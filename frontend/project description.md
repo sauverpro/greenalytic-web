@@ -3,7 +3,7 @@
 ## Objective:
 The Greenalytic Vehicle Monitoring System is designed to provide real-time tracking and monitoring of multiple vehicles in a fleet. The system collects and displays critical parameters such as speed, GPS location, voltage, fuel level, and carbon emissions, and offers a dashboard for real-time analysis. The system also stores historical data for trend analysis and reporting.
 
-## Core Features:
+## Core Featuress:
 
 ### 1. Real-Time Vehicle Tracking:
 - **Interactive Map:** Displays live GPS locations of all vehicles on an interactive map using **Leaflet.js**.
