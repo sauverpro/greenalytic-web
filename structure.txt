@@ -1,0 +1,24 @@
+/greenalytic-vehicle-monitoring
+│── /public                 # Static assets (logos, images, etc.)
+│── /src                    # Main source code
+│   │── /app                # Next.js app router (pages, layouts)
+│   │   │── /dashboard      # Main dashboard route
+│   │   │── /auth           # Authentication (login, signup, etc.)
+│   │   │── /api            # API routes (server-side logic)
+│   │   │── layout.tsx      # Global layout file
+│   │   └── page.tsx        # Entry page (landing or dashboard)
+│   │── /components         # Reusable UI components
+│   │   │── /charts         # Charts (LineChart, BarChart, etc.)
+│   │   │── /tables         # Tables (DataGrid, custom tables)
+│   │   │── /ui             # UI elements (buttons, cards, modals)
+│   │   └── index.ts        # Export all components
+│   │── /context            # Global state (Zustand, Redux, etc.)
+│   │── /hooks              # Custom hooks (fetching, authentication, etc.)
+│   │── /lib                # Utility functions (helpers, constants)
+│   │── /services           # API services (fetch data, authentication)
+│   │── /types              # TypeScript types/interfaces
+│   │── /styles             # Global styles (Tailwind, CSS)
+│── .env                    # Environment variables
+│── next.config.js          # Next.js config
+│── package.json            # Dependencies
+└── tsconfig.json           # TypeScript config
