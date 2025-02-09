@@ -30,15 +30,20 @@ type ChartConfig = {
   };
 };
 
+
+interface DataPoint {
+  [key: string]: string | number; // Keys will be dynamic based on config
+}
+
 interface DynamicLineChartProps {
-  data: Array<any>; // Accepts any dataset
-  config: ChartConfig; // Configuration for each dataset key
-  xAxisKey: string; // Key for X-Axis
-  yAxisLabel: string; // Label for Y-Axis
-  title: string; // Chart title
-  description?: string; // Optional chart description
-  height: string; // Height of the chart (e.g., "300px")
-  width: string; // Width of the chart (e.g., "100%")
+  data: DataPoint[]; // Replace `any[]` with `DataPoint[]`
+  config: ChartConfig;
+  xAxisKey: string;
+  yAxisLabel: string;
+  title: string;
+  description?: string;
+  height:string;
+  width:string;
 }
 
 export function DynamicLineChart({
