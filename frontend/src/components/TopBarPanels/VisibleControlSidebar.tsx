@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-
+import Image from "next/image";
 import {
   CheckSquare,
   Settings,
@@ -70,7 +70,7 @@ function VisibleControlSidebar  ()  {
               {users.map(user => (
                 <div key={user.id} className="p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-3">
-                    <img src="/api/placeholder/40/40" alt={user.name} className="w-10 h-10 rounded-full bg-gray-200" />
+                    <Image src="/api/placeholder/40/40" alt={user.name} className="w-10 h-10 rounded-full bg-gray-200" />
                     <div>
                       <h4 className="font-medium">{user.name}</h4>
                       <p className="text-sm text-gray-500">{user.message}</p>
