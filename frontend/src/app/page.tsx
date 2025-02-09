@@ -12,7 +12,7 @@ import {
   weeklyClientsData,
   weeklySalesData
 } from "@/data/monthlyDeviceSalesData";
-import Image from "next/image";
+
 
 export default function Home() {
   return (

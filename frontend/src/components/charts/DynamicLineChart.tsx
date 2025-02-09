@@ -1,5 +1,5 @@
 "use client";
-import { Separator } from "@radix-ui/react-dropdown-menu";
+
 import { useEffect, useState } from "react";
 
 import {
@@ -11,13 +11,13 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-  LineProps
+
 } from "recharts";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
+
   CardHeader,
   CardTitle
 } from "@/components/ui/card";
@@ -31,7 +31,7 @@ type ChartConfig = {
 };
 
 interface DynamicLineChartProps {
-  data: any[]; // Accepts any dataset
+  data: Array<any>; // Accepts any dataset
   config: ChartConfig; // Configuration for each dataset key
   xAxisKey: string; // Key for X-Axis
   yAxisLabel: string; // Label for Y-Axis
@@ -63,17 +63,12 @@ export function DynamicLineChart({
   if (!mounted) return null; // Prevent hydration errors
 
   // Toggle visibility of individual series
-  const toggleKey = (key: string) => {
-    setFocusKey(null);
-    setVisibleKeys((prev) =>
-      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
-    );
-  };
+
 
   // Show only one series
-  const toggleOnlyOne = (key: string) => {
-    setVisibleKeys([key]);
-  };
+  // const toggleOnlyOne = (key: string) => {
+  //   setVisibleKeys([key]);
+  // };
 
   // Focus on one series using dropdown
   const handleFocusKey = (event: React.ChangeEvent<HTMLSelectElement>) => {

@@ -1,7 +1,7 @@
 "use client";
 import { Bar, BarChart, CartesianGrid, Legend, XAxis, YAxis } from "recharts";
 import {
-  ChartConfig,
+
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent

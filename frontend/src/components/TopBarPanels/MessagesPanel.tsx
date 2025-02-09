@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FiBell, FiUser } from "react-icons/fi";
+
 import { Drawer } from "vaul";
 
 import {

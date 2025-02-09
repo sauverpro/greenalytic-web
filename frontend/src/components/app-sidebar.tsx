@@ -4,12 +4,12 @@
 import React, { useState } from "react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { useTheme } from "next-themes";
-import { motion } from "framer-motion";
+
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
+import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,  SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 
 // Icons
-import { Home, Settings, Users, BarChart2, MessageSquare, FileText, Bell, CheckSquare, XCircle } from "lucide-react";
+import { Home,  Users, BarChart2, MessageSquare, FileText, Bell } from "lucide-react";
 
 // Define the menu items
 const items = [
@@ -21,16 +21,16 @@ const items = [
   { title: "Reports", url: "#", icon: FileText },
 ];
 
-const tasks = [
-  { task: "Finish Dashboard UI", status: "in-progress" },
-  { task: "Update Client Data", status: "pending" },
-  { task: "Review Sales Reports", status: "completed" },
-];
+// const tasks = [
+//   { task: "Finish Dashboard UI", status: "in-progress" },
+//   { task: "Update Client Data", status: "pending" },
+//   { task: "Review Sales Reports", status: "completed" },
+// ];
 
 export function AppSidebar() {
   const [activeItem, setActiveItem] = useState("Dashboard");
   const { state: isCollapsed } = useSidebar();
-  const { theme, setTheme } = useTheme();
+
 
   return (
     <Sidebar collapsible="icon">
