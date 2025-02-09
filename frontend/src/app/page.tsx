@@ -255,11 +255,11 @@ export default function Home() {
 
             {/* Placeholder for Chart */}
             <div className="bg-gray-200 flex items-center justify-center rounded">
-              <DynamicBarChart
+              {/* <DynamicBarChart
                 data={carSalesData} // Pass car sales data
                 config={carSalesConfig} // Pass bar chart configuration
                 xAxisKey="month" // Use "month" as X-axis
-              />
+              /> */}
             </div>
 
             {/* Summary */}
@@ -294,13 +294,13 @@ export default function Home() {
         <h2 className="text-xl font-bold mb-4">Daily Statistics</h2>
         <div className="bg-white p-6 shadow-lg rounded-lg">
           <h3 className="font-semibold">Device Sales & Clients</h3>
-          <DynamicBarChart
+          {/* <DynamicBarChart
             title="Daily Sales"
             description="Sales data per device type"
             data={dailySalesData}
             config={dailySalesConfig}
             xAxisKey="day"
-          />
+          /> */}
           <p>Selecting data for analysis</p>
         </div>
       </div>

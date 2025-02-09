@@ -59,18 +59,56 @@ export const weeklyClientsData = [
   { name: "Truck", value: 50, fill: "#34d399" } // Green
 ];
 
- export const dailySalesData = [
-  { day: "Mon", smartphones: 15, laptops: 10, tablets: 8 },
-  { day: "Tue", smartphones: 20, laptops: 12, tablets: 6 },
-  { day: "Wed", smartphones: 18, laptops: 15, tablets: 7 },
-  { day: "Thu", smartphones: 25, laptops: 14, tablets: 10 },
-  { day: "Fri", smartphones: 22, laptops: 16, tablets: 12 },
-  { day: "Sat", smartphones: 30, laptops: 20, tablets: 15 },
-  { day: "Sun", smartphones: 28, laptops: 18, tablets: 13 }
+export const dailySalesData = [
+  {
+    month: "January",
+    day: "Monday",
+    smartphones: 30,
+    laptops: 20,
+    tablets: 10
+  },
+  {
+    month: "January",
+    day: "Tuesday",
+    smartphones: 40,
+    laptops: 25,
+    tablets: 15
+  },
+  {
+    month: "January",
+    day: "Wednesday",
+    smartphones: 35,
+    laptops: 22,
+    tablets: 12
+  },
+  {
+    month: "January",
+    day: "Thursday",
+    smartphones: 50,
+    laptops: 30,
+    tablets: 20
+  },
+  {
+    month: "January",
+    day: "Friday",
+    smartphones: 45,
+    laptops: 28,
+    tablets: 18
+  },
+  {
+    month: "January",
+    day: "Saturday",
+    smartphones: 60,
+    laptops: 35,
+    tablets: 25
+  },
+  { month: "January", day: "Sunday", smartphones: 55, laptops: 32, tablets: 22 }
 ];
 
 export const dailySalesConfig = {
-  smartphones: { label: "Smartphones", color: "#2563eb" }, // Blue
-  laptops: { label: "Laptops", color: "#60a5fa" }, // Light Blue
-  tablets: { label: "Tablets", color: "#a3e635" } // Green
+  day: { label: "Day", color: "#000000" },
+  month: { label: "Month", color: "#000000" },
+  smartphones: { label: "Smartphones", color: "#4caf50" },
+  laptops: { label: "Laptops", color: "#2196f3" },
+  tablets: { label: "Tablets", color: "#ff9800" }
 };

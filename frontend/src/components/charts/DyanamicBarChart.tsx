@@ -9,12 +9,11 @@ import {
 
 // Define the props for the dynamic bar chart
 interface DynamicBarChartProps<T extends string> {
-  data: Array<{ month: string } & Record<T, number>>; // Allows "month" + dynamic keys
-  config: Record<T, { label: string; color: string }>; // Config with labels and colors
-  xAxisKey: string; // The key for X-axis (e.g., "month")
+  data: Array<{ month: string } & Partial<Record<T, number>>>; // `Partial` ensures flexibility
+  config: Record<T, { label: string; color: string }>;
+  xAxisKey: string;
 }
-
-export function  DynamicBarChart<T extends string>({
+export function DynamicBarChart<T extends string>({
   data,
   config,
   xAxisKey
