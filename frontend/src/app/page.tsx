@@ -1,13 +1,14 @@
-import { DynamicBarChart } from "@/components/charts/DyanamicBarChart";
+import { DailyProductSalesChart } from "@/components/charts/DailyProductSalesChart";
+
 import { DynamicLineChart } from "@/components/charts/DynamicLineChart";
 import { DynamicPieChartComponent } from "@/components/charts/DynamicPieChart";
+import { YearlyproductsSalesChart } from "@/components/charts/YearlyproductsSalesChart";
+
 import {
 
-  carSalesConfig,
-  carSalesData,
+
   chartConfig,
-  dailySalesConfig,
-  dailySalesData,
+
   monthlyDeviceSalesData,
   weeklyClientsData,
   weeklySalesData
@@ -17,7 +18,7 @@ import {
 export default function Home() {
   return (
     <div className=" flex flex-col gap-6">
-      {/* Summary Cards */}
+ 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 gap-6 p-6 md:grid-cols-4">
         {/* Devices Summary */}
@@ -248,18 +249,14 @@ export default function Home() {
           </div>
 
           {/* Car Clients (Bar Chart) */}
-          <div className="bg-white p-6 shadow-lg rounded-lg">
+          <div className=" p-6 shadow-lg rounded-lg">
             <h3 className="text-lg font-semibold mb-3">
               🚗 Clients by Car Type
             </h3>
 
             {/* Placeholder for Chart */}
-            <div className="bg-gray-200 flex items-center justify-center rounded">
-              {/* <DynamicBarChart
-                data={carSalesData} // Pass car sales data
-                config={carSalesConfig} // Pass bar chart configuration
-                xAxisKey="month" // Use "month" as X-axis
-              /> */}
+            <div className="flex items-center justify-center rounded">
+              <YearlyproductsSalesChart />
             </div>
 
             {/* Summary */}
@@ -271,7 +268,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Weekly Statistics */}
       {/* Weekly Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-2  gap-6 p-6">
         {/* Weekly Sales (Devices) */}
@@ -290,18 +286,9 @@ export default function Home() {
       </div>
 
       {/* Daily Statistics */}
-      <div className="p-6">
-        <h2 className="text-xl font-bold mb-4">Daily Statistics</h2>
-        <div className="bg-white p-6 shadow-lg rounded-lg">
-          <h3 className="font-semibold">Device Sales & Clients</h3>
-          {/* <DynamicBarChart
-            title="Daily Sales"
-            description="Sales data per device type"
-            data={dailySalesData}
-            config={dailySalesConfig}
-            xAxisKey="day"
-          /> */}
-          <p>Selecting data for analysis</p>
+      <div className="p-6 ">
+        <div className=" flex items-center justify-center  shadow-lg rounded-lg min-h-48 max-h-[10%]">
+          <DailyProductSalesChart />
         </div>
       </div>
 
