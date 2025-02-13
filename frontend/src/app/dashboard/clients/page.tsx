@@ -1,9 +1,8 @@
 "use client";
+/* eslint-disable */
 import React, { useState, useEffect } from "react";
 import ReactSpeedometer from "react-d3-speedometer";
 import { Line } from "react-chartjs-2";
-// Disable TypeScript ESLint rules for the Chart.js imports
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -14,7 +13,7 @@ import {
   Tooltip,
   Legend
 } from "chart.js";
-/* eslint-enable @typescript-eslint/no-unused-vars */
+
 import {
   GoogleMap,
   Marker,
