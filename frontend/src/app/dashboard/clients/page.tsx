@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from "react";
 import ReactSpeedometer from "react-d3-speedometer";
 import { Line } from "react-chartjs-2";
+// Disable TypeScript ESLint rules for the Chart.js imports
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -12,6 +14,7 @@ import {
   Tooltip,
   Legend
 } from "chart.js";
+/* eslint-enable @typescript-eslint/no-unused-vars */
 import {
   GoogleMap,
   Marker,
@@ -19,7 +22,7 @@ import {
   useLoadScript,
   Libraries
 } from "@react-google-maps/api";
-/* eslint-disable no-unused-vars */
+
 ChartJS.register(
     
   CategoryScale,
@@ -30,7 +33,7 @@ ChartJS.register(
   Tooltip,
   Legend
 );
-/* eslint-enable no-unused-vars */
+
 const libraries: Libraries = ["places"];
 
 // Improved car data structure with historical and live data separation
