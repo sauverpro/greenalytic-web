@@ -3,7 +3,7 @@ import { DailyProductSalesChart } from "@/components/charts/DailyProductSalesCha
 import { DynamicLineChart } from "@/components/charts/DynamicLineChart";
 import { DynamicPieChartComponent } from "@/components/charts/DynamicPieChart";
 import { YearlyproductsSalesChart } from "@/components/charts/YearlyproductsSalesChart";
-import CarMap from "@/app/dashboard/map";
+
 
 import {
 
@@ -198,7 +198,7 @@ export default function Home() {
 
           {/* Map Placeholder */}
           <div className="bg-gray-200 h-48 rounded flex items-center justify-center">
-            <span className="text-gray-600"><CarMap/></span>
+            <span className="text-gray-600">[locations]</span>
           </div>
 
           {/* Expandable Button */}

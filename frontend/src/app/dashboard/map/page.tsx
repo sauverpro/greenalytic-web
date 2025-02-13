@@ -8,14 +8,18 @@ import {
   useLoadScript
 } from "@react-google-maps/api";
 
-const libraries: any = ["places"];
+const libraries: "places"[] = ["places"];
 const mapContainerStyle = { width: "100%", height: "100vh" };
-const defaultCenter = { lat: 12.9716, lng: 77.5946 }; // Default location (change as needed)
-const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY; // Load from environment variables
+const defaultCenter = { lat: 12.9716, lng: 77.5946 }; // Default location
+
+const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
+if (!API_KEY) {
+  console.error("Missing Google Maps API Key!");
+}
 
 const CarTracking = () => {
   const { isLoaded } = useLoadScript({
-    googleMapsApiKey: API_KEY!,
+    googleMapsApiKey: API_KEY,
     libraries
   });
 
@@ -36,9 +40,8 @@ const CarTracking = () => {
   });
 
   useEffect(() => {
-    if (!isLoaded) return;
+    if (!isLoaded || !car.location || !car.destination) return;
 
-    // Fetch real road route from Google Directions API
     const fetchRoute = async () => {
       const directionsService = new google.maps.DirectionsService();
       const result = await directionsService.route({
@@ -57,11 +60,10 @@ const CarTracking = () => {
     };
 
     fetchRoute();
-  }, [isLoaded]);
+  }, [isLoaded, car.location, car.destination]); // ✅ Correct dependencies
 
-  // Simulate car moving along the route
   useEffect(() => {
-    if (car.route.length === 0) return;
+    if (!car.route.length) return;
 
     const interval = setInterval(() => {
       setCar((prev) => {
@@ -72,7 +74,7 @@ const CarTracking = () => {
           index: prev.index + 1
         };
       });
-    }, 1000); // Move every second
+    }, 1000);
 
     return () => clearInterval(interval);
   }, [car.route]);
@@ -83,8 +85,14 @@ const CarTracking = () => {
     <GoogleMap
       mapContainerStyle={mapContainerStyle}
       zoom={14}
-      center={car.location}>
-      <Marker position={car.location} label="🚗" />
+      center={car.location || defaultCenter}>
+      <Marker
+        position={car.location}
+        icon={{
+          url: "/car-icon.png",
+          scaledSize: new google.maps.Size(40, 40)
+        }}
+      />
       {car.route.length > 0 && (
         <Polyline path={car.route} options={{ strokeColor: "#ff2527" }} />
       )}
