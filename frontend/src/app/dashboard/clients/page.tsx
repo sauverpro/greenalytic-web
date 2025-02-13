@@ -4,7 +4,10 @@ import ReactSpeedometer from "react-d3-speedometer";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
-
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
   Title,
   Tooltip,
   Legend
@@ -18,7 +21,9 @@ import {
 } from "@react-google-maps/api";
 
 ChartJS.register(
-  
+  // eslint-disable-next-line no-undef
+  CategoryScale,
+
   Title,
   Tooltip,
   Legend
