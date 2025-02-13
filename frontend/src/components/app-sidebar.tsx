@@ -13,7 +13,7 @@ import { Home,  Users, BarChart2, MessageSquare, FileText, Bell,MapPin } from "l
 
 // Define the menu items
 const items = [
-  { title: "Dashboard", url: "dashboard", icon: Home },
+  { title: "Dashboard", url: "/..", icon: Home },
   { title: "users", url: "#", icon: BarChart2 },
   { title: "Clients", url: "/dashboard/clients", icon: Users },
   { title: "Notifications", url: "#", icon: Bell },

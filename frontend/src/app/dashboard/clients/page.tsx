@@ -19,16 +19,18 @@ import {
   useLoadScript,
   Libraries
 } from "@react-google-maps/api";
-
+/* eslint-disable no-unused-vars */
 ChartJS.register(
-  // eslint-disable-next-line no-undef
+    
   CategoryScale,
-
+  LinearScale,
+  PointElement,
+  LineElement,
   Title,
   Tooltip,
   Legend
 );
-
+/* eslint-enable no-unused-vars */
 const libraries: Libraries = ["places"];
 
 // Improved car data structure with historical and live data separation
