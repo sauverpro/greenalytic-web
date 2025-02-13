@@ -9,16 +9,17 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,  SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 
 // Icons
-import { Home,  Users, BarChart2, MessageSquare, FileText, Bell } from "lucide-react";
+import { Home,  Users, BarChart2, MessageSquare, FileText, Bell,MapPin } from "lucide-react";
 
 // Define the menu items
 const items = [
-  { title: "Dashboard", url: "#", icon: Home },
-  { title: "Sales", url: "#", icon: BarChart2 },
-  { title: "Clients", url: "#", icon: Users },
+  { title: "Dashboard", url: "dashboard", icon: Home },
+  { title: "users", url: "#", icon: BarChart2 },
+  { title: "Clients", url: "/dashboard/clients", icon: Users },
   { title: "Notifications", url: "#", icon: Bell },
   { title: "Messages", url: "#", icon: MessageSquare },
   { title: "Reports", url: "#", icon: FileText },
+  { title: "map", url: "/dashboard/map", icon: MapPin },
 ];
 
 // const tasks = [
