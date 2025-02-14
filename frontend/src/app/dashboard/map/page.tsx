@@ -33,11 +33,18 @@ const CarTracking = () => {
   }>({
     id: 1,
     plateNumber: "XYZ-123",
-    location: { lat: 12.9716, lng: 77.5946 },
-    destination: { lat: 12.9352, lng: 77.6245 }, // Example destination
+    location: { lat: -1.6835, lng: 30.0878 },
+    destination: { lat: -2.602, lng: 28.9084 }, // Example destination
     route: [],
     index: 0
   });
+// const routeWaypoints = [
+//   { lat: -1.6835, lng: 30.0878 }, // Gicumbi
+//   { lat: -1.9447, lng: 30.0595 }, // Kigali (passing through)
+//   { lat: -2.0997, lng: 29.7497 }, // Nyanza (passing through)
+//   { lat: -2.3364, lng: 29.3739 }, // Nyamasheke (passing through)
+//   { lat: -2.602, lng: 28.9084 } // Rusizi
+// ];
 
   useEffect(() => {
     if (!isLoaded || !car.location || !car.destination) return;
@@ -84,7 +91,7 @@ const CarTracking = () => {
   return (
     <GoogleMap
       mapContainerStyle={mapContainerStyle}
-      zoom={14}
+      zoom={8}
       center={car.location || defaultCenter}>
       <Marker
         position={car.location}
