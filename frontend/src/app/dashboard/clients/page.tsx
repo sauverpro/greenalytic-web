@@ -20,6 +20,7 @@ import {
   useLoadScript,
   Libraries
 } from "@react-google-maps/api";
+import LiveData from "@/app/LiveData";
 
 ChartJS.register(
   CategoryScale,
@@ -436,6 +437,7 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+      <LiveData/>
     </div>
   );
 };

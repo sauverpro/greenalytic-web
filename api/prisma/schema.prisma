@@ -16,8 +16,8 @@ enum UserRole {
 
 model User {
   id           Int       @id @default(autoincrement())
-  username     String? // Removed unique constraint from username
-  email        String    @unique // Ensuring the email is unique
+  username     String?
+  email        String    @unique
   image        String    @default("https://st3.depositphotos.com/15648834/17930/v/450/depositphotos_179308454-stock-illustration-unknown-person-silhouette-glasses-profile.jpg")
   password     String
   gender       String?
@@ -27,13 +27,11 @@ model User {
   token        String?
   verified     Boolean   @default(false)
   phoneNumber  String?
-  deletedAt    DateTime? // Soft delete
+  deletedAt    DateTime?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  // Optional Relationships
-  vehicles Vehicle[] // Optional relationship - A User may own multiple Vehicles
-
+  vehicles        Vehicle[]
   trackingDevices TrackingDevice[]
 
   @@index([email])
@@ -43,49 +41,63 @@ model User {
 model Vehicle {
   id                Int     @id @default(autoincrement())
   plateNumber       String  @unique
-  chassisNumber     String? // Allow null chassisNumbers
-  vehicleType       String // e.g., Toyota, VW, Suzuki
-  vehicleModel      String // e.g., Corolla, Rava4, Tucson
+  chassisNumber     String?
+  vehicleType       String
+  vehicleModel      String
   yearOfManufacture Int
-  usage             String // Private or Commercial
-  userId            Int
+  usage             String
   user              User    @relation(fields: [userId], references: [id])
+  userId            Int
 
-  emissionData   EmissionData[] // One-to-many relationship
-  gpsData        GPSData[] // One-to-many relationship (Real-time tracking)
-  fuelData       FuelData[] // Add this relation
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  deletedAt      DateTime? // Soft delete
+  emissionDatas EmissionData[]
+  gpsDatas      GPSData[]
+  fuelDatas     FuelData[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
   trackingDevice TrackingDevice?
-
-  @@index([userId])
-  @@index([plateNumber])
+ 
 }
 
 model TrackingDevice {
-  id           Int       @id @default(autoincrement()) // Unique ID for the tracking device
-  serialNumber String    @unique // Unique serial number for the device
-  model        String // Model of the tracking device
-  type         String // Type of the tracking device (e.g., "GPS", "Sensor", etc.)
-  plateNumber  String // Plate number of the vehicle (e.g., ABC123)
+  id           Int       @id @default(autoincrement())
+  serialNumber String    @unique
+  model        String
+  type         String
+  plateNumber  String
+  isActive     Boolean   @default(true)
+  lastPing     DateTime?
 
-  isActive     Boolean   @default(true) // Whether the device is active
-  lastPing     DateTime? // Last ping timestamp (when the device last sent data)
-  userId       Int? // Foreign key to the User model (optional)
-  user         User?     @relation(fields: [userId], references: [id]) // Link to User (optional)
-  vehicleId    Int?      @unique // Foreign key to Vehicle (optional relationship)
-  vehicle      Vehicle?  @relation(fields: [vehicleId], references: [id]) // Link to Vehicle (optional)
-  gpsData      GPSData[] // One-to-many relation with GPSData
-  createdAt    DateTime  @default(now()) // Timestamp when the device is created
-  updatedAt    DateTime  @updatedAt // Timestamp when the device is updated
-  deviceId     Int?
+  gpsDatas      GPSData[]
+  fuelDatas     FuelData[]
+  emissionDatas EmissionData[]
 
-  deletedAt DateTime? // Soft delete timestamp
+  user   User? @relation(fields: [userId], references: [id])
+  userId Int? // Optional userId for relationship with User
 
-  @@index([serialNumber]) // Index for serial number for fast lookup
-  @@index([plateNumber]) // Index for plate number for faster search
- 
+  vehicleId Int @unique
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id])
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+}
+
+model FuelData {
+  id               Int            @id @default(autoincrement())
+  timestamp        DateTime       @default(now())
+  fuelLevel        Float
+  fuelConsumption  Float
+  plateNumber      String
+  trackingDevice   TrackingDevice @relation(fields: [trackingDeviceId], references: [id])
+  trackingDeviceId Int // Foreign key to TrackingDevice
+
+  // Reverse relation to Vehicle
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id])
+  vehicleId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model EmissionData {
@@ -95,49 +107,39 @@ model EmissionData {
   coPercentage  Float
   o2Percentage  Float
   hcPPM         Int
-  vehicleId     Int
   vehicle       Vehicle  @relation(fields: [vehicleId], references: [id])
-  plateNumber   String // Vehicle plate number
-  vehicleModel  String // Vehicle model (e.g., Toyota Corolla)
-  createdAt     DateTime @default(now())
+  vehicleId     Int
+  plateNumber   String
 
-  @@index([vehicleId]) // Index for vehicle ID (for fast lookups)
-  @@index([timestamp]) // Index for timestamp (for time-based queries)
-  @@index([vehicleId, timestamp]) // Composite index to optimize querying by vehicle and timestamp
-  @@index([plateNumber]) // Optional index for plate number to speed up lookups
-  @@index([vehicleModel]) // Optional index for vehicle model (if using the model in queries)
+  trackingDevice   TrackingDevice @relation(fields: [trackingDeviceId], references: [id])
+  trackingDeviceId Int // Foreign key to TrackingDevice
+  createdAt        DateTime       @default(now())
+
+  @@index([vehicleId])
+  @@index([timestamp])
+  @@index([vehicleId, timestamp])
+  @@index([plateNumber])
+  @@index([trackingDeviceId])
 }
 
 model GPSData {
-  id        Int             @id @default(autoincrement())
-  latitude  Float // Latitude of the vehicle's location
-  longitude Float // Longitude of the vehicle's location
-  speed     Float // Vehicle speed in km/h
-  accuracy  Float? // Optional: Accuracy of the GPS reading in meters (if applicable)
-  timestamp DateTime        @default(now()) // Timestamp when GPS data was recorded
-  vehicleId Int
-  vehicle   Vehicle         @relation(fields: [vehicleId], references: [id])
-  deviceId  Int?
-  device    TrackingDevice? @relation(fields: [deviceId], references: [id]) // Device that recorded the GPS data
-  createdAt DateTime        @default(now()) // Timestamp when the data was created
-  updatedAt DateTime        @updatedAt // Timestamp when the data was last updated
-
-  @@index([vehicleId]) // Index for vehicle ID (for fast lookups)
-  @@index([timestamp]) // Index for timestamp (for time-based queries)
-  @@index([vehicleId, timestamp]) // Composite index to optimize querying by vehicle & timestamp
-  @@index([deviceId]) // Optional index for device ID (if linking to devices)
-}
-
-model FuelData {
   id        Int      @id @default(autoincrement())
+  latitude  Float
+  longitude Float
+  plateNumber String
+  speed     Float
+  accuracy  Float?
   timestamp DateTime @default(now())
-  fuelLevel Float // Fuel level (0-100 scale, percentage)
   vehicleId Int
   vehicle   Vehicle  @relation(fields: [vehicleId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
-  @@index([vehicleId]) // Fast lookups by vehicle ID
-  @@index([timestamp]) // Fast lookups by timestamp
-  @@index([vehicleId, timestamp]) // Optimized for time-range queries by vehicle
+  trackingDeviceId Int? // Foreign key to TrackingDevice (optional)
+  trackingDevice   TrackingDevice? @relation(fields: [trackingDeviceId], references: [id])
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  @@index([vehicleId])
+  @@index([timestamp])
+  @@index([vehicleId, timestamp])
+  @@index([trackingDeviceId])
 }

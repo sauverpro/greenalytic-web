@@ -7,14 +7,14 @@ class TrackingDeviceService {
   static async addTrackingDeviceToVehicle (data) {
     try {
       const { serialNumber, model, type, plateNumber, vehicleId } = data
-
+      console.log('the data----', data)
       // Ensure the vehicle exists and fetch `userId`
-      const vehicle = await prisma.vehicle.findUnique({
-        where: { id: vehicleId, plateNumber },
-        select: { id: true, userId: true } // Include userId
+      const vehicleData = await prisma.vehicle.findUnique({
+        where: { id: vehicleId, plateNumber: plateNumber }
+        // select: { id: true, userId: true } // Include userId
       })
-
-      if (!vehicle) {
+      console.log('the vehicleData found----', vehicleData)
+      if (!vehicleData) {
         throw new Error('Vehicle not found or plate number mismatch.')
       }
 
@@ -46,7 +46,7 @@ class TrackingDeviceService {
           type,
           plateNumber,
           vehicleId,
-          userId: vehicle.userId // Track userId from vehicle
+          userId: vehicleData.userId // Track userId from vehicle
         }
       })
 
