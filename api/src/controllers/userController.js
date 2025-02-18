@@ -82,6 +82,8 @@ export const getUserById = async (req, res) => {
 // **4️⃣ Update User** - Update user details
 export const updateUser = async (req, res) => {
   try {
+    // Exclude the password from the request body to prevent updating becuase  the whole process of password  making i long and   only need to br updated by their owners
+    const { password, ...updatedData } = req.body
     const result = await userService.updateUser(req.params.id, req.body)
     if (!result.success) {
       return res.status(400).json(result)

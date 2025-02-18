@@ -9,7 +9,7 @@ let carData = {
   serialNumber: 'SN78945',
   longitude: 29.746,
   latitude: -2.626,
-  speed: 2,
+  speed: 20,
   fuelLevel: 50,
   fuelConsumption: 0.1,
   co2Percentage: 0.5,
@@ -33,7 +33,14 @@ export function startSimulation () {
       // Simulate GPS movement
       carData.longitude += 0.001
       carData.latitude += 0.001
-
+      if (isNaN(carData.latitude) || isNaN(carData.longitude)) {
+        console.error(
+          'Invalid coordinates detected:',
+          carData.latitude,
+          carData.longitude
+        )
+        return // Skip emitting if invalid
+      }
       // Simulate emissions
       carData.co2Percentage += 0.01
       carData.coPercentage += 0.005

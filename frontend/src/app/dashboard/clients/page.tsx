@@ -48,14 +48,22 @@ export default function RealTimeChart() {
     libraries
   });
 
+  const [selectedCarId, setSelectedCarId] = useState<number | null>(null);
   const [gpsData, setGpsData] = useState<
-    { timestamp: number; speed: number; lat: number; lng: number }[]
+    {
+      vehicleId: number;
+      timestamp: number;
+      speed: number;
+      lat: number;
+      lng: number;
+    }[]
   >([]);
   const [fuelData, setFuelData] = useState<
-    { timestamp: number; fuelLevel: number }[]
+    { vehicleId: number; timestamp: number; fuelLevel: number }[]
   >([]);
   const [emissionData, setEmissionData] = useState<
     {
+      vehicleId: number;
       timestamp: number;
       co2Percentage: number;
       coPercentage: number;
@@ -76,6 +84,7 @@ export default function RealTimeChart() {
         data.gpsData.longitude
       ) {
         const newGpsEntry = {
+          vehicleId: data.gpsData.vehicleId,
           timestamp: Date.now(),
           speed: data.gpsData.speed,
           lat: data.gpsData.latitude,
@@ -91,12 +100,15 @@ export default function RealTimeChart() {
           return updatedData;
         });
 
-        setCurrentLocation({ lat: newGpsEntry.lat, lng: newGpsEntry.lng });
+        if (data.gpsData.vehicleId === selectedCarId) {
+          setCurrentLocation({ lat: newGpsEntry.lat, lng: newGpsEntry.lng });
+        }
       }
 
       // Fuel data
       if (data.type === "fuel" && data.fuelData) {
         const newFuelEntry = {
+          vehicleId: data.fuelData.vehicleId,
           timestamp: Date.now(),
           fuelLevel: data.fuelData.fuelLevel
         };
@@ -113,6 +125,7 @@ export default function RealTimeChart() {
       // Emission data
       if (data.type === "emission" && data.emissionData) {
         const newEmissionEntry = {
+          vehicleId: data.emissionData.vehicleId,
           timestamp: Date.now(),
           co2Percentage: data.emissionData.co2Percentage,
           coPercentage: data.emissionData.coPercentage,
@@ -135,15 +148,26 @@ export default function RealTimeChart() {
     return () => {
       socket.off("dataStatus", handleDataStatus);
     };
-  }, []);
+  }, [selectedCarId]);
+
+  // Filter data by selected carId
+  const filteredGpsData = gpsData.filter((d) => d.vehicleId === selectedCarId);
+  const filteredFuelData = fuelData.filter(
+    (d) => d.vehicleId === selectedCarId
+  );
+  const filteredEmissionData = emissionData.filter(
+    (d) => d.vehicleId === selectedCarId
+  );
 
   // Chart.js Data for Speed with Smooth Lines
   const speedChartData = {
-    labels: gpsData.map((d) => new Date(d.timestamp).toLocaleTimeString()),
+    labels: filteredGpsData.map((d) =>
+      new Date(d.timestamp).toLocaleTimeString()
+    ),
     datasets: [
       {
         label: "Vehicle Speed (km/h)",
-        data: gpsData.map((d) => d.speed),
+        data: filteredGpsData.map((d) => d.speed),
         borderColor: "blue",
         borderWidth: 2,
         fill: false,
@@ -154,11 +178,13 @@ export default function RealTimeChart() {
 
   // Chart.js Data for Fuel Level with Smooth Lines
   const fuelChartData = {
-    labels: fuelData.map((d) => new Date(d.timestamp).toLocaleTimeString()),
+    labels: filteredFuelData.map((d) =>
+      new Date(d.timestamp).toLocaleTimeString()
+    ),
     datasets: [
       {
         label: "Fuel Level (%)",
-        data: fuelData.map((d) => d.fuelLevel),
+        data: filteredFuelData.map((d) => d.fuelLevel),
         backgroundColor: "green",
         borderColor: "green",
         borderWidth: 2,
@@ -170,11 +196,13 @@ export default function RealTimeChart() {
 
   // Chart.js Data for Emission Levels with Smooth Lines
   const emissionChartData = {
-    labels: emissionData.map((d) => new Date(d.timestamp).toLocaleTimeString()),
+    labels: filteredEmissionData.map((d) =>
+      new Date(d.timestamp).toLocaleTimeString()
+    ),
     datasets: [
       {
         label: "CO2 Percentage",
-        data: emissionData.map((d) => d.co2Percentage),
+        data: filteredEmissionData.map((d) => d.co2Percentage),
         backgroundColor: "red",
         borderColor: "red",
         borderWidth: 2,
@@ -183,7 +211,7 @@ export default function RealTimeChart() {
       },
       {
         label: "CO Percentage",
-        data: emissionData.map((d) => d.coPercentage),
+        data: filteredEmissionData.map((d) => d.coPercentage),
         backgroundColor: "orange",
         borderColor: "orange",
         borderWidth: 2,
@@ -192,7 +220,7 @@ export default function RealTimeChart() {
       },
       {
         label: "O2 Percentage",
-        data: emissionData.map((d) => d.o2Percentage),
+        data: filteredEmissionData.map((d) => d.o2Percentage),
         backgroundColor: "green",
         borderColor: "green",
         borderWidth: 2,
@@ -201,7 +229,7 @@ export default function RealTimeChart() {
       },
       {
         label: "HC PPM",
-        data: emissionData.map((d) => d.hcPPM),
+        data: filteredEmissionData.map((d) => d.hcPPM),
         backgroundColor: "purple",
         borderColor: "purple",
         borderWidth: 2,
@@ -211,9 +239,24 @@ export default function RealTimeChart() {
     ]
   };
 
+  // List of vehicle IDs (replace with actual vehicle IDs)
+  const vehicleIds = [1, 2, 3]; // Example car IDs
+
   return (
     <div>
       <h2>Real-Time Vehicle Tracking</h2>
+
+      {/* Car Selection Dropdown */}
+      <select
+        onChange={(e) => setSelectedCarId(Number(e.target.value))}
+        value={selectedCarId || ""}>
+        <option value="">Select a Car</option>
+        {vehicleIds.map((id) => (
+          <option key={id} value={id}>
+            Car {id}
+          </option>
+        ))}
+      </select>
 
       {/* Speed Chart */}
       <Line data={speedChartData} />
@@ -235,7 +278,7 @@ export default function RealTimeChart() {
 
           {/* Polyline showing the path of the car */}
           <Polyline
-            path={gpsData.map((d) => ({ lat: d.lat, lng: d.lng }))}
+            path={filteredGpsData.map((d) => ({ lat: d.lat, lng: d.lng }))}
             options={{
               strokeColor: "#FF0000",
               strokeOpacity: 1,

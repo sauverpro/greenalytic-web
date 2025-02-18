@@ -1,23 +1,26 @@
-// paginationMiddleware.js
+// middlewares/paginationMiddleware.js
+
 export const paginationMiddleware = (req, res, next) => {
-  // Default values for page and limit if not provided
-  const defaultPage = 1
-  const defaultLimit = 10
+  // Extract page and limit from query parameters
+  let { page, limit } = req.query
 
-  // Extract the page and limit from query params (default to 1 and 10 if not provided)
-  const page = parseInt(req.query.page) || defaultPage
-  const limit = parseInt(req.query.limit) || defaultLimit
+  // Parse them into integers, with defaults if not provided
+  page = parseInt(page) || 1 // Default to page 1 if not provided
+  limit = parseInt(limit) || 10 // Default to 10 items per page if not provided
 
-  // Optional: Validate that page and limit are positive integers
-  if (page < 1 || limit < 1) {
-    return res.status(400).json({
-      message: 'Page and limit must be positive integers.'
-    })
+  // Ensure the values are not below 1
+  if (page < 1) page = 1
+  if (limit < 1) limit = 10
+
+  // Attach pagination details to the request object
+  req.pagination = {
+    skip: (page - 1) * limit, // Skip the number of records already displayed in previous pages
+    take: limit, // Number of records to fetch
+    page,
+    limit
   }
 
-  // Attach pagination info to the request object
-  req.pagination = { page, limit }
-
-  // Continue to the next middleware/controller
-  next()
+  next() // Move to the next middleware or route handler
 }
+
+export default paginationMiddleware;

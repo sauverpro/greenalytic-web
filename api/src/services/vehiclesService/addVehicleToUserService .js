@@ -1,5 +1,6 @@
-import prisma from '../../prismaClient.js'
+import prisma from '../../../prismaClient.js'
 
+// ✅ 1️⃣ Add Vehicle to User
 export const addVehicleToUser = async (userId, vehicleData) => {
   try {
     // 1️⃣ Check if user exists

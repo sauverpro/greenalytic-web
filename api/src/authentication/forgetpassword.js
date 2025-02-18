@@ -5,7 +5,7 @@ import { passHashing } from "../utils/passwordfunctions.js";
 import { isOTPValid } from "../utils/passwordfunctions.js";
 
 export const generateAndSendOTP = async (req, res) => {
-  console.log('the user is-------------------------------------------------------------', "here")
+
   const otp = generateOTP().code
   const expiresAt = generateOTP().expiresAt
   const userEmail = req.body.email

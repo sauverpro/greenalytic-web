@@ -5,7 +5,7 @@ import prisma from './prismaClient.js'
 import userRouters from './src/routes/userRoutes.js'
 import VehicleRouter from './src/routes/vehicleRoutes.js'
 import trackingRouter from './src/routes/trackingDeviceRoutes.js'
-import { server } from './socketServer.js'
+import { server, io } from './socketServer.js'
 import { startSimulation } from './client.js'
 
 const app = express()
@@ -26,8 +26,15 @@ prisma
 app.listen(expressPort, () => {
   console.log(`Server running on port ${expressPort}`)
 })
+
 const socketPort = process.env.SOCKET_SERVER_PORT || 4000
 server.listen(socketPort, () => {
   console.log(`Socket.IO server is running on port ${socketPort}`)
 })
-// startSimulation();
+// Handle server shutdown gracefully
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM received. Closing server...')
+  await server.close()
+  process.exit(0)
+})
+startSimulation()

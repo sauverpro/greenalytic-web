@@ -1,6 +1,6 @@
-import WebSocket from 'ws'
+import { io } from 'socket.io-client'
 
-// Pre-defined coordinates for cities in Rwanda
+// Pre-defined routes (Kigali to other cities)
 const routes = {
   kigaliToNyamagabe: [
     { latitude: -1.9572, longitude: 30.1127 }, // Kigali
@@ -18,103 +18,104 @@ const routes = {
 
 // Function to interpolate between two coordinates
 function interpolateCoordinates (start, end, fraction) {
-  const latitude = start.latitude + (end.latitude - start.latitude) * fraction
-  const longitude =
-    start.longitude + (end.longitude - start.longitude) * fraction
-  return { latitude, longitude }
+  return {
+    latitude: start.latitude + (end.latitude - start.latitude) * fraction,
+    longitude: start.longitude + (end.longitude - start.longitude) * fraction
+  }
 }
 
-export function sendData () {
-  const socket = new WebSocket('ws://localhost:8770')
+// Function to generate random vehicle data
+function generateRandomData (vehicleId, latitude, longitude) {
+  const dataTypes = ['fuel', 'gps', 'emission']
+  const type = dataTypes[Math.floor(Math.random() * dataTypes.length)]
+  console.log(`Generating data for Vehicle ${vehicleId} of type ${type}`) // Log action
 
-  socket.on('open', () => {
-    console.log('WebSocket connection established')
-
-    // Route selection (for example, Kigali to Nyamagabe)
-    const selectedRoute = routes.kigaliToNyamagabe
-
-    // Set interval to send data every second
-    let fraction = 0 // This will represent the position along the route (0 to 1)
-    const interval = setInterval(() => {
-      if (fraction > 1) {
-        fraction = 0 // Reset to start if we have reached the end
+  switch (type) {
+    case 'fuel':
+      return {
+        type,
+        fuelLevel: Math.floor(Math.random() * 100),
+        vehicleId
       }
+    case 'gps':
+      return {
+        type,
+        latitude,
+        longitude,
+        speed: Math.floor(Math.random() * 120),
+        accuracy: Math.floor(Math.random() * 100),
+        vehicleId,
+        deviceId: vehicleId
+      }
+    case 'emission':
+      return {
+        type,
+        co2Percentage: (Math.random() * 100).toFixed(2),
+        coPercentage: (Math.random() * 100).toFixed(2),
+        o2Percentage: (Math.random() * 100).toFixed(2),
+        hcPPM: (Math.random() * 100).toFixed(2),
+        vehicleId,
+        plateNumber: `ABC${vehicleId}`
+      }
+    default:
+      return {}
+  }
+}
 
-      // Interpolate coordinates between the two cities along the route
-      const { latitude, longitude } = interpolateCoordinates(
-        selectedRoute[0], // Start point (Kigali)
-        selectedRoute[1], // End point (Nyamagabe)
-        fraction
+// Function to send data with auto-reconnect
+export function sendData (vehicleId = 1, routeName = 'kigaliToNyamagabe') {
+  const selectedRoute = routes[routeName] || routes.kigaliToNyamagabe
+  let fraction = 0
+
+  function connectWebSocket () {
+    const socket = io('http://localhost:4000')
+
+    socket.on('connect', () => {
+      console.log(`✅ Connected to WebSocket for Vehicle ${vehicleId}`)
+
+      const interval = setInterval(() => {
+        if (fraction > 1) {
+          fraction = 0 // Restart movement
+        }
+
+        const { latitude, longitude } = interpolateCoordinates(
+          selectedRoute[0],
+          selectedRoute[1],
+          fraction
+        )
+
+        const data = generateRandomData(vehicleId, latitude, longitude)
+
+        socket.emit('vehicleData', data) // Send data
+        console.log(`🚗 Vehicle ${vehicleId} Sent:`, data)
+
+        fraction += 0.02 // Move forward
+      }, 1000)
+
+      // Stop sending after 20 seconds
+      setTimeout(() => {
+        clearInterval(interval)
+        console.log(`⏹️ Stopped sending data for Vehicle ${vehicleId}`)
+        socket.disconnect()
+      }, 20000)
+    })
+
+    // Log received data
+    socket.on('vehicleDataResponse', data => {
+      console.log(`📩 Vehicle ${vehicleId} Received:`, data)
+    })
+
+    socket.on('disconnect', () => {
+      console.log(
+        `❌ WebSocket disconnected for Vehicle ${vehicleId}. Reconnecting...`
       )
+      setTimeout(connectWebSocket, 5000) // Retry in 5 sec
+    })
 
-      // Random data type selection (fuel, gps, emission)
-      const dataTypes = ['fuel', 'gps', 'emission']
-      const randomType =
-        dataTypes[Math.floor(Math.random() * dataTypes.length)]
+    socket.on('connect_error', error => {
+      console.error(`⚠️ Connection error for Vehicle ${vehicleId}:`, error)
+    })
+  }
 
-      let data
-      switch (randomType) {
-        case 'fuel':
-          data = {
-            type: 'fuel',
-            fuelLevel: Math.floor(Math.random() * 100), // Random fuel level
-            vehicleId: 1
-          }
-          break
-        case 'gps':
-          data = {
-            type: 'gps',
-            latitude,
-            longitude,
-            speed: Math.floor(Math.random() * 120), // Random speed
-            accuracy: Math.floor(Math.random() * 100), // Random accuracy
-            vehicleId: 1,
-            deviceId: 1
-          }
-          break
-        case 'emission':
-          data = {
-            type: 'emission',
-            co2Percentage: (Math.random() * 100).toFixed(2),
-            coPercentage: (Math.random() * 100).toFixed(2),
-            o2Percentage: (Math.random() * 100).toFixed(2),
-            hcPPM: (Math.random() * 100).toFixed(2),
-            vehicleId: 1,
-            plateNumber: 'ABC' // Static plate number
-          }
-          break
-        default:
-          data = {}
-          break
-      }
-
-      // Send data if WebSocket is open
-      if (socket.readyState === WebSocket.OPEN) {
-        socket.send(JSON.stringify(data))
-        console.log('Sent data:', data)
-      }
-
-      // Increment the fraction to simulate movement
-      fraction += 0.01
-    }, 1000) // Send data every second
-
-    // Close WebSocket after 10 seconds
-    setTimeout(() => {
-      clearInterval(interval)
-      console.log('Stopped sending data')
-      socket.close()
-    }, 10000)
-  })
-
-  // Handle WebSocket errors
-  socket.on('error', error => {
-    console.error('WebSocket error:', error)
-  })
-
-  // Handle WebSocket connection close
-  socket.on('close', () => {
-    console.log('WebSocket connection closed')
-  })
+  connectWebSocket() // Initial connection
 }
-
-// Start sending data

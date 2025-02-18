@@ -1,9 +1,20 @@
 import express from 'express'
-import { addVehicleController } from '../controllers/vehicleController.js'
+import { addVehicleToUserController } from '../controllers/vehicleControllers/addVehicleToUserController.js'
+import paginationMiddleware from '../middlewares/paginationMiddleware.js'
+import {
+    getAllVehiclesController,
+    getVehicleByIdController,
+    getVehiclesByUserIdController
+} from '../controllers/vehicleControllers/gettingvehiclesControllers.js'
+import { getVehicleHistoryController } from '../controllers/vehicleControllers/vehicleHistory.js'
 
 const VehicleRouter = express.Router()
 
 // Route to add a vehicle to a user
-VehicleRouter.post('/addvehicle/:userId', addVehicleController)
+VehicleRouter.post('/addvehicletouser/:userId',addVehicleToUserController)
+VehicleRouter.get('/getallvehicles',paginationMiddleware,getAllVehiclesController)
+VehicleRouter.get('/:id',paginationMiddleware,getVehicleByIdController)
+VehicleRouter.get('/user/:userId/vehicles',paginationMiddleware,getVehiclesByUserIdController)
+VehicleRouter.get('/:vehicleId/history',paginationMiddleware, getVehicleHistoryController)
 
 export default VehicleRouter

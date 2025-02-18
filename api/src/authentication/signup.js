@@ -33,7 +33,7 @@ export const signup = catchAsync(async (req, res, next) => {
   }
 
   let hashedPassword = await passHashing(req.body.password)
-  let newUserDetails = { ...req.body, password: hashedPassword }
+  let newUserDetails = { ...req.body, password: hashedPassword,role:"USER" }
 
   const otpDetails = generateOTP()
   const verificationToken = otpDetails.code

@@ -1,7 +1,3 @@
-
-
-
-
 // Middleware for input validation
 export const validateLogin = [
   body('email').isEmail().withMessage('Invalid email format'),
@@ -21,9 +17,7 @@ import { tokengenerating } from '../utils/jwtfunctions.js'
 import { passComparer } from '../utils/passwordfunctions.js'
 import { body, validationResult } from 'express-validator'
 
-// Middleware for input validation
-
-
+// Login function
 export const login = async (req, res) => {
   try {
     // Validate input
@@ -37,7 +31,13 @@ export const login = async (req, res) => {
     // Check if the user exists
     let user = await prisma.user.findUnique({
       where: { email },
-      include: { vehicles: true, trackingDevices: true }
+      include: {
+        vehicles: {
+          include: {
+            trackingDevice: true // Fetch tracking device data
+          }
+        }
+      }
     })
 
     if (!user) {
@@ -50,24 +50,32 @@ export const login = async (req, res) => {
       return res.status(401).json({ message: 'Wrong password' })
     }
 
-    // Pagination: limit the number of vehicles and tracking devices per page
-    const maxLimit = 50; // Set a maximum limit for pagination
-    const validLimit = Math.min(limit, maxLimit); // Ensure the limit does not exceed the maxLimit
+    // Pagination: limit the number of vehicles per page
+    const maxLimit = 50 // Set a maximum limit for pagination
+    const validLimit = Math.min(limit, maxLimit) // Ensure the limit does not exceed maxLimit
 
-    const vehiclesTotalCount = user.vehicles.length; // Total number of vehicles
-    const trackingDevicesTotalCount = user.trackingDevices.length; // Total number of tracking devices
+    const vehiclesTotalCount = user.vehicles.length // Total number of vehicles
+    const totalPagesForVehicles = Math.ceil(vehiclesTotalCount / validLimit) // Calculate total pages
 
-    // Calculate the total number of pages for vehicles and tracking devices
-    const totalPagesForVehicles = Math.ceil(vehiclesTotalCount / validLimit);
-    const totalPagesForTrackingDevices = Math.ceil(trackingDevicesTotalCount / validLimit);
+    // If requested page exceeds available pages, set to last available page
+    const validPageForVehicles = Math.min(page, totalPagesForVehicles)
 
-    // If requested page exceeds available pages, set the page to the last available page
-    const validPageForVehicles = Math.min(page, totalPagesForVehicles);
-    const validPageForTrackingDevices = Math.min(page, totalPagesForTrackingDevices);
-
-    // Fetch paginated vehicles and tracking devices
-    const vehicles = user.vehicles.slice((validPageForVehicles - 1) * validLimit, validPageForVehicles * validLimit);
-    const trackingDevices = user.trackingDevices.slice((validPageForTrackingDevices - 1) * validLimit, validPageForTrackingDevices * validLimit);
+    // Fetch and format only necessary vehicle details
+    const vehicles = user.vehicles
+      .slice(
+        (validPageForVehicles - 1) * validLimit,
+        validPageForVehicles * validLimit
+      )
+      .map(vehicle => ({
+        id: vehicle.id,
+        plateNumber: vehicle.plateNumber,
+        trackingDevice: vehicle.trackingDevice
+          ? {
+            id: vehicle.trackingDevice.id,
+            serialNumber: vehicle.trackingDevice.serialNumber
+          }
+          : null
+      }))
 
     // Generate token
     let token = tokengenerating({
@@ -87,14 +95,11 @@ export const login = async (req, res) => {
         role: user.role
       },
       vehicles: vehicles,
-      trackingDevices: trackingDevices,
       pagination: {
         page: validPageForVehicles,
         limit: validLimit,
         totalVehicles: vehiclesTotalCount,
-        totalPagesForVehicles: totalPagesForVehicles,
-        totalTrackingDevices: trackingDevicesTotalCount,
-        totalPagesForTrackingDevices: totalPagesForTrackingDevices
+        totalPagesForVehicles: totalPagesForVehicles
       }
     })
   } catch (err) {
@@ -102,4 +107,3 @@ export const login = async (req, res) => {
     return res.status(500).json({ error: 'Internal Server Error' }) // 500 for unexpected errors
   }
 }
-
