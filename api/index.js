@@ -7,6 +7,7 @@ import VehicleRouter from './src/routes/vehicleRoutes.js'
 import trackingRouter from './src/routes/trackingDeviceRoutes.js'
 import { server, io } from './socketServer.js'
 import { startSimulation } from './client.js'
+import { manySimulation } from './manyClints.js'
 
 const app = express()
 const expressPort = process.env.EXPRESS_SERVER_PORT || 2222
@@ -38,3 +39,4 @@ process.on('SIGTERM', async () => {
   process.exit(0)
 })
 startSimulation()
+// manySimulation()

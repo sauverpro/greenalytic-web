@@ -2,6 +2,7 @@
 /* eslint-disable */
 import React, { useState, useEffect } from "react";
 import { io } from "socket.io-client";
+import ReactSpeedometer from "react-d3-speedometer";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -20,6 +21,7 @@ import {
   useLoadScript,
   Libraries
 } from "@react-google-maps/api";
+import LiveData from "@/app/LiveData";
 
 ChartJS.register(
   CategoryScale,
@@ -32,263 +34,456 @@ ChartJS.register(
 );
 
 const libraries: Libraries = ["places"];
-const socket = io("http://localhost:4000"); // Replace with your backend URL
 
-const mapContainerStyle = {
-  width: "100%",
-  height: "600px"
+interface CarData {
+  id: number;
+  plate: string;
+  currentData: {
+    location: { lat: number; lng: number };
+    speed: number;
+    fuel: number;
+    distance: number;
+    emission: {
+      co2: number;
+      co: number;
+      no: number;
+      other: number;
+    };
+    status: "online" | "offline";
+    lastOnline: Date;
+  };
+  history: {
+    timestamp: Date;
+    location: { lat: number; lng: number };
+    speed: number;
+    fuel: number;
+    distance: number;
+    emission: {
+      co2: number;
+      co: number;
+      no: number;
+      other: number;
+    };
+  }[];
+  pathHistory: { lat: number; lng: number }[];
+}
+
+const initialCarsData: CarData[] = [
+  {
+    id: 1,
+    plate: "RAA 123B",
+    currentData: {
+      location: { lat: -1.9403, lng: 30.0596 },
+      speed: 45,
+      fuel: 100,
+      distance: 0,
+      emission: { co2: 5.2, co: 1.8, no: 0.9, other: 0.5 },
+      status: "online",
+      lastOnline: new Date()
+    },
+    history: [],
+    pathHistory: [{ lat: -1.9403, lng: 30.0596 }]
+  },
+  {
+    id: 2,
+    plate: "KBZ 789C",
+    currentData: {
+      location: { lat: -1.9453, lng: 30.0646 },
+      speed: 38,
+      fuel: 85,
+      distance: 0,
+      emission: { co2: 4.8, co: 1.6, no: 0.8, other: 0.4 },
+      status: "online",
+      lastOnline: new Date()
+    },
+    history: [],
+    pathHistory: [{ lat: -1.9453, lng: 30.0646 }]
+  }
+];
+
+const chartOptions = {
+  responsive: true,
+  plugins: {
+    tooltip: {
+      mode: "index" as const,
+      intersect: false
+    },
+    legend: {
+      position: "top" as const
+    }
+  },
+  interaction: {
+    mode: "index" as const,
+    intersect: false
+  },
+  scales: {
+    y: {
+      beginAtZero: true,
+      grid: {
+        color: "rgba(0, 0, 0, 0.1)"
+      }
+    },
+    x: {
+      grid: {
+        display: false
+      }
+    }
+  },
+  maintainAspectRatio: false
 };
 
-const defaultCenter = { lat: 0, lng: 0 }; // Default center if no GPS data
-const MAX_DATA_POINTS = 50000;
+const calculateDistance = (
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+) => {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
 
-export default function RealTimeChart() {
+const Dashboard = () => {
   const { isLoaded } = useLoadScript({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
     libraries
   });
 
-  const [selectedCarId, setSelectedCarId] = useState<number | null>(null);
-  const [gpsData, setGpsData] = useState<
-    {
-      vehicleId: number;
-      timestamp: number;
-      speed: number;
-      lat: number;
-      lng: number;
-    }[]
-  >([]);
-  const [fuelData, setFuelData] = useState<
-    { vehicleId: number; timestamp: number; fuelLevel: number }[]
-  >([]);
-  const [emissionData, setEmissionData] = useState<
-    {
-      vehicleId: number;
-      timestamp: number;
-      co2Percentage: number;
-      coPercentage: number;
-      o2Percentage: number;
-      hcPPM: number;
-    }[]
-  >([]);
-  const [currentLocation, setCurrentLocation] = useState<{
-    lat: number;
-    lng: number;
-  } | null>(null);
+  const [cars, setCars] = useState<CarData[]>(initialCarsData);
+  const [selectedCarId, setSelectedCarId] = useState(cars[0].id);
+
+  const selectedCar = cars.find((car) => car.id === selectedCarId)!;
 
   useEffect(() => {
-    const handleDataStatus = (data: any) => {
-      if (
-        data.type === "gps" &&
-        data.gpsData.latitude &&
-        data.gpsData.longitude
-      ) {
-        const newGpsEntry = {
-          vehicleId: data.gpsData.vehicleId,
-          timestamp: Date.now(),
-          speed: data.gpsData.speed,
-          lat: data.gpsData.latitude,
-          lng: data.gpsData.longitude
-        };
+    const interval = setInterval(() => {
+      setCars((prevCars) =>
+        prevCars.map((car) => {
+          const prevLocation = car.currentData.location;
+          const speedKmh = car.currentData.speed;
+          const movementScale = (speedKmh / 3600) * 3;
 
-        // Limit the number of data points
-        setGpsData((prev) => {
-          const updatedData = [...prev, newGpsEntry];
-          if (updatedData.length > MAX_DATA_POINTS) {
-            updatedData.shift(); // Remove the oldest data point
-          }
-          return updatedData;
-        });
+          const newLocation = {
+            lat: prevLocation.lat + (Math.random() - 0.5) * movementScale,
+            lng: prevLocation.lng + (Math.random() - 0.5) * movementScale
+          };
 
-        if (data.gpsData.vehicleId === selectedCarId) {
-          setCurrentLocation({ lat: newGpsEntry.lat, lng: newGpsEntry.lng });
-        }
-      }
+          const distanceMoved = calculateDistance(
+            prevLocation.lat,
+            prevLocation.lng,
+            newLocation.lat,
+            newLocation.lng
+          );
 
-      // Fuel data
-      if (data.type === "fuel" && data.fuelData) {
-        const newFuelEntry = {
-          vehicleId: data.fuelData.vehicleId,
-          timestamp: Date.now(),
-          fuelLevel: data.fuelData.fuelLevel
-        };
+          const fuelConsumption = distanceMoved * 0.1;
 
-        setFuelData((prev) => {
-          const updatedFuelData = [...prev, newFuelEntry];
-          if (updatedFuelData.length > MAX_DATA_POINTS) {
-            updatedFuelData.shift();
-          }
-          return updatedFuelData;
-        });
-      }
+          const newHistoryEntry = {
+            timestamp: new Date(),
+            location: { ...newLocation },
+            speed: car.currentData.speed,
+            fuel: car.currentData.fuel,
+            distance: car.currentData.distance + distanceMoved,
+            emission: { ...car.currentData.emission }
+          };
 
-      // Emission data
-      if (data.type === "emission" && data.emissionData) {
-        const newEmissionEntry = {
-          vehicleId: data.emissionData.vehicleId,
-          timestamp: Date.now(),
-          co2Percentage: data.emissionData.co2Percentage,
-          coPercentage: data.emissionData.coPercentage,
-          o2Percentage: data.emissionData.o2Percentage,
-          hcPPM: data.emissionData.hcPPM
-        };
+          return {
+            ...car,
+            currentData: {
+              ...car.currentData,
+              location: newLocation,
+              speed: Math.max(
+                0,
+                Math.min(200, car.currentData.speed + (Math.random() - 0.5) * 5)
+              ),
+              fuel: Math.max(0, car.currentData.fuel - fuelConsumption),
+              distance: car.currentData.distance + distanceMoved,
+              emission: {
+                co2: car.currentData.emission.co2 + (Math.random() - 0.5) * 0.1,
+                co: car.currentData.emission.co + (Math.random() - 0.5) * 0.05,
+                no: car.currentData.emission.no + (Math.random() - 0.5) * 0.05,
+                other:
+                  car.currentData.emission.other + (Math.random() - 0.5) * 0.02
+              }
+            },
+            history: [...car.history, newHistoryEntry].slice(-50),
+            pathHistory: [...car.pathHistory, newLocation].slice(-100)
+          };
+        })
+      );
+    }, 3000);
 
-        setEmissionData((prev) => {
-          const updatedEmissionData = [...prev, newEmissionEntry];
-          if (updatedEmissionData.length > MAX_DATA_POINTS) {
-            updatedEmissionData.shift();
-          }
-          return updatedEmissionData;
-        });
-      }
-    };
+    return () => clearInterval(interval);
+  }, []);
 
-    socket.on("dataStatus", handleDataStatus);
-
-    return () => {
-      socket.off("dataStatus", handleDataStatus);
-    };
-  }, [selectedCarId]);
-
-  // Filter data by selected carId
-  const filteredGpsData = gpsData.filter((d) => d.vehicleId === selectedCarId);
-  const filteredFuelData = fuelData.filter(
-    (d) => d.vehicleId === selectedCarId
-  );
-  const filteredEmissionData = emissionData.filter(
-    (d) => d.vehicleId === selectedCarId
-  );
-
-  // Chart.js Data for Speed with Smooth Lines
-  const speedChartData = {
-    labels: filteredGpsData.map((d) =>
-      new Date(d.timestamp).toLocaleTimeString()
-    ),
-    datasets: [
+const cardData = [  {
+    title: "Emission Status",
+    icon: "🌍",
+    color: "bg-red-100",
+    gases: [
       {
-        label: "Vehicle Speed (km/h)",
-        data: filteredGpsData.map((d) => d.speed),
-        borderColor: "blue",
-        borderWidth: 2,
-        fill: false,
-        tension: 0.4 // Smooth line curve
+        name: "CO₂",
+        value: selectedCar.currentData.emission.co2.toFixed(1),
+        unit: "ppm"
+      },
+      {
+        name: "CO",
+        value: selectedCar.currentData.emission.co.toFixed(1),
+        unit: "ppm"
+      },
+      {
+        name: "NO",
+        value: selectedCar.currentData.emission.no.toFixed(1),
+        unit: "ppm"
+      },
+      {
+        name: "Other",
+        value: selectedCar.currentData.emission.other.toFixed(1),
+        unit: "ppm"
       }
     ]
-  };
+  },
+  {
+    title: "Fuel Level",
+    value: `${selectedCar.currentData.fuel.toFixed(1)}L`,
+    icon: "⛽",
+    color: "bg-blue-100"
+  },
+  {
+    title: "Distance Traveled",
+    value: `${selectedCar.currentData.distance.toFixed(2)} km`,
+    icon: "🛣️",
+    color: "bg-green-100"
+  },
+  {
+    title: "Status",
+    value: selectedCar.currentData.status,
+    icon: "⏱️",
+    color: "bg-purple-100"
+  },
 
-  // Chart.js Data for Fuel Level with Smooth Lines
-  const fuelChartData = {
-    labels: filteredFuelData.map((d) =>
-      new Date(d.timestamp).toLocaleTimeString()
-    ),
+];
+
+
+  const speedData = {
+    labels: selectedCar.history.map((h) => h.timestamp.toLocaleTimeString()),
     datasets: [
       {
-        label: "Fuel Level (%)",
-        data: filteredFuelData.map((d) => d.fuelLevel),
-        backgroundColor: "green",
-        borderColor: "green",
-        borderWidth: 2,
+        label: "Speed (km/h)",
+        data: selectedCar.history.map((h) => h.speed),
+        borderColor: "rgb(255, 99, 132)",
+        backgroundColor: "rgba(255, 99, 132, 0.2)",
         fill: true,
-        tension: 0.4 // Smooth line curve
+        tension: 0.4
       }
     ]
   };
 
-  // Chart.js Data for Emission Levels with Smooth Lines
-  const emissionChartData = {
-    labels: filteredEmissionData.map((d) =>
-      new Date(d.timestamp).toLocaleTimeString()
-    ),
+  const fuelData = {
+    labels: selectedCar.history.map((h) => h.timestamp.toLocaleTimeString()),
     datasets: [
       {
-        label: "CO2 Percentage",
-        data: filteredEmissionData.map((d) => d.co2Percentage),
-        backgroundColor: "red",
-        borderColor: "red",
-        borderWidth: 2,
-        fill: false,
-        tension: 0.4 // Smooth line curve
-      },
-      {
-        label: "CO Percentage",
-        data: filteredEmissionData.map((d) => d.coPercentage),
-        backgroundColor: "orange",
-        borderColor: "orange",
-        borderWidth: 2,
-        fill: false,
-        tension: 0.4 // Smooth line curve
-      },
-      {
-        label: "O2 Percentage",
-        data: filteredEmissionData.map((d) => d.o2Percentage),
-        backgroundColor: "green",
-        borderColor: "green",
-        borderWidth: 2,
-        fill: false,
-        tension: 0.4 // Smooth line curve
-      },
-      {
-        label: "HC PPM",
-        data: filteredEmissionData.map((d) => d.hcPPM),
-        backgroundColor: "purple",
-        borderColor: "purple",
-        borderWidth: 2,
-        fill: false,
-        tension: 0.4 // Smooth line curve
+        label: "Fuel Level (L)",
+        data: selectedCar.history.map((h) => h.fuel),
+        borderColor: "rgb(54, 162, 235)",
+        backgroundColor: "rgba(54, 162, 235, 0.2)",
+        fill: true,
+        tension: 0.4
       }
     ]
   };
 
-  // List of vehicle IDs (replace with actual vehicle IDs)
-  const vehicleIds = [1, 2, 3]; // Example car IDs
+  const emissionsData = {
+    labels: selectedCar.history.map((h) => h.timestamp.toLocaleTimeString()),
+    datasets: [
+      {
+        label: "CO₂ (g/km)",
+        data: selectedCar.history.map((h) => h.emission.co2),
+        borderColor: "rgb(75, 192, 192)",
+        backgroundColor: "rgba(75, 192, 192, 0.2)",
+        fill: true,
+        tension: 0.4
+      },
+      {
+        label: "CO (g/km)",
+        data: selectedCar.history.map((h) => h.emission.co),
+        borderColor: "rgb(153, 102, 255)",
+        backgroundColor: "rgba(153, 102, 255, 0.2)",
+        fill: true,
+        tension: 0.4
+      },
+      {
+        label: "NO (g/km)",
+        data: selectedCar.history.map((h) => h.emission.no),
+        borderColor: "rgb(255, 159, 64)",
+        backgroundColor: "rgba(255, 159, 64, 0.2)",
+        fill: true,
+        tension: 0.4
+      }
+    ]
+  };
 
   return (
-    <div>
-      <h2>Real-Time Vehicle Tracking</h2>
+    <div className="h-screen flex flex-col bg-gray-50">
+      {/* Fixed Header Section */}
+      <div className="bg-white shadow-lg px-6 py-4 border-b border-gray-200">
+        <div className="">
+          {/* Car Selector */}
+          <div className="mb-4 flex items-center">
+            <label className="font-bold text-lg text-gray-700">
+              🚗 Select Vehicle:
+            </label>
+            <select
+              className="ml-2 p-2 border rounded-lg bg-white shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              value={selectedCarId}
+              onChange={(e) => setSelectedCarId(Number(e.target.value))}>
+              {cars.map((car) => (
+                <option key={car.id} value={car.id}>
+                  {car.plate}
+                </option>
+              ))}
+            </select>
+          </div>
 
-      {/* Car Selection Dropdown */}
-      <select
-        onChange={(e) => setSelectedCarId(Number(e.target.value))}
-        value={selectedCarId || ""}>
-        <option value="">Select a Car</option>
-        {vehicleIds.map((id) => (
-          <option key={id} value={id}>
-            Car {id}
-          </option>
-        ))}
-      </select>
+          {/* Stats Overview */}
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 p-4">
+            {cardData.map((data, index) => (
+              <div
+                key={index}
+                className={`${data.color} flex flex-col justify-between p-4 sm:p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 w-full max-w-full sm:max-w-sm md:max-w-md lg:max-w-lg h-auto min-h-[80px] mx-auto`}>
+                <div className="flex flex-col items-center justify-between">
+                  <div className="text-2xl sm:text-3xl md:text-4xl">
+                    {data.icon}
+                  </div>
+                  <div className=" min-w-0">
+                    <p className="text-xs sm:text-sm md:text-lg font-semibold text-gray-600 truncate">
+                      {data.title}
+                    </p>
 
-      {/* Speed Chart */}
-      <Line data={speedChartData} />
+                    {/* If it's the Emission Status card, show gases */}
+                    {data.title === "Emission Status" ? (
+                      <ul className="mt-2 text-sm text-gray-700">
+                        {data.gases?.map((gas, i) => (
+                          <li key={i} className="grid grid-cols-2  gap-2 items-center text-xl">
+                            <span className="font-medium">{gas.name}:</span>
+                            <span>
+                              {gas.value} {gas.unit}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">
+                        {data.value}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
 
-      {/* Fuel Level Chart */}
-      <Line data={fuelChartData} />
+      {/* Scrollable Content Section */}
+      <div className="flex-1 ">
+        <div className="p-6 space-y-6">
+          {/* Map Section */}
+          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div className="h-[400px] w-full">
+              {isLoaded ? (
+                <GoogleMap
+                  center={selectedCar.currentData.location}
+                  zoom={14}
+                  mapContainerStyle={{ height: "100%", width: "100%" }}
+                  options={{
+                    styles: [
+                      {
+                        featureType: "poi",
+                        elementType: "labels",
+                        stylers: [{ visibility: "off" }]
+                      }
+                    ]
+                  }}>
+                  <Marker position={selectedCar.currentData.location} />
+                  <Polyline
+                    path={selectedCar.pathHistory}
+                    options={{
+                      strokeColor: "#4A90E2",
+                      strokeOpacity: 0.8,
+                      strokeWeight: 3
+                    }}
+                  />
+                </GoogleMap>
+              ) : (
+                <div className="h-full w-full flex items-center justify-center bg-gray-100">
+                  <p className="text-gray-500">Loading map...</p>
+                </div>
+              )}
+            </div>
+          </div>
 
-      {/* Emission Level Chart */}
-      <Line data={emissionChartData} />
+          {/* Charts Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Speed Section */}
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <h2 className="text-xl font-bold mb-4 text-gray-800">
+                🔥 Live Speed
+              </h2>
+              <div className="min-h-[400px] flex items-center justify-center">
+                <ReactSpeedometer
+                  maxValue={200}
+                  value={selectedCar.currentData.speed}
+                  needleColor="red"
+                  startColor="green"
+                  endColor="red"
+                  segments={5}
+                  currentValueText={`${selectedCar.currentData.speed.toFixed(
+                    1
+                  )} km/h`}
+                />
+              </div>
+            </div>
 
-      {/* Google Map Displaying Live GPS Location */}
-      {isLoaded ? (
-        <GoogleMap
-          mapContainerStyle={mapContainerStyle}
-          zoom={8}
-          center={currentLocation || defaultCenter}>
-          {/* Marker for current location */}
-          {currentLocation && <Marker position={currentLocation} />}
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <h2 className="text-xl font-bold mb-4 text-gray-800">
+                📈 Speed History
+              </h2>
+              <div className="min-h-[400px]">
+                <Line data={speedData} options={chartOptions} />
+              </div>
+            </div>
 
-          {/* Polyline showing the path of the car */}
-          <Polyline
-            path={filteredGpsData.map((d) => ({ lat: d.lat, lng: d.lng }))}
-            options={{
-              strokeColor: "#FF0000",
-              strokeOpacity: 1,
-              strokeWeight: 2
-            }}
-          />
-        </GoogleMap>
-      ) : (
-        <p>Loading map...</p>
-      )}
+            {/* Emissions and Fuel Charts */}
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <h2 className="text-xl font-bold mb-4 text-gray-800">
+                🌍 Emission Levels
+              </h2>
+              <div className="min-h-[400px]">
+                <Line data={emissionsData} options={chartOptions} />
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <h2 className="text-xl font-bold mb-4 text-gray-800">
+                ⛽ Fuel Level
+              </h2>
+              <div className="min-h-[400px]">
+                <Line data={fuelData} options={chartOptions} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {/* <LiveData /> */}
     </div>
   );
-}
+};
+
+export default Dashboard; 

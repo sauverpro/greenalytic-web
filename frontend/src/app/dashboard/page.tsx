@@ -4,64 +4,91 @@ import { DynamicLineChart } from "@/components/charts/DynamicLineChart";
 import { DynamicPieChartComponent } from "@/components/charts/DynamicPieChart";
 import { YearlyproductsSalesChart } from "@/components/charts/YearlyproductsSalesChart";
 
-
 import {
-
-
   chartConfig,
-
   monthlyDeviceSalesData,
   weeklyClientsData,
   weeklySalesData
 } from "@/data/monthlyDeviceSalesData";
 
-
 export default function Home() {
+  const summaryCards = [
+    {
+      title: "Total Devices",
+      items: [
+        {
+          icon: "📡",
+          label: "Emission Trackers",
+          value: "120",
+          change: "↑ (+5%)"
+        },
+        {
+          icon: "⚡",
+          label: "GPS and Speed Monitors",
+          value: "80",
+          change: "↓ (-3%)"
+        },
+        { icon: "⛽", label: "Fuel Sensors", value: "65", change: "↑ (+2%)" }
+      ]
+    },
+    {
+      title: "Active Devices",
+      items: [
+        { icon: "📡", label: "GPS Trackers", value: "110", change: "↑ (+8%)" },
+        { icon: "⚡", label: "Speed Monitors", value: "75", change: "↓ (-2%)" },
+        { icon: "⛽", label: "Fuel Sensors", value: "60", change: "↑ (+4%)" }
+      ]
+    },
+    {
+      title: "Clients",
+      items: [
+        {
+          icon: "🚗",
+          label: "Individual Owners",
+          value: "45",
+          change: "↑ (+10%)"
+        },
+        { icon: "🏢", label: "Fleet Managers", value: "30", change: "↓ (-5%)" },
+        {
+          icon: "🛻",
+          label: "Transport Companies",
+          value: "25",
+          change: "↑ (+3%)"
+        }
+      ]
+    },
+    {
+      title: "User Roles",
+      items: [
+        { icon: "🌐", label: "Web Users", value: "250", change: "↑ (+12%)" },
+        { icon: "🔑", label: "Admins", value: "15", change: "(No Change)" },
+        { icon: "👥", label: "Other Roles", value: "8", change: "↓ (-2%)" }
+      ]
+    }
+  ];
+  const SummaryCard = ({ title, items }: { title: string; items: { icon: string; label: string; value: string; change: string; }[] }) => (
+    <div className="bg-gradient-to-b from-emerald-700 to-emerald-900 p-6 shadow-lg shadow-green-700 rounded-lg text-white">
+      <h3 className="text-lg font-semibold">{title}</h3>
+      <ul className="mt-2">
+        {items.map((item, index) => (
+          <li key={index}>
+            {item.icon} {item.label}: {item.value} {item.change}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+
+
   return (
     <div className=" flex flex-col gap-6">
- 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 gap-6 p-6 md:grid-cols-4">
-        {/* Devices Summary */}
-        <div className="bg-white p-6 shadow-lg rounded-lg">
-          <h3 className="text-lg font-semibold">Total Devices</h3>
-          <ul className="text-gray-600 mt-2">
-            <li>📡 GPS Trackers: 120 ↑ (+5%)</li>
-            <li>⚡ Speed Monitors: 80 ↓ (-3%)</li>
-            <li>⛽ Fuel Sensors: 65 ↑ (+2%)</li>
-          </ul>
-        </div>
-
-        {/* Active Devices Summary */}
-        <div className="bg-white p-6 shadow-lg rounded-lg">
-          <h3 className="text-lg font-semibold">Active Devices</h3>
-          <ul className="text-gray-600 mt-2">
-            <li>📡 GPS Trackers: 110 ↑ (+8%)</li>
-            <li>⚡ Speed Monitors: 75 ↓ (-2%)</li>
-            <li>⛽ Fuel Sensors: 60 ↑ (+4%)</li>
-          </ul>
-        </div>
-
-        {/* Clients Summary */}
-        <div className="bg-white p-6 shadow-lg rounded-lg">
-          <h3 className="text-lg font-semibold">Clients</h3>
-          <ul className="text-gray-600 mt-2">
-            <li>🚗 Individual Owners: 45 ↑ (+10%)</li>
-            <li>🏢 Fleet Managers: 30 ↓ (-5%)</li>
-            <li>🛻 Transport Companies: 25 ↑ (+3%)</li>
-          </ul>
-        </div>
-
-        {/* User Roles Summary */}
-        <div className="bg-white p-6 shadow-lg rounded-lg">
-          <h3 className="text-lg font-semibold">User Roles</h3>
-          <ul className="text-gray-600 mt-2">
-            <li>🌐 Web Users: 250 ↑ (+12%)</li>
-            <li>🔑 Admins: 15 (No Change)</li>
-            <li>👥 Other Roles: 8 ↓ (-2%)</li>
-          </ul>
-        </div>
+        {summaryCards.map((card, index) => (
+          <SummaryCard key={index} {...card} />
+        ))}
       </div>
+
       {/* Two-Column Layout - Fully Optimized */}
       <div className="grid grid-cols-1 gap-6 p-6 md:grid-cols-2">
         {/* Left Card: Revenue Overview */}
