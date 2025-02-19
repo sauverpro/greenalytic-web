@@ -47,7 +47,7 @@ interface CarData {
       co2: number;
       co: number;
       no: number;
-      other: number;
+      HC: number;
     };
     status: "online" | "offline";
     lastOnline: Date;
@@ -62,7 +62,7 @@ interface CarData {
       co2: number;
       co: number;
       no: number;
-      other: number;
+      HC: number;
     };
   }[];
   pathHistory: { lat: number; lng: number }[];
@@ -77,7 +77,7 @@ const initialCarsData: CarData[] = [
       speed: 45,
       fuel: 100,
       distance: 0,
-      emission: { co2: 5.2, co: 1.8, no: 0.9, other: 0.5 },
+      emission: { co2: 5.2, co: 1.8, no: 0.9, HC: 0.5 },
       status: "online",
       lastOnline: new Date()
     },
@@ -92,7 +92,7 @@ const initialCarsData: CarData[] = [
       speed: 38,
       fuel: 85,
       distance: 0,
-      emission: { co2: 4.8, co: 1.6, no: 0.8, other: 0.4 },
+      emission: { co2: 4.8, co: 1.6, no: 0.8, HC: 0.4 },
       status: "online",
       lastOnline: new Date()
     },
@@ -208,8 +208,8 @@ const Dashboard = () => {
                 co2: car.currentData.emission.co2 + (Math.random() - 0.5) * 0.1,
                 co: car.currentData.emission.co + (Math.random() - 0.5) * 0.05,
                 no: car.currentData.emission.no + (Math.random() - 0.5) * 0.05,
-                other:
-                  car.currentData.emission.other + (Math.random() - 0.5) * 0.02
+                HC:
+                  car.currentData.emission.HC + (Math.random() - 0.5) * 0.02
               }
             },
             history: [...car.history, newHistoryEntry].slice(-50),
@@ -222,54 +222,53 @@ const Dashboard = () => {
     return () => clearInterval(interval);
   }, []);
 
-const cardData = [  {
-    title: "Emission Status",
-    icon: "🌍",
-    color: "bg-red-100",
-    gases: [
-      {
-        name: "CO₂",
-        value: selectedCar.currentData.emission.co2.toFixed(1),
-        unit: "ppm"
-      },
-      {
-        name: "CO",
-        value: selectedCar.currentData.emission.co.toFixed(1),
-        unit: "ppm"
-      },
-      {
-        name: "NO",
-        value: selectedCar.currentData.emission.no.toFixed(1),
-        unit: "ppm"
-      },
-      {
-        name: "Other",
-        value: selectedCar.currentData.emission.other.toFixed(1),
-        unit: "ppm"
-      }
-    ]
-  },
-  {
-    title: "Fuel Level",
-    value: `${selectedCar.currentData.fuel.toFixed(1)}L`,
-    icon: "⛽",
-    color: "bg-blue-100"
-  },
-  {
-    title: "Distance Traveled",
-    value: `${selectedCar.currentData.distance.toFixed(2)} km`,
-    icon: "🛣️",
-    color: "bg-green-100"
-  },
-  {
-    title: "Status",
-    value: selectedCar.currentData.status,
-    icon: "⏱️",
-    color: "bg-purple-100"
-  },
-
-];
-
+  const cardData = [
+    {
+      title: "Emission Status",
+      icon: "🌍",
+      color: "bg-red-100",
+      gases: [
+        {
+          name: "CO₂",
+          value: selectedCar.currentData.emission.co2.toFixed(1),
+          unit: "ppm"
+        },
+        {
+          name: "CO",
+          value: selectedCar.currentData.emission.co.toFixed(1),
+          unit: "ppm"
+        },
+        {
+          name: "NO",
+          value: selectedCar.currentData.emission.no.toFixed(1),
+          unit: "ppm"
+        },
+        {
+          name: "HC",
+          value: selectedCar.currentData.emission.HC.toFixed(1),
+          unit: "ppm"
+        }
+      ]
+    },
+    {
+      title: "Fuel Level",
+      value: `${selectedCar.currentData.fuel.toFixed(1)}L`,
+      icon: "⛽",
+      color: "bg-blue-100"
+    },
+    {
+      title: "Distance Traveled",
+      value: `${selectedCar.currentData.distance.toFixed(2)} km`,
+      icon: "🛣️",
+      color: "bg-green-100"
+    },
+    {
+      title: "Status",
+      value: selectedCar.currentData.status,
+      icon: "⏱️",
+      color: "bg-purple-100"
+    }
+  ];
 
   const speedData = {
     labels: selectedCar.history.map((h) => h.timestamp.toLocaleTimeString()),
@@ -370,7 +369,9 @@ const cardData = [  {
                     {data.title === "Emission Status" ? (
                       <ul className="mt-2 text-sm text-gray-700">
                         {data.gases?.map((gas, i) => (
-                          <li key={i} className="grid grid-cols-2  gap-2 items-center text-xl">
+                          <li
+                            key={i}
+                            className="grid grid-cols-2  gap-2 items-center text-xl">
                             <span className="font-medium">{gas.name}:</span>
                             <span>
                               {gas.value} {gas.unit}
@@ -486,4 +487,4 @@ const cardData = [  {
   );
 };
 
-export default Dashboard; 
+export default Dashboard;

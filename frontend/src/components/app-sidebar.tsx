@@ -106,7 +106,7 @@ export function AppSidebar() {
   return (
     <Sidebar
       collapsible="icon"
-      className={`fixed top-16 border-r border-emerald-600/20 shadow-lg h-[calc(100vh-4rem) overflow-y-auto] 
+      className={`fixed top-0 border-r border-emerald-600/20 shadow-lg h-[calc(100vh-4rem) overflow-y-auto] 
         ${isCollapsed === "expanded" ? "w-64" : "w-16"} 
         transition-all duration-300 ease-in-out`}>
       <SidebarContent className="bg-gradient-to-b from-emerald-800 to-emerald-900 w-full h-full">
