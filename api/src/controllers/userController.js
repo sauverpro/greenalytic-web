@@ -47,11 +47,10 @@ export const signup = catchAsync(async (req, res, next) => {
 // **2️⃣ Get All Users** - Retrieve all users
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await userService.getAllUsers()
-    res.status(200).json({
-      success: true,
-      users
-    })
+    const { page, limit } = req.pagination // Get pagination from middleware
+    const usersData = await userService.getAllUsers(page, limit)
+
+    res.status(200).json(usersData)
   } catch (error) {
     res.status(500).json({
       success: false,

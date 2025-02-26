@@ -1,4 +1,3 @@
-
 import prisma from '../../prismaClient.js'
 import { passHashing } from '../utils/passwordfunctions.js'
 
@@ -31,7 +30,6 @@ export const createUser = async userData => {
         password: hashedPassword
       }
     })
- 
 
     return {
       success: true,
@@ -47,12 +45,65 @@ export const createUser = async userData => {
 }
 
 // **2️⃣ Get All Users** - Retrieve all users
-export const getAllUsers = async () => {
+export const getAllUsers = async (page, limit) => {
   try {
-    const users = await prisma.user.findMany()
+    // Get total number of users
+    // Get total number of users excluding soft-deleted ones
+    const totalItems = await prisma.user.count({
+      where: {
+        deletedAt: null // Exclude users who have a deletedAt timestamp
+      }
+    })
+    // Calculate total pages
+    const totalPages = Math.ceil(totalItems / limit)
+
+    // Fetch users with pagination
+    const users = await prisma.user.findMany({
+      where: {
+        deletedAt: null // Exclude users who have a deletedAt timestamp
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        image: true,
+        role: true,
+        phoneNumber: true,
+        verified: true,
+        createdAt: true,
+        updatedAt: true,
+        vehicles: {
+          select: {
+            id: true,
+            plateNumber: true,
+            vehicleModel: true,
+            vehicleType: true
+          }
+        },
+        trackingDevices: {
+          select: {
+            id: true,
+            serialNumber: true,
+            model: true,
+            type: true,
+            isActive: true
+          }
+        }
+      }
+    })
 
     return {
-      users
+      success: true,
+      users,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        remainingItems: Math.max(0, totalItems - page * limit), // Items left after current page
+        totalItems,
+        limit
+      }
     }
   } catch (error) {
     console.error('Error retrieving users:', error)
@@ -92,10 +143,12 @@ export const getUserById = async id => {
 
 // **4️⃣ Update User** - Update user details
 export const updateUser = async (id, updateData) => {
+  const { vehicles, trackingDevices, ...userData } = updateData
+
   try {
     const updatedUser = await prisma.user.update({
       where: { id: Number(id) },
-      data: updateData
+      data: userData
     })
 
     return {

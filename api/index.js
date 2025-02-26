@@ -1,5 +1,6 @@
 // api/index.js
 import express from 'express'
+import { faker } from '@faker-js/faker'
 
 import prisma from './prismaClient.js'
 import userRouters from './src/routes/userRoutes.js'
@@ -8,8 +9,15 @@ import trackingRouter from './src/routes/trackingDeviceRoutes.js'
 import { server, io } from './socketServer.js'
 import { startSimulation } from './client.js'
 import { manySimulation } from './manyClints.js'
+import cors from 'cors'
+import { signup } from './src/controllers/userController.js'
+import sanitizeUserMiddleware from './src/middlewares/sanitizeUserMiddleware.js'
 
 const app = express()
+app.use(sanitizeUserMiddleware)
+
+app.use(express.json())
+app.use(cors())
 const expressPort = process.env.EXPRESS_SERVER_PORT || 2222
 
 app.use(express.json()) // for parsing application/json
@@ -38,5 +46,43 @@ process.on('SIGTERM', async () => {
   await server.close()
   process.exit(0)
 })
-startSimulation()
+// startSimulation()
 // manySimulation()
+// Function to generate 400 users
+const generateUsers = async numberOfUsers => {
+  for (let i = 0; i < numberOfUsers; i++) {
+    const fakeUser = {
+      email: faker.internet.email(),
+      username: faker.person.fullName(),
+      phoneNumber: faker.phone.number(), // Updated method
+      location: faker.location.city(),
+      role: 'USER',
+      password: faker.internet.password()
+    }
+
+    try {
+      console.log(`Creating user ${i + 1}/${numberOfUsers}...`)
+
+      // Simulate Express request and response
+      const req = { body: fakeUser }
+      const res = {
+        status: statusCode => ({
+          json: message =>
+            console.log(`User ${i + 1} created: ${message.message}`)
+        })
+      }
+      const next = error =>
+        console.error(`Error creating user ${i + 1}:`, error)
+
+      // Call the signup function to create the user
+      await signup(req, res, next)
+    } catch (error) {
+      console.error(`Failed to create user ${i + 1}:`, error)
+    }
+  }
+
+  console.log(`Finished creating ${numberOfUsers} users.`)
+}
+
+// Generate 400 users
+// generateUsers(400)
