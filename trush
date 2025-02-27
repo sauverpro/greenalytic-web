@@ -1,0 +1,457 @@
+  /**
+   * Get all emission data records
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   */
+  // static getAllEmissionData = async (req, res) => {
+  //   try {
+  //     const {
+  //       vehicleId,
+  //       limit = 100,
+  //       page = 1,
+  //       startDate,
+  //       endDate,
+  //     } = req.query;
+  //     const skip = (parseInt(page) - 1) * parseInt(limit);
+
+  //     // Build filter conditions
+  //     const where = {};
+
+  //     if (vehicleId) {
+  //       where.vehicleId = parseInt(vehicleId);
+  //     }
+
+  //     if (startDate && endDate) {
+  //       where.timestamp = {
+  //         gte: new Date(startDate),
+  //         lte: new Date(endDate),
+  //       };
+  //     }
+
+  //     // Get emission data with pagination
+  //     const emissionData = await prisma.emissionData.findMany({
+  //       where,
+  //       take: parseInt(limit),
+  //       skip,
+  //       orderBy: {
+  //         timestamp: "desc",
+  //       },
+  //       include: {
+  //         vehicle: {
+  //           select: {
+  //             plateNumber: true,
+  //             vehicleModel: true,
+  //             vehicleType: true,
+  //           },
+  //         },
+  //         trackingDevice: {
+  //           select: {
+  //             serialNumber: true,
+  //             model: true,
+  //           },
+  //         },
+  //       },
+  //     });
+
+  //     // Get total count for pagination
+  //     const totalCount = await prisma.emissionData.count({ where });
+
+  //     return res.status(200).json({
+  //       success: true,
+  //       totalCount,
+  //       totalPages: Math.ceil(totalCount / parseInt(limit)),
+  //       currentPage: parseInt(page),
+  //       data: emissionData,
+  //     });
+  //   } catch (error) {
+  //     return errorHandler(res, error);
+  //   }
+  // };
+
+  // /**
+  //  * Get all fuel data records
+  //  * @param {Object} req - Express request object
+  //  * @param {Object} res - Express response object
+  //  */
+  // static getAllFuelData = async (req, res) => {
+  //   try {
+  //     const {
+  //       vehicleId,
+  //       limit = 100,
+  //       page = 1,
+  //       startDate,
+  //       endDate,
+  //     } = req.query;
+  //     const skip = (parseInt(page) - 1) * parseInt(limit);
+
+  //     // Build filter conditions
+  //     const where = {};
+
+  //     if (vehicleId) {
+  //       where.vehicleId = parseInt(vehicleId);
+  //     }
+
+  //     if (startDate && endDate) {
+  //       where.timestamp = {
+  //         gte: new Date(startDate),
+  //         lte: new Date(endDate),
+  //       };
+  //     }
+
+  //     // Get fuel data with pagination
+  //     const fuelData = await prisma.fuelData.findMany({
+  //       where,
+  //       take: parseInt(limit),
+  //       skip,
+  //       orderBy: {
+  //         timestamp: "desc",
+  //       },
+  //       include: {
+  //         vehicle: {
+  //           select: {
+  //             plateNumber: true,
+  //             vehicleModel: true,
+  //             vehicleType: true,
+  //           },
+  //         },
+  //         trackingDevice: {
+  //           select: {
+  //             serialNumber: true,
+  //             model: true,
+  //           },
+  //         },
+  //       },
+  //     });
+
+  //     // Get total count for pagination
+  //     const totalCount = await prisma.fuelData.count({ where });
+
+  //     return res.status(200).json({
+  //       success: true,
+  //       totalCount,
+  //       totalPages: Math.ceil(totalCount / parseInt(limit)),
+  //       currentPage: parseInt(page),
+  //       data: fuelData,
+  //     });
+  //   } catch (error) {
+  //     return errorHandler(res, error);
+  //   }
+  // };
+
+  // /**
+  //  * Get all GPS data records
+  //  * @param {Object} req - Express request object
+  //  * @param {Object} res - Express response object
+  //  */
+  // static getAllGPSData = async (req, res) => {
+  //   try {
+  //     const {
+  //       vehicleId,
+  //       limit = 100,
+  //       page = 1,
+  //       startDate,
+  //       endDate,
+  //     } = req.query;
+  //     const skip = (parseInt(page) - 1) * parseInt(limit);
+
+  //     // Build filter conditions
+  //     const where = {};
+
+  //     if (vehicleId) {
+  //       where.vehicleId = parseInt(vehicleId);
+  //     }
+
+  //     if (startDate && endDate) {
+  //       where.timestamp = {
+  //         gte: new Date(startDate),
+  //         lte: new Date(endDate),
+  //       };
+  //     }
+
+  //     // Get GPS data with pagination
+  //     const gpsData = await prisma.gPSData.findMany({
+  //       where,
+  //       take: parseInt(limit),
+  //       skip,
+  //       orderBy: {
+  //         timestamp: "desc",
+  //       },
+  //       include: {
+  //         vehicle: {
+  //           select: {
+  //             plateNumber: true,
+  //             vehicleModel: true,
+  //             vehicleType: true,
+  //           },
+  //         },
+  //         trackingDevice: {
+  //           select: {
+  //             serialNumber: true,
+  //             model: true,
+  //           },
+  //         },
+  //       },
+  //     });
+
+  //     // Get total count for pagination
+  //     const totalCount = await prisma.gPSData.count({ where });
+
+  //     return res.status(200).json({
+  //       success: true,
+  //       totalCount,
+  //       totalPages: Math.ceil(totalCount / parseInt(limit)),
+  //       currentPage: parseInt(page),
+  //       data: gpsData,
+  //     });
+  //   } catch (error) {
+  //     return errorHandler(res, error);
+  //   }
+  // };
+
+  // /**
+  //  * Get latest data for a specific vehicle
+  //  * @param {Object} req - Express request object
+  //  * @param {Object} res - Express response object
+  //  */
+  // static getLatestVehicleData = async (req, res) => {
+  //   try {
+  //     const { vehicleId } = req.params;
+
+  //     if (!vehicleId) {
+  //       return res.status(400).json({
+  //         success: false,
+  //         message: "Vehicle ID is required",
+  //       });
+  //     }
+
+  //     const parsedVehicleId = parseInt(vehicleId);
+
+  //     // Get the latest emission data
+  //     const latestEmission = await prisma.emissionData.findFirst({
+  //       where: { vehicleId: parsedVehicleId },
+  //       orderBy: { timestamp: "desc" },
+  //     });
+
+  //     // Get the latest fuel data
+  //     const latestFuel = await prisma.fuelData.findFirst({
+  //       where: { vehicleId: parsedVehicleId },
+  //       orderBy: { timestamp: "desc" },
+  //     });
+
+  //     // Get the latest GPS data
+  //     const latestGPS = await prisma.gPSData.findFirst({
+  //       where: { vehicleId: parsedVehicleId },
+  //       orderBy: { timestamp: "desc" },
+  //     });
+
+  //     // Get vehicle details
+  //     const vehicle = await prisma.vehicle.findUnique({
+  //       where: { id: parsedVehicleId },
+  //       include: {
+  //         trackingDevice: {
+  //           select: {
+  //             serialNumber: true,
+  //             model: true,
+  //             isActive: true,
+  //             lastPing: true,
+  //           },
+  //         },
+  //       },
+  //     });
+
+  //     if (!vehicle) {
+  //       return res.status(404).json({
+  //         success: false,
+  //         message: "Vehicle not found",
+  //       });
+  //     }
+
+  //     return res.status(200).json({
+  //       success: true,
+  //       message: "Latest vehicle data retrieved successfully",
+  //       data: {
+  //         vehicle,
+  //         latestEmission,
+  //         latestFuel,
+  //         latestGPS,
+  //       },
+  //     });
+  //   } catch (error) {
+  //     return errorHandler(res, error);
+  //   }
+  // };
+
+  // /**
+  //  * Get aggregated statistics for emission, fuel, and GPS data
+  //  * @param {Object} req - Express request object
+  //  * @param {Object} res - Express response object
+  //  */
+  // static getVehicleDataStats = async (req, res) => {
+  //   try {
+  //     const { vehicleId, period = "day" } = req.query;
+
+  //     let groupByFormat;
+  //     let startDate = new Date();
+
+  //     // Set time grouping based on period
+  //     switch (period) {
+  //       case "hour":
+  //         groupByFormat = "%Y-%m-%d %H:00:00";
+  //         startDate.setHours(startDate.getHours() - 24);
+  //         break;
+  //       case "day":
+  //         groupByFormat = "%Y-%m-%d";
+  //         startDate.setDate(startDate.getDate() - 30);
+  //         break;
+  //       case "week":
+  //         groupByFormat = "%Y-%U";
+  //         startDate.setDate(startDate.getDate() - 7 * 12);
+  //         break;
+  //       case "month":
+  //         groupByFormat = "%Y-%m";
+  //         startDate.setMonth(startDate.getMonth() - 12);
+  //         break;
+  //       default:
+  //         groupByFormat = "%Y-%m-%d";
+  //         startDate.setDate(startDate.getDate() - 30);
+  //     }
+
+  //     // Build where clause
+  //     const where = { timestamp: { gte: startDate } };
+  //     if (vehicleId) {
+  //       where.vehicleId = parseInt(vehicleId);
+  //     }
+
+  //     // Get emission data statistics
+  //     const emissionStats = await prisma.$queryRaw`
+  //       SELECT
+  //         DATE_FORMAT(timestamp, ${groupByFormat}) as timePeriod,
+  //         AVG(co2Percentage) as avgCO2,
+  //         AVG(coPercentage) as avgCO,
+  //         AVG(o2Percentage) as avgO2,
+  //         AVG(hcPPM) as avgHC,
+  //         COUNT(*) as count
+  //       FROM EmissionData
+  //       WHERE vehicleId = ${vehicleId ? parseInt(vehicleId) : vehicleId}
+  //         AND timestamp >= ${startDate}
+  //       GROUP BY timePeriod
+  //       ORDER BY timePeriod
+  //     `;
+
+  //     // Get fuel data statistics
+  //     const fuelStats = await prisma.$queryRaw`
+  //       SELECT
+  //         DATE_FORMAT(timestamp, ${groupByFormat}) as timePeriod,
+  //         AVG(fuelLevel) as avgFuelLevel,
+  //         AVG(fuelConsumption) as avgFuelConsumption,
+  //         COUNT(*) as count
+  //       FROM FuelData
+  //       WHERE vehicleId = ${vehicleId ? parseInt(vehicleId) : vehicleId}
+  //         AND timestamp >= ${startDate}
+  //       GROUP BY timePeriod
+  //       ORDER BY timePeriod
+  //     `;
+
+  //     // Get GPS data statistics
+  //     const gpsStats = await prisma.$queryRaw`
+  //       SELECT
+  //         DATE_FORMAT(timestamp, ${groupByFormat}) as timePeriod,
+  //         AVG(speed) as avgSpeed,
+  //         MAX(speed) as maxSpeed,
+  //         COUNT(*) as count
+  //       FROM GPSData
+  //       WHERE vehicleId = ${vehicleId ? parseInt(vehicleId) : vehicleId}
+  //         AND timestamp >= ${startDate}
+  //       GROUP BY timePeriod
+  //       ORDER BY timePeriod
+  //     `;
+
+  //     return res.status(200).json({
+  //       success: true,
+  //       period,
+  //       data: {
+  //         emission: emissionStats,
+  //         fuel: fuelStats,
+  //         gps: gpsStats,
+  //       },
+  //     });
+  //   } catch (error) {
+  //     return errorHandler(res, error);
+  //   }
+  // };
+
+  // /**
+  //  * Get data for all vehicles with their latest information
+  //  * @param {Object} req - Express request object
+  //  * @param {Object} res - Express response object
+  //  */
+  // static getAllVehiclesWithLatestData = async (req, res) => {
+  //   try {
+  //     // Get all vehicles
+  //     const vehicles = await prisma.vehicle.findMany({
+  //       where: {
+  //         deletedAt: null,
+  //       },
+  //       include: {
+  //         trackingDevice: {
+  //           select: {
+  //             serialNumber: true,
+  //             model: true,
+  //             isActive: true,
+  //             lastPing: true,
+  //           },
+  //         },
+  //       },
+  //     });
+
+  //     // Get latest data for each vehicle
+  //     const vehiclesWithData = await Promise.all(
+  //       vehicles.map(async (vehicle) => {
+  //         // Get latest emission data
+  //         const latestEmission = await prisma.emissionData.findFirst({
+  //           where: { vehicleId: vehicle.id },
+  //           orderBy: { timestamp: "desc" },
+  //         });
+
+  //         // Get latest fuel data
+  //         const latestFuel = await prisma.fuelData.findFirst({
+  //           where: { vehicleId: vehicle.id },
+  //           orderBy: { timestamp: "desc" },
+  //         });
+
+  //         // Get latest GPS data
+  //         const latestGPS = await prisma.gPSData.findFirst({
+  //           where: { vehicleId: vehicle.id },
+  //           orderBy: { timestamp: "desc" },
+  //         });
+
+  //         // Get connection state
+  //         const connectionState = await prisma.connectionState.findUnique({
+  //           where: { vehicleId: vehicle.id.toString() },
+  //         });
+
+  //         return {
+  //           ...vehicle,
+  //           latestEmission,
+  //           latestFuel,
+  //           latestGPS,
+  //           connectionState: connectionState
+  //             ? connectionState.status
+  //             : "UNKNOWN",
+  //         };
+  //       })
+  //     );
+
+  //     return res.status(200).json({
+  //       success: true,
+  //       count: vehiclesWithData.length,
+  //       data: vehiclesWithData,
+  //     });
+  //   } catch (error) {
+  //     return errorHandler(res, error);
+  //   }
+  // };
+
+
+
+  

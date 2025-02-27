@@ -84,7 +84,7 @@ export const Topbar = () => {
                 GREENALYTIC MOTORS
               </h1>
               <p className="text-xs text-emerald-600 dark:text-emerald-300">
-                Data Insights Platformvv
+                Data Insights Platform
               </p>
             </div>
           </div>
