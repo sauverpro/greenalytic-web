@@ -1,11 +1,11 @@
 // redisManager.js - Updated for Windows compatibility
 import { exec } from 'child_process'
-import dotenv from 'dotenv'
 import redis from 'redis'
 import { promisify } from 'util'
 import path from 'path'
 import fs from 'fs'
 
+import dotenv from 'dotenv'
 dotenv.config()
 
 const execPromise = promisify(exec)
