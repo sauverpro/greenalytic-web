@@ -1,3 +1,8 @@
+import prisma from '../../prismaClient.js'
+import { tokengenerating } from '../utils/jwtfunctions.js'
+import { passComparer } from '../utils/passwordfunctions.js'
+import { body, validationResult } from 'express-validator'
+
 // Middleware for input validation
 export const validateLogin = [
   body('email').isEmail().withMessage('Invalid email format'),
@@ -12,11 +17,6 @@ export const validateLogin = [
     .withMessage('Limit must be a positive integer')
 ]
 
-import prisma from '../../prismaClient.js'
-import { tokengenerating } from '../utils/jwtfunctions.js'
-import { passComparer } from '../utils/passwordfunctions.js'
-import { body, validationResult } from 'express-validator'
-
 // Login function
 export const login = async (req, res) => {
   try {
@@ -26,18 +26,11 @@ export const login = async (req, res) => {
       return res.status(400).json({ errors: errors.array() }) // 400 Bad Request
     }
 
-    const { email, password, page = 1, limit = 5 } = req.body
+    const { email, password } = req.body
 
     // Check if the user exists
     let user = await prisma.user.findUnique({
-      where: { email },
-      include: {
-        vehicles: {
-          include: {
-            trackingDevice: true // Fetch tracking device data
-          }
-        }
-      }
+      where: { email }
     })
 
     if (!user) {
@@ -50,40 +43,15 @@ export const login = async (req, res) => {
       return res.status(401).json({ message: 'Wrong password' })
     }
 
-    // Pagination: limit the number of vehicles per page
-    const maxLimit = 50 // Set a maximum limit for pagination
-    const validLimit = Math.min(limit, maxLimit) // Ensure the limit does not exceed maxLimit
-
-    const vehiclesTotalCount = user.vehicles.length // Total number of vehicles
-    const totalPagesForVehicles = Math.ceil(vehiclesTotalCount / validLimit) // Calculate total pages
-
-    // If requested page exceeds available pages, set to last available page
-    const validPageForVehicles = Math.min(page, totalPagesForVehicles)
-
-    // Fetch and format only necessary vehicle details
-    const vehicles = user.vehicles
-      .slice(
-        (validPageForVehicles - 1) * validLimit,
-        validPageForVehicles * validLimit
-      )
-      .map(vehicle => ({
-        id: vehicle.id,
-        plateNumber: vehicle.plateNumber,
-        trackingDevice: vehicle.trackingDevice
-          ? {
-            id: vehicle.trackingDevice.id,
-            serialNumber: vehicle.trackingDevice.serialNumber
-          }
-          : null
-      }))
-
-    // Generate token
+    // Generate token with only the essential user info
     let token = tokengenerating({
-      user: user,
-      _id: user.id,
-      email: user.email
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      role: user.role
     })
 
+    // Response
     res.status(200).json({
       message: 'User logged in successfully',
       access_token: token,
@@ -93,13 +61,6 @@ export const login = async (req, res) => {
         username: user.username,
         phoneNumber: user.phoneNumber,
         role: user.role
-      },
-      vehicles: vehicles,
-      pagination: {
-        page: validPageForVehicles,
-        limit: validLimit,
-        totalVehicles: vehiclesTotalCount,
-        totalPagesForVehicles: totalPagesForVehicles
       }
     })
   } catch (err) {

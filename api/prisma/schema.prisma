@@ -56,7 +56,13 @@ model Vehicle {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
-  trackingDevice TrackingDevice?
+trackingDevice    TrackingDevice? 
+  trackingDeviceId  Int?     
+  // Adding indexes for performance optimization
+  @@index([userId])  // To optimize queries by userId
+  @@index([deletedAt])  // To optimize queries with filtering out deleted records
+  @@index([vehicleType])  // If you frequently search by vehicle type, this can help
+  @@index([trackingDeviceId])  // If you often query by tracking device
 
 }
 

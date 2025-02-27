@@ -4,7 +4,7 @@ class TrackingDeviceService {
   /**
    * Add a tracking device to a vehicle and track userId
    */
-  // 静态方法，用于将追踪设备添加到车辆中
+
   static async addTrackingDeviceToVehicle (data) {
     try {
       const { serialNumber, model, type, plateNumber, vehicleId } = data
