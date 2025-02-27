@@ -14,19 +14,19 @@ export interface User {
 }
 
 export interface Vehicle {
-  id: number;
+  id?: number;
   plateNumber: string;
   chassisNumber?: string;
   vehicleType: string;
   vehicleModel: string;
   yearOfManufacture: number;
   usage: string;
-  userId: number;
-  emissionDatas: EmissionData[];
-  gpsDatas: GPSData[];
-  fuelDatas: FuelData[];
-  createdAt: Date;
-  updatedAt: Date;
+  userId?: number;
+  emissionDatas?: EmissionData[];
+  gpsDatas?: GPSData[];
+  fuelDatas?: FuelData[];
+  createdAt?: Date;
+  updatedAt?: Date;
   deletedAt?: Date;
   trackingDevice?: TrackingDevice;
 }

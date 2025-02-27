@@ -21,7 +21,14 @@ const UserTable = () => {
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [openEditDialog, setOpenEditDialog] = useState(false);
-  const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
+const [openAddVehicleDrawer, setOpenAddVehicleDrawer] = useState(false);
+  const [openDropdownId, setOpenDropdownId] = useState<number | null>
+  (null);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const handleOpenAddVehicleDrawer = (userId: string) => {
+    setSelectedUserId(userId);
+    setOpenAddVehicleDrawer(true);
+  };
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
@@ -147,14 +154,11 @@ const UserTable = () => {
                 }
               />
             </DropdownMenuItem>
-
-            <DropdownMenuItem onSelect={() => setOpenDropdownId(null)} asChild>
-              <AddVehicleDrawer
-                userId={params.row.id.toString()}
-                refetchVehicles={() =>
-                  fetchUsers(pagination.currentPage, pagination.limit)
-                }
-              />
+            <DropdownMenuItem
+              onClick={() =>
+                handleOpenAddVehicleDrawer(params.row.id.toString())
+              }>
+              Add Vehicle
             </DropdownMenuItem>
 
             <DropdownMenuItem
@@ -281,6 +285,14 @@ const UserTable = () => {
           )}
         </DialogContent>
       </Dialog>
+      <AddVehicleDrawer
+        open={openAddVehicleDrawer}
+        onOpenChange={setOpenAddVehicleDrawer}
+        userId={selectedUserId ?? ""}
+        refetchVehicles={() =>
+          fetchUsers(pagination.currentPage, pagination.limit)
+        }
+      />
     </div>
   );
 };

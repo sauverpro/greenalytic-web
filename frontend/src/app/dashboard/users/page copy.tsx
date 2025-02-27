@@ -153,6 +153,8 @@ const UserTable = () => {
 
             <DropdownMenuItem onSelect={() => setOpenDropdownId(null)} asChild>
               <AddVehicleDrawer
+                open={openDropdownId === params.row.id}
+                onOpenChange={(open) => setOpenDropdownId(open ? params.row.id : null)}
                 userId={params.row.id.toString()}
                 refetchVehicles={() =>
                   fetchUsers(pagination.currentPage, pagination.limit)
