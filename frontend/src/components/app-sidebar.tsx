@@ -27,30 +27,37 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   Home,
   Users,
+  Radio,
   BarChart2,
+  Settings,
   MessageSquare,
   FileText,
   Bell,
   MapPin,
   Leaf,
-  Sparkles
+  Sparkles,
+  LogOut
 } from "lucide-react";
 
-const items = [
-  { title: "Dashboard", url: "/dashboard", icon: Home },
-  { title: "Users", url: "/dashboard/users", icon: BarChart2 },
-  { title: "Clients", url: "/dashboard/clients", icon: Users },
-  { title: "Integrated", url: "/dashboard/integrated", icon: Users },
-  { title: "Notifications", url: "#", icon: Bell },
+const adminItems = [
+  { title: "Dashboard", url: "/admin-dash", icon: Home },
+  { title: "Users", url: "/admin-dash/users", icon: Users },
   { title: "Messages", url: "#", icon: MessageSquare },
   { title: "Reports", url: "#", icon: FileText },
-  { title: "Map", url: "/dashboard/map", icon: MapPin }
+  { title: "Map", url: "/admin-dash/map", icon: MapPin },
+];
+
+const clientItems = [
+  { title: "Dashboard", url: "/client-dash", icon: Home },
+  { title: "Live", url: "/client-dash/live-info", icon: Radio },
+  { title: "settings", url: "#", icon: Settings },
 ];
 
 export function AppSidebar() {
   const [activeItem, setActiveItem] = useState("Dashboard");
   const { state: isCollapsed } = useSidebar();
   const [isLogoHovered, setIsLogoHovered] = useState(false);
+   const items = window.location.pathname.startsWith("/admin-dash") ? adminItems : clientItems;
 
   // Logo Branding with Card Design
   const LogoBranding = () => (
@@ -109,7 +116,8 @@ export function AppSidebar() {
       collapsible="icon"
       className={`fixed top-0 border-r border-emerald-600/20 shadow-lg h-[calc(100vh-4rem) overflow-y-auto] 
         ${isCollapsed === "expanded" ? "w-64" : "w-16"} 
-        transition-all duration-300 ease-in-out`}>
+        transition-all duration-300 ease-in-out`}
+    >
       <SidebarContent className="bg-gradient-to-b from-emerald-800 to-emerald-900 w-full h-full">
         {/* Logo Branding Section */}
         <LogoBranding />
@@ -136,7 +144,8 @@ export function AppSidebar() {
                               activeItem === item.title
                                 ? "bg-emerald-600 text-white font-medium shadow-lg shadow-emerald-900/30 border border-emerald-500"
                                 : "text-emerald-100 hover:bg-emerald-700/40"
-                            }`}>
+                            }`}
+                        >
                           <TooltipTrigger>
                             <div className="flex items-center justify-center">
                               <item.icon
@@ -162,14 +171,16 @@ export function AppSidebar() {
                                 isCollapsed === "expanded"
                                   ? "right-2"
                                   : "right-1"
-                              }`}></span>
+                              }`}
+                            ></span>
                           )}
                         </Link>
                       </SidebarMenuButton>
                       {isCollapsed !== "expanded" && (
                         <TooltipContent
                           side="right"
-                          className="bg-emerald-900 text-emerald-50 border-emerald-700 shadow-xl">
+                          className="bg-emerald-900 text-emerald-50 border-emerald-700 shadow-xl"
+                        >
                           {item.title}
                         </TooltipContent>
                       )}
@@ -180,6 +191,49 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* Logout Button */}
+        <div className="absolute bottom-10 w-full p-4  border-emerald-700 bg-emerald-900/30 mt-8">
+          <SidebarMenuItem>
+            <TooltipProvider delayDuration={0}>
+              <Tooltip>
+                <SidebarMenuButton asChild>
+                  <Link
+                    href="/"
+                    className={`flex items-center transition-all duration-300 relative my-2 py-4 rounded-lg
+                      ${
+                        isCollapsed === "expanded"
+                          ? "px-4 gap-3"
+                          : "w-12 h-12 mx-auto justify-center"
+                      }
+                      text-emerald-100 hover:bg-emerald-700/40`}
+                  >
+                    <TooltipTrigger>
+                      <div className="flex items-center justify-center">
+                        <LogOut
+                          className={`w-8 h-8 transition-transform duration-300 text-emerald-200`}
+                        />
+                      </div>
+                    </TooltipTrigger>
+                    {isCollapsed === "expanded" && (
+                      <span className="transition-all duration-300">
+                        Logout
+                      </span>
+                    )}
+                  </Link>
+                </SidebarMenuButton>
+                {isCollapsed !== "expanded" && (
+                  <TooltipContent
+                    side="right"
+                    className="bg-emerald-900 text-emerald-50 border-emerald-700 shadow-xl"
+                  >
+                    Logout
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
+          </SidebarMenuItem>
+        </div>
 
         {/* Footer */}
         <div className="absolute bottom-0 w-full p-4 border-t border-emerald-700 bg-emerald-800/50">
