@@ -1,4 +1,4 @@
-import prisma from '../../../prismaClient.js'
+import prisma from "../../../prismaClient.js";
 
 // ✅ 1️⃣ Add Vehicle to User
 export const addVehicleToUser = async (userId, vehicleData) => {
@@ -6,25 +6,25 @@ export const addVehicleToUser = async (userId, vehicleData) => {
     // 1️⃣ Check if user exists
     const user = await prisma.user.findUnique({
       where: { id: parseInt(userId) },
-      include: { vehicles: true } // Include vehicles in the user response
-    })
+      include: { vehicles: true }, // Include vehicles in the user response
+    });
 
     if (!user) {
-      throw new Error('User not found')
+      throw new Error("User not found");
     }
 
     // 2️⃣ Check if the vehicle is already registered (system-wide)
     const existingVehicle = await prisma.vehicle.findUnique({
-      where: { plateNumber: vehicleData.plateNumber.trim() }
-    })
+      where: { plateNumber: vehicleData.plateNumber.trim() },
+    });
 
     if (existingVehicle) {
       if (existingVehicle.userId !== parseInt(userId)) {
         throw new Error(
-          'This vehicle is already registered under another user'
-        )
+          "This vehicle is already registered under another user"
+        );
       }
-      throw new Error('This vehicle is already registered under your account')
+      throw new Error("This vehicle is already registered under your account");
     }
 
     // 3️⃣ Register the vehicle
@@ -36,18 +36,18 @@ export const addVehicleToUser = async (userId, vehicleData) => {
         vehicleModel: vehicleData.vehicleModel,
         yearOfManufacture: vehicleData.yearOfManufacture,
         usage: vehicleData.usage,
-        userId: parseInt(userId)
-      }
-    })
+        userId: parseInt(userId),
+      },
+    });
 
     // 4️⃣ Return the updated user with their vehicles
     const updatedUser = await prisma.user.findUnique({
       where: { id: parseInt(userId) },
-      include: { vehicles: true }
-    })
+      include: { vehicles: true },
+    });
 
-    return updatedUser
+    return updatedUser;
   } catch (error) {
-    throw error
+    throw error;
   }
-}
+};

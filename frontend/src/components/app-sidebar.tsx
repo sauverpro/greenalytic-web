@@ -40,6 +40,7 @@ const items = [
   { title: "Dashboard", url: "/dashboard", icon: Home },
   { title: "Users", url: "/dashboard/users", icon: BarChart2 },
   { title: "Clients", url: "/dashboard/clients", icon: Users },
+  { title: "Integrated", url: "/dashboard/integrated", icon: Users },
   { title: "Notifications", url: "#", icon: Bell },
   { title: "Messages", url: "#", icon: MessageSquare },
   { title: "Reports", url: "#", icon: FileText },
