@@ -64,7 +64,7 @@ io.on('connection', socket => {
 // Start the server on the given port
 const expressPort = process.env.EXPRESS_SERVER_PORT || 3000
 server.listen(expressPort, () => {
-  console.log(`Server running on port ${expressPort}`)
+  console.log(`Server running on port ${expressPort} now`)
 })
 
 // Handle server shutdown gracefully
