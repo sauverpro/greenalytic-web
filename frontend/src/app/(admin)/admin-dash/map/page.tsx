@@ -1,4 +1,4 @@
-"use client";
+"use client"; // ✅ Add this at the top
 
 import React, { useEffect, useState } from "react";
 import {
@@ -38,13 +38,6 @@ const CarTracking = () => {
     route: [],
     index: 0
   });
-// const routeWaypoints = [
-//   { lat: -1.6835, lng: 30.0878 }, // Gicumbi
-//   { lat: -1.9447, lng: 30.0595 }, // Kigali (passing through)
-//   { lat: -2.0997, lng: 29.7497 }, // Nyanza (passing through)
-//   { lat: -2.3364, lng: 29.3739 }, // Nyamasheke (passing through)
-//   { lat: -2.602, lng: 28.9084 } // Rusizi
-// ];
 
   useEffect(() => {
     if (!isLoaded || !car.location || !car.destination) return;
@@ -67,7 +60,7 @@ const CarTracking = () => {
     };
 
     fetchRoute();
-  }, [isLoaded, car.location, car.destination]); // ✅ Correct dependencies
+  }, [isLoaded, car.location, car.destination]);
 
   useEffect(() => {
     if (!car.route.length) return;
