@@ -60,7 +60,7 @@ const TableToolbar = ({
         <Button
           variant="outline"
           size="sm"
-          onClick={() => window.print()}
+          onClick={() => {}}
           className="flex items-center gap-1 bg-white hover:bg-gray-100">
           <Printer size={16} />
           Print
