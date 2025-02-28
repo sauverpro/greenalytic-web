@@ -1,20 +1,18 @@
 import express from 'express'
-import http from 'http'
-import { faker } from '@faker-js/faker'
 import prisma from './prismaClient.js'
 import userRouters from './src/routes/userRoutes.js'
 import VehicleRouter from './src/routes/vehicleRoutes.js'
 import trackingRouter from './src/routes/trackingDeviceRoutes.js'
 import cors from 'cors'
-import { signup } from './src/controllers/userController.js'
-
+import { Server } from 'socket.io' // Import Socket.IO server
 import dotenv from 'dotenv'
 dotenv.config()
 import sanitizeUserMiddleware from './src/middlewares/sanitizeUserMiddleware.js'
-import { startSimulation } from './src/controllers/addingdummydatas/client.js'
-import { setupSocketServer } from './socketServer.js' // Import the socket server setup
+import { createServer } from 'http' // ES6 Import for creating HTTP server
 
 const app = express()
+
+// Middleware setup
 app.use(sanitizeUserMiddleware)
 app.use(express.json())
 app.use(cors())
@@ -33,14 +31,38 @@ prisma
     process.exit(1)
   })
 
-// Create an HTTP server to share with both Express and Socket.IO
-const server = http.createServer(app)
+// Create an HTTP server to work with both Express and Socket.IO
+const server = createServer(app) // Use ES6 import method for creating HTTP server
 
-// Initialize Socket.IO on the same server instance
-setupSocketServer(server)
+// Initialize Socket.IO with the existing HTTP server
+const io = new Server(server, {
+  cors: {
+    origin: 'http://localhost:3000',
+    methods: ['GET', 'POST'], 
+    
+  }
+})
+
+// Socket.IO Setup (for handling WebSocket communication)
+io.on('connection', socket => {
+  console.log('A client connected:', socket.id)
+
+  // Listen for events from the client
+  socket.on('sendMessage', message => {
+    console.log('Message received:', message)
+
+    // Respond back to the client
+    socket.emit('receiveMessage', `Message received: ${message}`)
+  })
+
+  // Handle disconnection
+  socket.on('disconnect', () => {
+    console.log('Client disconnected:', socket.id)
+  })
+})
 
 // Start the server on the given port
-const expressPort = process.env.EXPRESS_SERVER_PORT 
+const expressPort = process.env.EXPRESS_SERVER_PORT || 3000
 server.listen(expressPort, () => {
   console.log(`Server running on port ${expressPort}`)
 })
@@ -48,7 +70,8 @@ server.listen(expressPort, () => {
 // Handle server shutdown gracefully
 process.on('SIGTERM', async () => {
   console.log('SIGTERM received. Closing server...')
-  await server.close()
-  process.exit(0)
+  await server.close() // Close the server gracefully
+  process.exit(0) // Exit process
 })
-// startSimulation();
+
+
