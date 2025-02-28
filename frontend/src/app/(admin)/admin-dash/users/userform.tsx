@@ -1,21 +1,27 @@
-
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { User } from "@/types/types";
 import { Button } from "@/components/ui/button";
-import { updateUser } from "@/services/userService";
+import { updateUser } from "@/api/services/userService";
 
-const UserForm = ({ user, onSubmit }: { user: User; onSubmit: () => void }) => {
+type UserFormProps = {
+  user: User;
+  onSubmit: (userData: User) => void;
+  isNewUser?: boolean;
+};
+
+const UserForm = ({ user, onSubmit, isNewUser = false }: UserFormProps) => {
   const [userData, setUserData] = useState<User>({
     id: user.id,
     username: user.username || "",
-    email: user.email,
+    email: user.email || "",
     image: user.image || "",
     gender: user.gender || "",
-    role: user.role,
+    role: user.role || "USER",
     phoneNumber: user.phoneNumber || "",
+ 
     deletedAt: user.deletedAt || undefined,
-    createdAt: user.createdAt,
+    createdAt: user.createdAt || new Date(),
     updatedAt: new Date(),
     vehicles: user.vehicles || [],
     trackingDevices: user.trackingDevices || []
@@ -33,23 +39,35 @@ const UserForm = ({ user, onSubmit }: { user: User; onSubmit: () => void }) => {
 
   const handleSubmit = async () => {
     try {
-      await updateUser(userData.id.toString(), userData);
-      onSubmit();
+      if (isNewUser) {
+        // For new users, just pass the data to the parent component
+        onSubmit(userData);
+      } else {
+        // For existing users, update via API then call onSubmit
+        await updateUser(userData.id.toString(), userData);
+        onSubmit(userData);
+      }
     } catch (error) {
-      console.error("Failed to update user", error);
+      console.error("Failed to submit user data", error);
     }
   };
 
+  // Add password field only for new users
+  const formFields = [
+    { name: "username", label: "Username", type: "text" },
+    { name: "email", label: "Email", type: "email" },
+    ...(isNewUser
+      ? [{ name: "password", label: "Password", type: "password" }]
+      : []),
+    { name: "image", label: "Profile Image URL", type: "text" },
+    { name: "phoneNumber", label: "Phone Number", type: "text" }
+  ];
+
   return (
-    <div className="space-y-4 p-4">
-      <h2 className="text-lg font-bold mb-4">Edit User</h2>
+    <div className="space-y-4">
+      {!isNewUser && <h2 className="text-lg font-bold mb-4">Edit User</h2>}
       <div className="space-y-4">
-        {[
-          { name: "username", label: "Username", type: "text" },
-          { name: "email", label: "Email", type: "email" },
-          { name: "image", label: "Profile Image URL", type: "text" },
-          { name: "phoneNumber", label: "Phone Number", type: "text" }
-        ].map((field) => (
+        {formFields.map((field) => (
           <div key={field.name}>
             <label className="block text-sm mb-1">{field.label}</label>
             <input
@@ -91,9 +109,11 @@ const UserForm = ({ user, onSubmit }: { user: User; onSubmit: () => void }) => {
           </select>
         </div>
 
-        <Button onClick={handleSubmit} className="w-full">
-          Save Changes
-        </Button>
+        {!isNewUser && (
+          <Button onClick={handleSubmit} className="w-full">
+            Save Changes
+          </Button>
+        )}
       </div>
     </div>
   );

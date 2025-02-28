@@ -25,7 +25,11 @@ export const signup = async (userData: {
     const response = await API.post("/users/signup", userData);
     return response.data; // Return the response (e.g., success message, user data)
   } catch (error) {
-    throw new Error("Signup failed");
+    if (error instanceof Error) {
+      throw new Error(`Signup failed: ${error.message}`);
+    } else {
+      throw new Error("Signup failed");
+    }
   }
 };
 

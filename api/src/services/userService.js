@@ -118,7 +118,35 @@ export const getAllUsers = async (page, limit) => {
 export const getUserById = async id => {
   try {
     const user = await prisma.user.findUnique({
-      where: { id: Number(id) }
+      where: { id: Number(id) },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        image: true,
+        role: true,
+        phoneNumber: true,
+        verified: true,
+        createdAt: true,
+        updatedAt: true,
+        vehicles: {
+          select: {
+            id: true,
+            plateNumber: true,
+            vehicleModel: true,
+            vehicleType: true
+          }
+        },
+        trackingDevices: {
+          select: {
+            id: true,
+            serialNumber: true,
+            model: true,
+            type: true,
+            isActive: true
+          }
+        }
+      }
     })
 
     if (!user) {

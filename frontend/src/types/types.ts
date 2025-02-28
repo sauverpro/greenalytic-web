@@ -2,8 +2,9 @@ export interface User {
   id: number;
   username?: string;
   email: string;
-  image: string;
+  image?: string;
   gender?: string;
+  password?: string;
   role: "ADMIN" | "USER" | "TECHNICIAN" | "MANAGER";
   phoneNumber?: string;
   deletedAt?: Date;

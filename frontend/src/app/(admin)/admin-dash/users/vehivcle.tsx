@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { addVehicleToUser } from "@/services/vehicleService";
+import { addVehicleToUser } from "@/api/services/vehicleService";
 import { Button } from "@/components/ui/button";
 import { Vehicle } from "@/types/types";
 
