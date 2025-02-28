@@ -1,7 +1,8 @@
 import io from 'socket.io-client'
 
-
-const socket = io(`http://localhost:${process.env.EXPRESS_SERVER_PORT}`) // Replace with your actual server URL
+// const socket = io(`http://localhost:${process.env.EXPRESS_SERVER_PORT}`)
+// // Replace with your actual server URL
+const socket = io('https://heptadevwepapi.onrender.com') // Replace with your actual server URL
 
 // Car's initial data
 let carData = {
