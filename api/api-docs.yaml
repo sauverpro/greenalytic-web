@@ -1,0 +1,957 @@
+openapi: 3.0.0
+info:
+  title: Greenalytic User Management API
+  version: 1.0.0
+  description: API for managing users with authentication and pagination
+
+servers:
+  - url: http://localhost:2222/greenalytic
+    description: Local Development Server
+  - url: https://greenalytic.herokuapp.com/greenalytic
+    description: Production Server
+
+# Define Authentication Scheme
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT  # JSON Web Token (JWT) format
+  
+  schemas:
+    EmissionData:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        co2Percentage:
+          type: number
+          example: 4.5
+        coPercentage:
+          type: number
+          example: 0.3
+        o2Percentage:
+          type: number
+          example: 21.0
+        hcPPM:
+          type: integer
+          example: 200
+        vehicleId:
+          type: integer
+          example: 101
+        plateNumber:
+          type: string
+          example: RAB123X
+        trackingDeviceId:
+          type: integer
+          example: 5001
+        timestamp:
+          type: string
+          format: date-time
+          example: "2025-03-01T10:30:00Z"
+
+    PaginationMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 10
+        totalCount:
+          type: integer
+          example: 100
+        totalPages:
+          type: integer
+          example: 10
+
+
+paths:
+  /users:
+    get:
+      summary: Get all users (Protected)
+      description: Retrieve a paginated list of users. Requires authentication.
+      security:
+        - BearerAuth: []  # Require Bearer Token for this route
+      parameters:
+        - name: page
+          in: query
+          description: Page number (default is 1)
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          description: Number of users per page (default is 10)
+          required: false
+          schema:
+            type: integer
+            default: 10
+      tags: [authentication]
+      responses:
+        '200':
+          description: A list of users with pagination details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  users:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        username:
+                          type: string
+                        email:
+                          type: string
+                        image:
+                          type: string
+                        role:
+                          type: string
+                        phoneNumber:
+                          type: string
+                        verified:
+                          type: boolean
+                        createdAt:
+                          type: string
+                          format: date-time
+                        updatedAt:
+                          type: string
+                          format: date-time
+                        vehicles:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                              plateNumber:
+                                type: string
+                              vehicleModel:
+                                type: string
+                              vehicleType:
+                                type: string
+                        trackingDevices:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                              serialNumber:
+                                type: string
+                              model:
+                                type: string
+                              type:
+                                type: string
+                              isActive:
+                                type: boolean
+                  pagination:
+                    type: object
+                    properties:
+                      currentPage:
+                        type: integer
+                      totalPages:
+                        type: integer
+                      remainingItems:
+                        type: integer
+                      totalItems:
+                        type: integer
+                      limit:
+                        type: integer
+        '401':
+          description: Unauthorized - Invalid or missing authentication token
+        '500':
+          description: Internal server error
+  /users/signup:    
+    post:
+      summary: User Signup
+      tags: [authentication]
+      operationId: signup
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - username
+                - phoneNumber
+              properties:
+                username:
+                  type: string
+                  example: "JohnDoe"
+                email:
+                  type: string
+                  example: "imanariyobaptiste@gmail.com"
+                password:
+                  type: string
+                  example: "123"
+                phoneNumber:
+                  type: string
+                  example: "1234567890"
+                location:
+                  type: string
+                  example: "City, Country"
+                gender:
+                  type: string
+                  example: "Male"
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                    example: "User registered successfully"
+                  userInformation:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      email:
+                        type: string
+                      username:
+                        type: string
+                      phoneNumber:
+                        type: string
+                      role:
+                        type: string
+        '400':
+          description: Missing required fields
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                    example: "Please provide all required fields: email, password, username, and phoneNumber."
+        '500':
+          description: Internal Server Error
+  /users/login:     
+    post:
+      summary: User Login
+      tags: [authentication]
+      operationId: login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  example: "imanariyobaptiste@gmail.com"
+                password:
+                  type: string
+                  example: "123"
+      responses:
+        '200':
+          description: User logged in successfully, returns a JWT token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                    example: "Login successful"
+                  token:
+                    type: string
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZXhwIjoxNjE0MzMwMjk5fQ.WD_Vn0Kg5XsOpbZTYrs2g2ev_JfBltJ_4y1M8RQ2c4w"
+        '400':
+          description: Invalid email or password
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                    example: "Invalid email or password."
+        '500':
+          description: Internal Server Error
+  /users/forget:
+    post:
+      summary: Generate and Send OTP for Password Reset
+      tags: [authentication]
+      operationId: generateAndSendOTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  example: "imanariyobaptiste@gmail.com"
+      responses:
+        '200':
+          description: OTP sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "OTP sent successfully! Please check your email and use the OTP to reset your password."
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "No user with email imanariyobaptiste@gmail.com found. Please use a correct registered email if you have ever signed up."
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Something went wrong. Please try again."
+  /users/reset:
+    post:
+      summary: Verify OTP and Reset Password
+      tags: [authentication]
+      operationId: verifyOTPAndUpdatePassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - otp
+                - newpassword
+              properties:
+                email:
+                  type: string
+                  example: "imanariyobaptiste@gmail.com"
+                otp:
+                  type: string
+                  example: "123456"
+                newpassword:
+                  type: string
+                  example: "NewStrongPassword123!"
+      responses:
+        '200':
+          description: Password updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Password updated successfully."
+        '400':
+          description: Invalid OTP or expired OTP
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Invalid or expired OTP."
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "No user with email imanariyobaptiste@gmail.com found. Please use a correct registered email if you have ever signed up."
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Something went wrong. Please try again."
+  /users/change:
+    post:
+      summary: Change Password
+      tags: [authentication]
+      security:
+        - BearerAuth: []  # Requires authentication (JWT)
+      operationId: changepassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - currentpassword
+                - newpassword
+              properties:
+                currentpassword:
+                  type: string
+                  example: "OldPassword123!"
+                newpassword:
+                  type: string
+                  example: "NewStrongPassword123!"
+      responses:
+        '200':
+          description: Password changed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Password changed successfully"
+        '401':
+          description: Unauthorized - Incorrect current password
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "The current password is wrong"
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User not found"
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Something went wrong. Please try again."
+  /users/{id}:
+    delete:
+      summary: Soft Delete a User
+      tags: [users]
+      security:
+        - BearerAuth: []  # Requires authentication (JWT)
+      operationId: deleteUser
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the user to delete
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User deleted (soft delete)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "User deleted (soft delete)"
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "User not found"
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Something went wrong. Please try again."
+    get:
+      summary: Get User by ID
+      tags: [users]
+      security:
+        - BearerAuth: []  # Requires authentication (JWT)
+      operationId: getUserById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the user to retrieve
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      username:
+                        type: string
+                      email:
+                        type: string
+                      phoneNumber:
+                        type: string
+                      role:
+                        type: string
+                      verified:
+                        type: boolean
+                      createdAt:
+                        type: string
+                        format: date-time
+                      updatedAt:
+                        type: string
+                        format: date-time
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "User not found"
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Something went wrong. Please try again."
+    patch:
+      summary: Update User by ID
+      tags: [users]
+      security:
+        - BearerAuth: []  # Requires authentication (JWT)
+      operationId: updateUser
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the user to update
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: "UpdatedUsername"
+                email:
+                  type: string
+                  format: email
+                  example: "updatedemail@example.com"
+                phoneNumber:
+                  type: string
+                  example: "1234567890"
+                role:
+                  type: string
+                  example: "admin"
+                verified:
+                  type: boolean
+                  example: true
+              additionalProperties: false  # Prevents sending unexpected fields
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "User updated successfully"
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      username:
+                        type: string
+                      email:
+                        type: string
+                      phoneNumber:
+                        type: string
+                      role:
+                        type: string
+                      verified:
+                        type: boolean
+                      createdAt:
+                        type: string
+                        format: date-time
+                      updatedAt:
+                        type: string
+                        format: date-time
+        '400':
+          description: Invalid request or update failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Failed to update user"
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "User not found"
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Something went wrong. Please try again."
+  /emissions:
+    post:
+      summary: Create a new emission data record
+      security:
+        - bearerAuth: []
+      tags:
+        - Emission Data
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmissionData"
+      responses:
+        "201":
+          description: Emission data created successfully
+        "400":
+          description: Bad Request - Missing required fields
+        "500":
+          description: Internal Server Error
+
+    get:
+      summary: Get all emission data (paginated)
+      security:
+        - bearerAuth: []
+      tags:
+        - Emission Data
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+          example: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+          example: 10
+        - name: startTime
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: endTime
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          description: List of emission data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/EmissionData"
+                  meta:
+                    $ref: "#/components/schemas/PaginationMeta"
+        "500":
+          description: Internal Server Error
+
+  /emissions/{id}:
+    get:
+      summary: Get emission data by ID
+      security:
+        - bearerAuth: []
+      tags:
+        - Emission Data
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Emission data found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmissionData"
+        "404":
+          description: Emission data not found
+        "500":
+          description: Internal Server Error
+
+    put:
+      summary: Update emission data by ID
+      security:
+        - bearerAuth: []
+      tags:
+        - Emission Data
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmissionData"
+      responses:
+        "200":
+          description: Emission data updated successfully
+        "404":
+          description: Emission data not found
+        "500":
+          description: Internal Server Error
+
+    delete:
+      summary: Delete emission data by ID
+      security:
+        - bearerAuth: []
+      tags:
+        - Emission Data
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Emission data deleted successfully
+        "404":
+          description: Emission data not found
+        "500":
+          description: Internal Server Error
+  /emissions/vehicle/{vehicleId}:
+    get:
+      summary: Get emission data for a specific vehicle
+      description: Retrieves emission data for a given vehicle with pagination, filtering by date range if provided.
+      tags:
+        - Emission Data
+      parameters:
+        - in: path
+          name: vehicleId
+          required: true
+          schema:
+            type: integer
+          description: The ID of the vehicle.
+        - in: query
+          name: page
+          required: false
+          schema:
+            type: integer
+            default: 1
+          description: The page number for pagination (default is 1).
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+            default: 10
+          description: The number of items per page (default is 10).
+        - in: query
+          name: startTime
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: The start timestamp for filtering emission data (optional).
+        - in: query
+          name: endTime
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: The end timestamp for filtering emission data (optional).
+      responses:
+        '200':
+          description: A list of emission data with pagination metadata.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          description: The ID of the emission record.
+                        vehicleId:
+                          type: integer
+                          description: The ID of the vehicle.
+                        timestamp:
+                          type: string
+                          format: date-time
+                          description: The timestamp when the emission data was recorded.
+                        trackingDevice:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                            name:
+                              type: string
+                          description: The tracking device associated with the emission data.
+                  meta:
+                    type: object
+                    properties:
+                      currentPage:
+                        type: integer
+                        description: The current page number.
+                      totalPages:
+                        type: integer
+                        description: The total number of pages.
+                      remainingItems:
+                        type: integer
+                        description: The number of items remaining after the current page.
+                      totalItems:
+                        type: integer
+                        description: The total number of items matching the query.
+                      limit:
+                        type: integer
+                        description: The number of items per page.
+        '400':
+          description: Invalid parameters.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: The error message explaining what was wrong with the request.
+        '500':
+          description: Failed to fetch emission data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: An error message explaining the failure.
+ 

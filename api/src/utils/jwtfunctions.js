@@ -22,10 +22,11 @@ if(!token){
             messagefromverifytoken:err.message,
         });
     }
-    req.user=decoded.user
-  
-    req.userId=decoded._id;
-    req.userEmail=decoded.email
+ req.userId = decoded.id;         // id from payload
+      req.userEmail = decoded.email;   // email from payload
+      req.username = decoded.username; // username from payload
+      req.userRole = decoded.role;     // role from payload
+
     next();
 }
 );

@@ -10,18 +10,12 @@ export const signup = catchAsync(async (req, res, next) => {
     return res.status(400).json({
       success: false,
       message:
-        'Please provide all required fields: email, password, name, phoneNumber.'
+        'Please provide all required fields: email, password, username, and phoneNumber.'
     })
   }
 
   // Call the service to create the user
-  const result = await userService.createUser({
-    email,
-    password,
-    username,
-    username,
-    phoneNumber
-  })
+  const result = await userService.createUserService(req.body)
 
   // If service returns failure, send error response
   if (!result.success) {
@@ -36,19 +30,18 @@ export const signup = catchAsync(async (req, res, next) => {
       id: result.user.id,
       email: result.user.email,
       username: result.user.username, // Optional username
-
       phoneNumber: result.user.phoneNumber,
-
-      role: result.user.role
+      role: result.user.role,
+      gender: result.user.gender,
     }
   })
 })
 
-// **2️⃣ Get All Users** - Retrieve all users
-export const getAllUsers = async (req, res) => {
+// **2️⃣ Get All Users** - Retrieve all users with pagination
+export const getAllUsers = catchAsync(async (req, res) => {
   try {
     const { page, limit } = req.pagination // Get pagination from middleware
-    const usersData = await userService.getAllUsers(page, limit)
+    const usersData = await userService.getAllUsersService(page, limit)
 
     res.status(200).json(usersData)
   } catch (error) {
@@ -57,12 +50,12 @@ export const getAllUsers = async (req, res) => {
       error: error.message
     })
   }
-}
+})
 
 // **3️⃣ Get User By ID** - Retrieve a user by ID
-export const getUserById = async (req, res) => {
+export const getUserById = catchAsync(async (req, res) => {
   try {
-    const result = await userService.getUserById(req.params.id)
+    const result = await userService.getUserByIdService(req.params.id)
     if (!result.success) {
       return res.status(404).json(result)
     }
@@ -76,14 +69,14 @@ export const getUserById = async (req, res) => {
       error: error.message
     })
   }
-}
+})
 
 // **4️⃣ Update User** - Update user details
-export const updateUser = async (req, res) => {
+export const updateUser = catchAsync(async (req, res) => {
   try {
-    // Exclude the password from the request body to prevent updating becuase  the whole process of password  making i long and   only need to br updated by their owners
+    // Exclude the password from the request body to prevent updating the password
     const { password, ...updatedData } = req.body
-    const result = await userService.updateUser(req.params.id, req.body)
+    const result = await userService.updateUserService(req.params.id, updatedData)
     if (!result.success) {
       return res.status(400).json(result)
     }
@@ -98,12 +91,12 @@ export const updateUser = async (req, res) => {
       error: error.message
     })
   }
-}
+})
 
 // **5️⃣ Delete User (Soft Delete)** - Soft delete a user
-export const deleteUser = async (req, res) => {
+export const deleteUser = catchAsync(async (req, res) => {
   try {
-    const result = await userService.deleteUser(req.params.id)
+    const result = await userService.deleteUserService(req.params.id)
     if (!result.success) {
       return res.status(404).json(result)
     }
@@ -117,4 +110,4 @@ export const deleteUser = async (req, res) => {
       error: error.message
     })
   }
-}
+})

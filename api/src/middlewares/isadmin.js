@@ -1,16 +1,25 @@
-import { User } from '../models/index.js'
+// Import Prisma client
+
+import prisma from "../../prismaClient.js"
 
 export const isAdmin = async (req, res, next, userRole) => {
   const { userId } = req
 
-  let user = await User.findById(userId)
+  // Fetch user from the database using Prisma
+  let user = await prisma.user.findUnique({
+    where: { id: parseInt(userId) } // Ensure userId is an integer
+  })
+
   if (!user) {
-    return res.status(401).json({ message: 'user not found' })
+    return res.status(401).json({ message: 'User not found' })
   }
-  let isadmin = user.role == userRole
-  if (!isadmin) {
+
+  // Check if the user role matches the required role
+  let isAdmin = user.role === userRole
+
+  if (!isAdmin) {
     return res.status(401).json({
-      message: `action is only reseverd for ${userRole} while ${user} role is {user.role}`
+      message: `Action is only reserved for ${userRole}, while the user role is ${user.role}`
     })
   }
 

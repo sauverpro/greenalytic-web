@@ -45,10 +45,12 @@ const MAX_DATA_POINTS = 50000;
 
 export default function RealTimeChart() {
   const { isLoaded } = useLoadScript({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
+    // googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
+    googleMapsApiKey: "AIzaSyC3Yz41S3FuCixGeMyDfQIOd67GjQDTyfI",
+
     libraries
   });
-
+  console.log("googleMapsApiKey", process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!)
   const [selectedCarId, setSelectedCarId] = useState<number | null>(null);
   const [gpsData, setGpsData] = useState<
     {

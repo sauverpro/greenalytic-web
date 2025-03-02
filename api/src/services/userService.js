@@ -4,7 +4,8 @@ import { passHashing } from '../utils/passwordfunctions.js'
 prisma
 
 // **1️⃣ Create User** - Create a new user
-export const createUser = async userData => {
+export const createUserService = async userData => {
+  console.log('Creating user:', userData)
   try {
     // Validate email uniqueness
     const existingUser = await prisma.user.findFirst({
@@ -45,7 +46,7 @@ export const createUser = async userData => {
 }
 
 // **2️⃣ Get All Users** - Retrieve all users
-export const getAllUsers = async (page, limit) => {
+export const getAllUsersService = async (page, limit) => {
   try {
     // Get total number of users
     // Get total number of users excluding soft-deleted ones
@@ -115,7 +116,7 @@ export const getAllUsers = async (page, limit) => {
 }
 
 // **3️⃣ Get User By ID** - Retrieve a user by ID
-export const getUserById = async id => {
+export const getUserByIdService = async id => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: Number(id) },
@@ -170,7 +171,7 @@ export const getUserById = async id => {
 }
 
 // **4️⃣ Update User** - Update user details
-export const updateUser = async (id, updateData) => {
+export const updateUserService = async (id, updateData) => {
   const { vehicles, trackingDevices, ...userData } = updateData
 
   try {
@@ -194,7 +195,7 @@ export const updateUser = async (id, updateData) => {
 }
 
 // **5️⃣ Delete User (Soft Delete)** - Soft delete a user
-export const deleteUser = async id => {
+export const deleteUserService = async id => {
   try {
     const deletedUser = await prisma.user.update({
       where: { id: Number(id) },

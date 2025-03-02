@@ -1,31 +1,30 @@
-// middlewares/paginationMiddleware.js
-
 export const paginationMiddleware = (req, res, next) => {
-  // Extract page and limit from query parameters
-  let { page, limit, startTime, endTime } = req.query
+  let { page, limit, startTime, endTime } = req.query // Keep startTime and endTime as they are
 
-  // Parse them into integers, with defaults if not provided
-  page = parseInt(page) || 1 // Default to page 1 if not provided
-  limit = parseInt(limit) || 10 // Default to 10 items per page if not provided
-
-  // Ensure the values are not below 1
+  // Parse `page` and `limit`, ensuring defaults and valid numbers
+  page = parseInt(page) || 1
+  limit = parseInt(limit) || 10
   if (page < 1) page = 1
   if (limit < 1) limit = 10
-  // Convert startTime & endTime to Date format (if provided)
-  const startDate = startTime ? new Date(startTime) : null
-  const endDate = endTime ? new Date(endTime) : null
 
-  // Attach pagination details to the request object
+  // Convert `startTime` & `endTime` to Date (if provided) and validate them
+  startTime = startTime ? new Date(startTime) : null
+  endTime = endTime ? new Date(endTime) : null
+
+  if (startTime && isNaN(startTime.getTime())) startTime = null // Invalid date check
+  if (endTime && isNaN(endTime.getTime())) endTime = null // Invalid date check
+
+  // Attach pagination details to `req.pagination`
   req.pagination = {
-    skip: (page - 1) * limit, // Skip the number of records already displayed in previous pages
-    take: limit, // Number of records to fetch
+    skip: (page - 1) * limit,
+    take: limit,
     page,
     limit,
-    startDate,
-    endDate
+    startTime, // Keep startTime here as well
+    endTime // Keep endTime here as well
   }
 
-  next() // Move to the next middleware or route handler
+  next() // Proceed to the next middleware or route handler
 }
 
 export default paginationMiddleware

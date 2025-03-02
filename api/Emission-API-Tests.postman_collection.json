@@ -1,0 +1,229 @@
+{
+  "info": {
+    "name": "Emission API Tests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Emission Data",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/emissions",
+          "host": ["{{baseUrl}}"],
+          "path": ["emissions"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"co2Percentage\": 12.5,\n  \"coPercentage\": 0.8,\n  \"o2Percentage\": 18.2,\n  \"hcPPM\": 120,\n  \"vehicleId\": 1,\n  \"plateNumber\": \"ABC123\",\n  \"trackingDeviceId\": 1,\n  \"timestamp\": \"{{$isoTimestamp}}\"\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get All Emission Data",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/emissions?page=1&limit=10",
+          "host": ["{{baseUrl}}"],
+          "path": ["emissions"],
+          "query": [
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "limit",
+              "value": "10"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Emission Data By ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/emissions/{{emissionId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["emissions", "{{emissionId}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Emission Data By Vehicle ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/emissions/vehicle/1?page=1&limit=10",
+          "host": ["{{baseUrl}}"],
+          "path": ["emissions", "vehicle", "1"],
+          "query": [
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "limit",
+              "value": "10"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Emission Data By Vehicle Interval",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/emissions/vehicle/1/interval?interval=hours&value=24&page=1&limit=10",
+          "host": ["{{baseUrl}}"],
+          "path": ["emissions", "vehicle", "1", "interval"],
+          "query": [
+            {
+              "key": "interval",
+              "value": "hours"
+            },
+            {
+              "key": "value",
+              "value": "24"
+            },
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "limit",
+              "value": "10"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Emission Data By Plate Number",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/emissions/plate/ABC123?page=1&limit=10",
+          "host": ["{{baseUrl}}"],
+          "path": ["emissions", "plate", "ABC123"],
+          "query": [
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "limit",
+              "value": "10"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Emission Statistics",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/emissions/statistics?vehicleId=1&interval=day",
+          "host": ["{{baseUrl}}"],
+          "path": ["emissions", "statistics"],
+          "query": [
+            {
+              "key": "vehicleId",
+              "value": "1"
+            },
+            {
+              "key": "interval",
+              "value": "day"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update Emission Data",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/emissions/{{emissionId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["emissions", "{{emissionId}}"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"co2Percentage\": 13.2,\n  \"coPercentage\": 0.9\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Emission Data",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/emissions/{{emissionId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["emissions", "{{emissionId}}"]
+        }
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "emissionId",
+      "value": "1",
+      "type": "string"
+    }
+  ]
+}
