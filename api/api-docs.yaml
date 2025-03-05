@@ -7,7 +7,7 @@ info:
 servers:
   - url: http://localhost:2222/greenalytic
     description: Local Development Server
-  - url: https://greenalytic.herokuapp.com/greenalytic
+  - url: https://greenalytic-vehicle-monitoring-1.onrender.com/greenalytic
     description: Production Server
 
 # Define Authentication Scheme

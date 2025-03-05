@@ -2,7 +2,9 @@ import { getAuthToken } from "@/utils/auth";
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:2222"
+  baseURL:
+    process.env.BACKEND_ULR ||
+    "https://greenalytic-vehicle-monitoring-1.onrender.com/greenalytic",
 });
 
 // Attach token to requests
