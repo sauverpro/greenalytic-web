@@ -1,3 +1,4 @@
+"use client";
 import { DailyProductSalesChart } from "@/components/charts/DailyProductSalesChart";
 
 import { DynamicLineChart } from "@/components/charts/DynamicLineChart";

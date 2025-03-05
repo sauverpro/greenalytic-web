@@ -1,7 +1,7 @@
 "use client";
 /* eslint-disable */
 import React, { useState, useEffect } from "react";
-import { io } from "socket.io-client";
+
 import ReactSpeedometer from "react-d3-speedometer";
 import { Line } from "react-chartjs-2";
 import {
@@ -21,7 +21,7 @@ import {
   useLoadScript,
   Libraries,
 } from "@react-google-maps/api";
-import LiveData from "@/app/LiveData";
+
 
 ChartJS.register(
   CategoryScale,
