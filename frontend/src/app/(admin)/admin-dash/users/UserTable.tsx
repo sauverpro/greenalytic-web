@@ -27,6 +27,7 @@ import SearchAndFilter from "./SearchAndFilter";
 import BulkActions from "./BulkActions";
 import PaginationControls from "./PaginationControls";
 import TableToolbar from "./TableToolbar";
+import ViewUserDrawer from "./ViewUserDrawer";
 
 
 const UserTable = () => {
@@ -38,6 +39,7 @@ const UserTable = () => {
   const [openAddUserDrawer, setOpenAddUserDrawer] = useState(false);
   const [openEditUserDrawer, setOpenEditUserDrawer] = useState(false);
   const [openAddVehicleDrawer, setOpenAddVehicleDrawer] = useState(false);
+  const [openViewUserDialog, setOpenViewUserDialog] = useState(false);
   const [selectionModel, setSelectionModel] = useState<GridRowSelectionModel>(
     []
   );
@@ -101,6 +103,12 @@ const UserTable = () => {
   const handleOpenAddVehicleDrawer = (userId: string) => {
     setSelectedUserId(userId);
     setOpenAddVehicleDrawer(true);
+  };
+
+  // Handle opening the "View User" dialog
+  const handleViewUser = (user: User) => {
+    setSelectedUser(user); // Set the selected user
+    setOpenViewUserDialog(true); // Open the view user dialog
   };
 
   // User created callback
@@ -168,8 +176,10 @@ const UserTable = () => {
 
   // Get columns with action handlers
   const columns = getDataGridColumns(
+    
     handleEditUser,
     handleOpenAddVehicleDrawer,
+    handleViewUser,
     fetchUsers,
     pagination
   );
@@ -183,7 +193,7 @@ const UserTable = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6">
+    <div className="container mx-auto px-4 py-6 max-w-[100%]">
       <Card className="w-full bg-white shadow-md">
         <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b">
           <div className="flex justify-between items-center">
@@ -318,7 +328,13 @@ const UserTable = () => {
         onOpenChange={setOpenAddUserDrawer}
         addUserToState={handleUserAdded}
       />
-
+      {/* View User Drawer */}
+      <ViewUserDrawer
+        open={openViewUserDialog}
+        // onOpenChange={setOpenViewUserDialog}
+        onOpenChange={setOpenViewUserDialog}
+        user={selectedUser}
+      />
       <EditUserDrawer
         open={openEditUserDrawer}
         onOpenChange={setOpenEditUserDrawer}

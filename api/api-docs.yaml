@@ -19,6 +19,42 @@ components:
       bearerFormat: JWT  # JSON Web Token (JWT) format
   
   schemas:
+    Vehicle:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        plateNumber:
+          type: string
+          example: "ABC123"
+        chassisNumber:
+          type: string
+          example: "CHS12345678"
+        vehicleType:
+          type: string
+          example: "SUV"
+        vehicleModel:
+          type: string
+          example: "Toyota Prado"
+        yearOfManufacture:
+          type: integer
+          example: 2020
+        usage:
+          type: string
+          example: "Personal"
+        userId:
+          type: integer
+          example: 2
+        trackingDeviceId:
+          type: integer
+          nullable: true
+          example: 5
+        createdAt:
+          type: string
+          format: date-time
+          example: "2023-01-01T12:00:00Z"
+
     EmissionData:
       type: object
       properties:
@@ -773,7 +809,6 @@ paths:
                     $ref: "#/components/schemas/PaginationMeta"
         "500":
           description: Internal Server Error
-
   /emissions/{id}:
     get:
       summary: Get emission data by ID
@@ -954,4 +989,241 @@ paths:
                   error:
                     type: string
                     description: An error message explaining the failure.
+    /vehicles/addvehicletouser/{userId}:
+    post:
+      summary: Add a Vehicle to a User
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                plateNumber:
+                  type: string
+                  example: "ABC123"
+                chassisNumber:
+                  type: string
+                  example: "CHS12345678"
+                vehicleType:
+                  type: string
+                  example: "SUV"
+                vehicleModel:
+                  type: string
+                  example: "Toyota Prado"
+                yearOfManufacture:
+                  type: integer
+                  example: 2020
+                usage:
+                  type: string
+                  example: "Personal"
+      responses:
+        "201":
+          description: Vehicle added successfully
+        "400":
+          description: Bad request
+        "500":
+          description: Internal server error
+
+  /vehicles/getallvehicles:
+    get:
+      summary: Get All Vehicles (Paginated)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+          example: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+          example: 10
+      responses:
+        "200":
+          description: List of all vehicles
+        "500":
+          description: Internal server error
+
+  /vehicles/{id}:
+    get:
+      summary: Get a Vehicle by ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 3
+      responses:
+        "200":
+          description: Vehicle details
+        "404":
+          description: Vehicle not found
+        "500":
+          description: Internal server error
+
+  /vehicles/user/{userId}/vehicles:
+    get:
+      summary: Get Vehicles by User ID (Paginated)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 2
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+          example: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+          example: 10
+      responses:
+        "200":
+          description: List of vehicles for the user
+        "500":
+          description: Internal server error
+
+  /vehicles/{vehicleId}/history:
+    get:
+      summary: Get Vehicle History
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: vehicleId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 5
+      responses:
+        "200":
+          description: Vehicle history retrieved successfully
+        "404":
+          description: Vehicle not found
+        "500":
+          description: Internal server error
+
+  /vehicles/{vehicleId}/emissions/range:
+    get:
+      summary: Get Vehicle Emission Data in a Time Range
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: vehicleId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 5
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+          example: "2024-01-01T00:00:00Z"
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+          example: "2024-01-07T23:59:59Z"
+      responses:
+        "200":
+          description: Emission data retrieved successfully
+        "500":
+          description: Internal server error
+
+  /vehicles/{vehicleId}/fuels/range:
+    get:
+      summary: Get Vehicle Fuel Data in a Time Range
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: vehicleId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 5
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+          example: "2024-01-01T00:00:00Z"
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+          example: "2024-01-07T23:59:59Z"
+      responses:
+        "200":
+          description: Fuel data retrieved successfully
+        "500":
+          description: Internal server error
+
+  /vehicles/{vehicleId}/gps/range:
+    get:
+      summary: Get Vehicle GPS Data in a Time Range
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: vehicleId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 5
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+          example: "2024-01-01T00:00:00Z"
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+          example: "2024-01-07T23:59:59Z"
+      responses:
+        "200":
+          description: GPS data retrieved successfully
+        "500":
+          description: Internal server error
+ 
+ 
+ 
  

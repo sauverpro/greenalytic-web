@@ -5,7 +5,7 @@ import UserTable from './UserTable'
 
 function page() {
   return (
-    <div><UserTable/></div>
+    <div className='w-full h-full absolute'><UserTable/></div>
   )
 }
 

@@ -7,6 +7,7 @@ import UserActions from "./UserActions";
 export const getDataGridColumns = (
   onEditUser: (user: User) => void,
   onAddVehicle: (userId: string) => void,
+  onViewUser: (user: User) => void,
   fetchUsers: Function,
   pagination: { currentPage: number; limit: number }
 ): GridColDef[] => {
@@ -104,6 +105,7 @@ export const getDataGridColumns = (
           user={params.row}
           onEditUser={onEditUser}
           onAddVehicle={onAddVehicle}
+          onViewUser={onViewUser}
           refetchUsers={() =>
             fetchUsers(pagination.currentPage, pagination.limit)
           }

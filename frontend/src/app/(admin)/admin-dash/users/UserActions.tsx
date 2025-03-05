@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { UserCog, Plus, ChevronDown } from "lucide-react";
+import { UserCog, Plus, ChevronDown, Eye } from "lucide-react";
 import { DeleteUserDialog } from "./deleteUserDialog";
 import { User } from "@/types/types";
 
@@ -18,6 +18,7 @@ interface UserActionsProps {
   user: User;
   onEditUser: (user: User) => void;
   onAddVehicle: (userId: string) => void;
+  onViewUser: (user: User) => void;
   refetchUsers: () => void;
 }
 
@@ -25,6 +26,7 @@ const UserActions = ({
   user,
   onEditUser,
   onAddVehicle,
+  onViewUser,
   refetchUsers
 }: UserActionsProps) => {
   const [open, setOpen] = useState(false);
@@ -37,6 +39,12 @@ const UserActions = ({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-48">
+        <DropdownMenuItem
+          onClick={() => onViewUser(user)}
+          className="flex items-center gap-2 cursor-pointer">
+          <Eye size={14} />
+          View Details
+        </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => onEditUser(user)}
           className="flex items-center gap-2 cursor-pointer">
