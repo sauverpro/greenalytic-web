@@ -4,10 +4,13 @@ import TextInput from "./TextInput";
 import Button from "./Button";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-// import vehicleLogin from "../../../public/images";
+import useAxiosClient from "../../hooks/axiosClient";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const Login: React.FC = () => {
   const router = useRouter();
+  const client = useAxiosClient();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({ email: "", password: "" });
@@ -27,8 +30,8 @@ const Login: React.FC = () => {
     if (!formData.password) {
       newErrors.password = "Password is required";
       valid = false;
-    } else if (formData.password.length < 8) {
-      newErrors.password = "Password must contain at least 8 characters";
+    } else if (formData.password.length < 3) {
+      newErrors.password = "Password must contain at least 3 characters";
       valid = false;
     }
 
@@ -40,17 +43,28 @@ const Login: React.FC = () => {
     e.preventDefault();
     if (validateForm()) {
       setIsLoading(true);
-      // Simulate login logic
-      setTimeout(() => {
-        setIsLoading(false);
-        const userRole =
-          formData.email === "admin@example.com" ? "admin" : "client";
-        if (userRole === "admin") {
-          router.push("/admin-dash");
-        } else {
-          router.push("/client-dash");
+      try {
+        const response = await client.post("users/login", formData);
+        if (response.status === 200) {
+          localStorage.setItem("AUTH_TOKEN", response.data.access_token);
+          const userRole = response.data.user.role.toLowerCase();
+          localStorage.setItem("USER_ROLE", userRole);
+
+          if (userRole === "admin") {
+            router.push("/admin-dash");
+          } else {
+            router.push("/client-dash");
+          }
+          toast.success("Login successful!");
         }
-      }, 1000);
+      } catch (error: any) {
+        console.error("Login failed:", error);
+        toast.error(
+          "Wrong credentials."
+        );
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -59,7 +73,7 @@ const Login: React.FC = () => {
       <div className="image-container w-[50%]">
         <Image
           src="/images/my-vehicle.png"
-          alt="Baby Care Logo"
+          alt="logo"
           width={300}
           height={300}
           className="text-bt-primary w-[80%]"
@@ -108,16 +122,6 @@ const Login: React.FC = () => {
             />
           </div>
         </form>
-        <p className="text-center align-middle self-center">- OR -</p>
-
-        <Button
-          //   icon={<FcGoogle />}
-          value="Continue with Google"
-          type="button"
-          onClick={() => {
-            alert("Google login is not implemented");
-          }}
-        />
 
         <p className="text-sm">
           Don't have an account?{" "}
@@ -126,6 +130,7 @@ const Login: React.FC = () => {
           </a>
         </p>
       </div>
+      <ToastContainer />
     </div>
   );
 };
