@@ -15,7 +15,7 @@ export default function Header() {
             height={32}
             className="text-bt-primary"
           />
-          <p className="text-sm text-tx-secondary">baby.ai</p>
+          <p className="text-sm text-tx-secondary">green</p>
         </div>
         <SectionHeader />
         <Link href="./">Home</Link>

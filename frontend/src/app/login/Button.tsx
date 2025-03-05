@@ -20,7 +20,7 @@ const Button: React.FC<ButtonProps> = (props) => {
         display: "flex",
         flexDirection: "row",
       }}
-      className={`rounded-sm mt-2 px-4 w-full py-3 border-none flex space-x-2 items-center justify-center gap-2`}
+      className={`bg-[#059669] rounded-sm mt-2 px-4 w-full py-3 border-none flex space-x-2 items-center justify-center gap-2`}
       onClick={props.onClick}
       disabled={props.disabled}
     >

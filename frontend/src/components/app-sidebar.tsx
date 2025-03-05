@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useSidebar } from "@/components/ui/sidebar";
 import Image from "next/image";
 import logo from "../../public/images/logo.png";
@@ -57,7 +57,16 @@ export function AppSidebar() {
   const [activeItem, setActiveItem] = useState("Dashboard");
   const { state: isCollapsed } = useSidebar();
   const [isLogoHovered, setIsLogoHovered] = useState(false);
-   const items = window.location.pathname.startsWith("/admin-dash") ? adminItems : clientItems;
+  const [items, setItems] = useState(clientItems);
+
+    useEffect(() => {
+      const role = localStorage.getItem("USER_ROLE");
+      if (role === "admin") {
+        setItems(adminItems);
+      } else {
+        setItems(clientItems);
+      }
+    }, []);
 
   // Logo Branding with Card Design
   const LogoBranding = () => (
