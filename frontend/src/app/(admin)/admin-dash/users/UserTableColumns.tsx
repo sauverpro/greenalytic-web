@@ -1,3 +1,4 @@
+"use cleint";
 // 4. UserTableColumns (UserTableColumns.tsx)
 import { GridColDef } from "@mui/x-data-grid";
 import { User } from "@/types/types";

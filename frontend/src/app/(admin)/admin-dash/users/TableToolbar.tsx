@@ -1,3 +1,4 @@
+"use  client";
 // 2. TableToolbar component (TableToolbar.tsx)
 import React from "react";
 import {

@@ -1,3 +1,5 @@
+
+"use cleint";
 // 6. PaginationControls component (PaginationControls.tsx)
 import React from "react";
 

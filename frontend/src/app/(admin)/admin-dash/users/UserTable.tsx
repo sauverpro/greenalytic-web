@@ -1,5 +1,5 @@
-// 1. Main UserTable component (UserTable.tsx)
 "use client";
+// 1. Main UserTable component (UserTable.tsx)
 import { useState, useEffect } from "react";
 import { DataGrid, GridRowSelectionModel } from "@mui/x-data-grid";
 import Box from "@mui/material/Box";

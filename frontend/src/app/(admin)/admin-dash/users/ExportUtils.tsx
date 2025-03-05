@@ -1,3 +1,6 @@
+
+"use cleint";
+
 // 8. ExportUtils for PDF and Excel export (ExportUtils.tsx)
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";

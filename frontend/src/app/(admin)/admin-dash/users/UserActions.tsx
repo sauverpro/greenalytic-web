@@ -1,4 +1,5 @@
 
+"use cleint";
 // 3. UserActions component (UserActions.tsx)
 import React, { useState } from "react";
 import {
