@@ -1,33 +1,35 @@
 import React from "react";
-import { FcGoogle } from "react-icons/fc";
 
 interface ButtonProps {
-  name?: string;
-  value?: string;
-  color?: string;
-  icon?: any;
-  onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
+  type: "button" | "submit" | "reset";
   disabled?: boolean;
-  type?: "submit" | "reset" | "button" | undefined;
+  onClick?: () => void;
+  children: React.ReactNode;
+  className?: string; // Keep this to allow additional custom classes
 }
 
-const Button: React.FC<ButtonProps> = (props) => {
+const Button: React.FC<ButtonProps> = ({
+  type,
+  disabled,
+  onClick,
+  children,
+  className = "", 
+}) => {
+  const baseStyles =
+    "w-full bg-primary hover:bg-second m-0 inline-block rounded-md lg:px-12 lg:py-2 sm:px-4 sm:py-1 md:font-semibold sm:mt-2 sm:font-medium text-white";
+
+  const disabledStyles = disabled ? "opacity-50" : "";
+
+  const combinedStyles = `${baseStyles} ${disabledStyles} ${className}`;
+
   return (
     <button
-      type={props.type}
-      style={{
-        backgroundColor: props.color || "rgb(38 38 38)",
-        display: "flex",
-        flexDirection: "row",
-      }}
-      className={`bg-[#059669] rounded-sm mt-2 px-4 w-full py-3 border-none flex space-x-2 items-center justify-center gap-2`}
-      onClick={props.onClick}
-      disabled={props.disabled}
+      type={type}
+      className={combinedStyles}
+      disabled={disabled}
+      onClick={onClick}
     >
-      {props.icon}
-      <p className={`text-sm`} style={{ color: "white" }}>
-        {props.value}
-      </p>
+      {children}
     </button>
   );
 };

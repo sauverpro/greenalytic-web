@@ -4,7 +4,7 @@ import { User } from "@/types/types";
 
 const client = useAxiosClient();
 
-export const loginUser = async (formData: {
+export const login = async (formData: {
   email: string;
   password: string;
 }) => {
@@ -24,21 +24,26 @@ export const loginUser = async (formData: {
 };
 
 
-export const signup = async (userData: {
+
+export const signup = async (formData: {
   username: string;
   email: string;
   password: string;
   phoneNumber: string;
+  gender: string;
 }) => {
   try {
-    const response = await client.post("/users/signup", userData);
-    return response.data; 
-  } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(`Signup failed: ${error.message}`);
-    } else {
-      throw new Error("Signup failed");
+    const response = await client.post("users/signup", formData);
+    if (response.status === 201) {
+      return { success: true, message: "Registration successful" };
     }
+    return { success: false, message: "Registration failed" };
+  } catch (error: any) {
+    console.error("Registration failed:", error);
+    if (error.response && error.response.data && error.response.data.message) {
+      throw new Error(error.response.data.message);
+    }
+    throw new Error("Registration failed. Please try again.");
   }
 };
 

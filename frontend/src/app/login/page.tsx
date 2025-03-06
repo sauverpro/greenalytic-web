@@ -1,19 +1,23 @@
 "use client";
 import React, { useState } from "react";
-import TextInput from "./TextInput";
-import Button from "./Button";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
-import useAxiosClient from "../../hooks/axiosClient";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import { loginUser } from "@/api/services/userService";
+import { toast } from "react-toastify";
+import { login } from "@/api/services/userService";
+import { FaRegEnvelope } from "react-icons/fa";
+import { MdLockOutline } from "react-icons/md";
+import { FiEyeOff } from "react-icons/fi";
+import { FaRegEye } from "react-icons/fa";
+import Link from "next/link";
+import AuthLayout from "../../components/authLayout";
+import { TextInput } from "./TextInput";
+import Button from "./Button";
 
 const Login: React.FC = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({ email: "", password: "" });
+  const [passwordShown, setPasswordShown] = useState(false);
 
   const validateForm = () => {
     let valid = true;
@@ -38,94 +42,135 @@ const Login: React.FC = () => {
     setErrors(newErrors);
     return valid;
   };
-    const handleLogin = async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (validateForm()) {
-        setIsLoading(true);
-        try {
-          const result = await loginUser(formData);
-          if (result.success) {
-            if (result.role === "admin") {
-              router.push("/admin-dash");
-            } else {
-              router.push("/client-dash");
-            }
-            toast.success("Login successful!");
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (validateForm()) {
+      setIsLoading(true);
+      try {
+        const result = await login(formData);
+        if (result.success) {
+          if (result.role === "admin") {
+            router.push("/admin-dash");
           } else {
-            toast.error(result.message);
+            router.push("/client-dash");
           }
-        } catch (error: any) {
-          toast.error(error.message);
-        } finally {
-          setIsLoading(false);
+          toast.success("Login successful!");
+        } else {
+          toast.error(result.message);
         }
+      } catch (error: any) {
+        toast.error(error.message);
+      } finally {
+        setIsLoading(false);
       }
-    };
+    }
+  };
+
+  const togglePassword = () => {
+    setPasswordShown(!passwordShown);
+  };
 
   return (
-    <div className="flex w-full container flex space-x-2 items-center justify-center tablet:min-h-[100vh] px-10">
-      <div className="image-container w-[50%]">
-        <Image
-          src="/images/my-vehicle.png"
-          alt="logo"
-          width={300}
-          height={300}
-          className="text-bt-primary w-[80%]"
-        />
-      </div>
-
-      <div className="content flex flex-col gap-5 space-y-4 w-[50%] phone:w-[80%] tablet:w-[40%] justify-start items-start h-full">
-        <h3 className="text-lg font-semibold text-center self-center">
-          LOGIN TO CONTINUE
-        </h3>
-        <p className="text-sm">Enter details below</p>
-
-        <form
-          className="w-full flex flex-col space-y-5 h-[45%] justify-end"
-          onSubmit={handleLogin}
-        >
-          <TextInput
-            error={errors.email}
-            borderColor={errors.email ? "red" : "gray"}
-            type="email"
-            title="Email"
-            placeholder="Enter email"
-            value={formData.email}
-            onChange={(e) =>
-              setFormData({ ...formData, email: e.target.value })
-            }
-          />
-          <TextInput
-            error={errors.password}
-            borderColor={errors.password ? "red" : "gray"}
-            type="password"
-            title="Password"
-            placeholder="Enter password"
-            value={formData.password}
-            onChange={(e) =>
-              setFormData({ ...formData, password: e.target.value })
-            }
-            secured={true}
-          />
-          <div className="flex flex-col">
-            <Button
-              type="submit"
-              disabled={isLoading}
-              color={"rgb(38 38 38)"}
-              value={isLoading ? "Loading..." : "Login"}
-            />
+    <AuthLayout>
+      <div className="w-full max-w-lg p-5 mx-auto bg-indigo-100 mt-10 mb-28 md:shadow-xl sm:shadow-none md:rounded-xl sm:rounded-none">
+        <div className="">
+          <div className="flex flex-col items-center justify-center">
+            <h2 className="text-2xl font-bold text-primary">
+              Welcome to Greenalytic
+            </h2>
+            <div className="border-[1px] w-10 bg-primary border-primary inline-block mb-2" />
           </div>
-        </form>
 
-        <p className="text-sm">
-          Don't have an account?{" "}
-          <a href="/signup" className="text-blue-500 hover:text-blue-800">
-            Create One
-          </a>
-        </p>
+          <div className="text-sm text-center">Login to continue</div>
+
+          <div className="flex flex-col items-center">
+            <form
+              className="w-full"
+              onSubmit={handleLogin}
+              data-testid="loginForm"
+            >
+              {errors.password && (
+                <div className="w-full p-4 my-4 text-center bg-red-400 rounded-md">
+                  <small className="text-white">{errors.password}</small>
+                </div>
+              )}
+              <TextInput
+                type="email"
+                placeholder="Enter email"
+                value={formData.email}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
+                icon={<FaRegEnvelope className="mr-2 text-gray-400" />}
+                error={errors.email}
+              />
+              <div className="pl-4 mb-1 text-left">
+                {errors.email && (
+                  <small className="text-red-600">{errors.email}</small>
+                )}
+              </div>
+
+              <TextInput
+                type={passwordShown ? "text" : "password"}
+                placeholder="Enter password"
+                value={formData.password}
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
+                icon={<MdLockOutline className="mr-2 text-gray-400" />}
+                error={errors.password}
+                togglePassword={togglePassword}
+              />
+              <div className="pl-4 mb-1 text-left">
+                {errors.password && (
+                  <small className="text-red-600">{errors.password}</small>
+                )}
+              </div>
+              <div className="flex flex-col items-center justify-between w-full mt-5 mb-5 rounded sm:flex-row">
+                <div className="w-50%">
+                  <label
+                    htmlFor="checkbox"
+                    className="flex items-center text-xs"
+                  >
+                    <input type="checkbox" name="remember" className="mr-1" />
+                    Remember me
+                  </label>
+                </div>
+                <div className="w-[50%] flex flex-row justify-end">
+                  <Link href="/forgotPassword" className="text-xs">
+                    Forgot Password?
+                  </Link>
+                </div>
+              </div>
+              <div className="justify-center w-full">
+                {isLoading ? (
+                  <Button
+                    type="button"
+                    disabled
+                  >
+                    Loading...
+                  </Button>
+                ) : (
+                  <Button
+                    type="submit"
+                  >
+                    Login
+                  </Button>
+                )}
+              </div>
+            </form>
+          </div>
+
+          <div className="my-4 text-sm text-center">
+            First time here?
+            <Link href="/signup" className="mx-1 text-primary">
+              Register
+            </Link>
+          </div>
+        </div>
       </div>
-      <ToastContainer />
-    </div>
+    </AuthLayout>
   );
 };
 
