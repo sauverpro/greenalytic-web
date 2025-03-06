@@ -1,7 +1,6 @@
 import axios, { AxiosInstance, AxiosError, AxiosResponse } from "axios";
 
 const useAxiosClient = (token?: string): AxiosInstance => {
-  // Use the full base URL explicitly
   const baseURL = process.env.NEXT_PUBLIC_BACKEND_ULR;
 
   const headers = token
@@ -40,12 +39,6 @@ const useAxiosClient = (token?: string): AxiosInstance => {
           localStorage.removeItem("AUTH_TOKEN");
         }
 
-        // Log more detailed error information
-        console.error("Full error:", {
-          status: response?.status,
-          data: response?.data,
-          headers: response?.headers,
-        });
       } catch (e) {
         console.error(e);
       }

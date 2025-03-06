@@ -152,7 +152,7 @@ export function AppSidebar() {
                             ${
                               activeItem === item.title
                                 ? "bg-emerald-600 text-white font-medium shadow-lg shadow-emerald-900/30 border border-emerald-500"
-                                : "text-emerald-100 hover:bg-emerald-700/40"
+                                : "text-emerald-100 hover:bg-secondary"
                             }`}
                         >
                           <TooltipTrigger>

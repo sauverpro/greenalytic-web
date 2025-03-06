@@ -58,7 +58,7 @@ export default function RootLayout({
       <body>
         <div className="flex flex-col min-h-screen">
           {shouldShowHeaderFooter && <Header />}
-          <main className="flex-grow bg-bg-primary dark:bg-bg-fourth text-tx-third dark:text-tx-primary">
+          <main className="flex-grow bg-light h-[30rem]">
             {children}
           </main>
           {shouldShowHeaderFooter && <Footer />}

@@ -1,74 +1,84 @@
-// Your axios instance
- // Assuming you have a `User` type
 
-import API from "@/api/api";
+import useAxiosClient from '../../hooks/axiosClient';
 import { User } from "@/types/types";
 
-// Login service
-export const login = async (email: string, password: string) => {
+const client = useAxiosClient();
+
+export const login = async (formData: {
+  email: string;
+  password: string;
+}) => {
   try {
-    const response = await API.post("/users/login", { email, password });
-    return response.data; 
-  } catch (error) {
-    throw new Error("Login failed");
+    const response = await client.post("users/login", formData);
+    if (response.status === 200) {
+      localStorage.setItem("AUTH_TOKEN", response.data.access_token);
+      const userRole = response.data.user.role.toLowerCase();
+      localStorage.setItem("USER_ROLE", userRole);
+      return { success: true, role: userRole };
+    }
+    return { success: false, message: "Login failed" };
+  } catch (error: any) {
+    console.error("Login failed:", error);
+    throw new Error("Wrong credentials.");
   }
 };
 
-// Signup service
-export const signup = async (userData: {
+
+
+export const signup = async (formData: {
   username: string;
   email: string;
   password: string;
   phoneNumber: string;
+  gender: string;
 }) => {
   try {
-    const response = await API.post("/users/signup", userData);
-    return response.data; // Return the response (e.g., success message, user data)
-  } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(`Signup failed: ${error.message}`);
-    } else {
-      throw new Error("Signup failed");
+    const response = await client.post("users/signup", formData);
+    if (response.status === 201) {
+      return { success: true, message: "Registration successful" };
     }
+    return { success: false, message: "Registration failed" };
+  } catch (error: any) {
+    console.error("Registration failed:", error);
+    if (error.response && error.response.data && error.response.data.message) {
+      throw new Error(error.response.data.message);
+    }
+    throw new Error("Registration failed. Please try again.");
   }
 };
 
-// Get all users
 export const getAllUsers = async (page = 1, limit = 10) => {
   try {
-    const response = await API.get(`/users?page=${page}&limit=${limit}`);
-    return response.data; // Return full response including pagination
+    const response = await client.get(`/users?page=${page}&limit=${limit}`);
+    return response.data; 
   } catch (error) {
     throw new Error(`Failed to fetch users: ${error}`);
   }
 };
 
 
-// Get a user by ID
 export const getUserById = async (id: string) => {
   try {
-    const response = await API.get(`/users/${id}`);
-    return response.data; // Return the specific user data
+    const response = await client.get(`/users/${id}`);
+    return response.data; 
   } catch (error) {
     throw new Error(`Failed to fetch user with ID: ${id}`);
   }
 };
 
-// Update a user by ID
 export const updateUser = async (id: string, updateData: Partial<User>) => {
   try {
-    const response = await API.patch(`/users/${id}`, updateData);
-    return response.data; // Return the updated user data
+    const response = await client.patch(`/users/${id}`, updateData);
+    return response.data; 
   } catch (error) {
     throw new Error(`Failed to update user with ID: ${id}`);
   }
 };
 
-// Delete a user by ID
 export const deleteUser = async (id: string) => {
   try {
-    const response = await API.delete(`/users/${id}`);
-    return response.data; // Return success message or status
+    const response = await client.delete(`/users/${id}`);
+    return response.data; 
   } catch (error) {
     throw new Error(`Failed to delete user with ID: ${id}`);
   }

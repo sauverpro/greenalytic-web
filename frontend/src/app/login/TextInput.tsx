@@ -1,58 +1,62 @@
-import React, { useState } from "react";
-import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
+import React from "react";
+import { MdPersonOutline } from "react-icons/md";
+import { FiEyeOff } from "react-icons/fi";
+import { FaRegEye } from "react-icons/fa";
 
 interface InputProps {
-  title?: string;
-  placeholder?: string;
-  value?: string;
-  error?: string;
-  type?: string;
-  secured?: boolean;
-  borderColor?: string;
-  onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  type: string;
+  placeholder: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  icon: React.ReactNode;
+  error: string;
+  togglePassword?: () => void;
 }
 
-const TextInput: React.FC<InputProps> = (props) => {
-  const [showPassword, setShowPassword] = useState(false);
-
-  return (
-    <div className="input-container flex relative my-2 w-full flex-col">
-      {props.title && (
-        <p className="bg-white absolute top-[-10px] px-4 text-black ml-2 text-xs">
-          {props.title}
-        </p>
-      )}
-      <div
-        className={
-          !props.error
-            ? "input border border-gray-400 rounded-sm w-full"
-            : "input border border-red-400 rounded-sm w-full"
-        }
-      >
-        <input
-          type={showPassword ? "text" : props.type}
-          placeholder={props.placeholder}
-          title={props.title}
-          value={props.value}
-          onChange={props.onChange}
-          className="rounded phone:p-2 p-4 outline-none w-full text-black text-sm"
-        />
-        <div className="eye absolute top-[30%] right-[5%]">
-          {props.secured ? (
-            <button
-              onClick={() => setShowPassword(!showPassword)}
-              type="button"
-            >
-              {!showPassword ? <IoEyeOutline /> : <IoEyeOffOutline />}
-            </button>
-          ) : (
-            ""
-          )}
-        </div>
+export const TextInput: React.FC<InputProps> = ({
+  type,
+  placeholder,
+  value,
+  onChange,
+  icon,
+  error,
+  togglePassword,
+}) => (
+  <div className="flex items-center w-full p-2 my-2 mb-2 bg-gray-100 border rounded-md border-gray dark:bg-dark-bg">
+    {icon}
+    <input
+      type={type}
+      placeholder={placeholder}
+      value={value}
+      onChange={onChange}
+      className="flex-1 px-2 text-sm bg-gray-100 outline-none dark:border-white dark:bg-dark-bg dark:text-white"
+    />
+    {togglePassword && (
+      <div className="text-gray-400 cursor-pointer" onClick={togglePassword}>
+        {type === "text" ? <FaRegEye /> : <FiEyeOff />}
       </div>
-      <p className="error text-red-600 text-xs self-start">{props.error}</p>
-    </div>
-  );
-};
+    )}
+  </div>
+);
 
-export default TextInput;
+export const SelectInput: React.FC<{
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  options: { value: string; label: string }[];
+  error: string;
+}> = ({ value, onChange, options, error }) => (
+  <div className="flex items-center w-full p-2 my-2 mb-2 bg-gray-100 border rounded-md border-gray dark:bg-dark-bg">
+    <MdPersonOutline className="mr-2 text-gray-400" />
+    <select
+      value={value}
+      onChange={onChange}
+      className="flex-1 px-2 text-sm bg-gray-100 outline-none dark:border-white dark:bg-dark-bg dark:text-white"
+    >
+      {options.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+  </div>
+);
