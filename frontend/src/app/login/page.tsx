@@ -7,10 +7,10 @@ import Image from "next/image";
 import useAxiosClient from "../../hooks/axiosClient";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { loginUser } from "@/api/services/userService";
 
 const Login: React.FC = () => {
   const router = useRouter();
-  const client = useAxiosClient();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({ email: "", password: "" });
@@ -38,35 +38,29 @@ const Login: React.FC = () => {
     setErrors(newErrors);
     return valid;
   };
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (validateForm()) {
-      setIsLoading(true);
-      try {
-        const response = await client.post("users/login", formData);
-        if (response.status === 200) {
-          localStorage.setItem("AUTH_TOKEN", response.data.access_token);
-          const userRole = response.data.user.role.toLowerCase();
-          localStorage.setItem("USER_ROLE", userRole);
-
-          if (userRole === "admin") {
-            router.push("/admin-dash");
+    const handleLogin = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (validateForm()) {
+        setIsLoading(true);
+        try {
+          const result = await loginUser(formData);
+          if (result.success) {
+            if (result.role === "admin") {
+              router.push("/admin-dash");
+            } else {
+              router.push("/client-dash");
+            }
+            toast.success("Login successful!");
           } else {
-            router.push("/client-dash");
+            toast.error(result.message);
           }
-          toast.success("Login successful!");
+        } catch (error: any) {
+          toast.error(error.message);
+        } finally {
+          setIsLoading(false);
         }
-      } catch (error: any) {
-        console.error("Login failed:", error);
-        toast.error(
-          "Wrong credentials."
-        );
-      } finally {
-        setIsLoading(false);
       }
-    }
-  };
+    };
 
   return (
     <div className="flex w-full container flex space-x-2 items-center justify-center tablet:min-h-[100vh] px-10">
