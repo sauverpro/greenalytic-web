@@ -9,6 +9,19 @@ const prisma = new PrismaClient();
  */
 export class vehicleDataController {
   /**
+   * Check if a vehicle exists in the database
+   * @param {number} vehicleId - The ID of the vehicle to check
+   * @returns {Promise<boolean>} - True if the vehicle exists, false otherwise
+   */
+  static async vehicleExists(vehicleId) {
+    const vehicle = await prisma.vehicle.findUnique({
+      where: { id: vehicleId },
+    });
+    return !!vehicle;
+  }
+
+  
+  /**
    * Get emission data for a specific vehicle within a time range
    * @param {Object} req - Express request object
    * @param {Object} res - Express response object
@@ -28,6 +41,14 @@ export class vehicleDataController {
       const parsedVehicleId = parseInt(vehicleId);
       const parsedStartDate = new Date(startDate);
       const parsedEndDate = new Date(endDate);
+
+      const vehicleExists = await this.vehicleExists(parsedVehicleId);
+      if (!vehicleExists) {
+        return res.status(404).json({
+          success: false,
+          message: "Vehicle not found",
+        });
+      }
 
       const where = {
         vehicleId: parsedVehicleId,
@@ -76,6 +97,14 @@ export class vehicleDataController {
       const parsedStartDate = new Date(startDate);
       const parsedEndDate = new Date(endDate);
 
+      const vehicleExists = await this.vehicleExists(parsedVehicleId);
+      if (!vehicleExists) {
+        return res.status(404).json({
+          success: false,
+          message: "Vehicle not found",
+        });
+      }
+
       const where = {
         vehicleId: parsedVehicleId,
         timestamp: {
@@ -122,6 +151,14 @@ export class vehicleDataController {
       const parsedVehicleId = parseInt(vehicleId);
       const parsedStartDate = new Date(startDate);
       const parsedEndDate = new Date(endDate);
+
+      const vehicleExists = await this.vehicleExists(parsedVehicleId);
+      if (!vehicleExists) {
+        return res.status(404).json({
+          success: false,
+          message: "Vehicle not found",
+        });
+      }
 
       const where = {
         vehicleId: parsedVehicleId,
