@@ -43,11 +43,11 @@ export default function AddUserDrawer({
     setError(null);
     try {
       // Signup the new user
-const response = await signup(userData);
+const response: { success: boolean; message: string; userInformation?: { id: string } } = await signup(userData);
 
-if (response.success) {
+if (response.success && response.userInformation) {
   // Fetch the user by ID after creation
-  const newUserResponse = await getUserById(response.message); // Assuming `response.message` contains the user ID
+  const newUserResponse = await getUserById(response.userInformation.id); // Assuming `response.userInformation` contains the user ID
   addUserToState(newUserResponse.user); // Add user to the existing state in UserTable
   console.log(newUserResponse.user);
 } else {
