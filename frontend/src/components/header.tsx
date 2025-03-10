@@ -23,7 +23,7 @@ export default function Header() {
         <Link href="/login">
           <Button variant="default">Login</Button>
         </Link>
-        <Link href="/login">
+        <Link href="/signup">
           <Button variant="destructive">BECOME A MEMBER</Button>
         </Link>
       </div>
