@@ -1,14 +1,14 @@
-
 import type { Config } from "tailwindcss";
 
 const config: Config = {
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/app/**/*.{js,ts,jsx,tsx,mdx}"
   ],
   theme: {
     extend: {
+      /*** ✅ Responsive Breakpoints ***/
       screens: {
         xm: "360px",
         sm: "375px",
@@ -17,58 +17,78 @@ const config: Config = {
         md: "768px",
         lg: "976px",
         mdl: "1240px",
-        xl: "1440px",
+        xl: "1440px"
       },
+
+      /*** ✅ Colors ***/
       colors: {
-        primary: "#06513D",
-        secondary: "#059669",
-        second: "#007755",
-        third: "#4ADE80",
-        fourth: "#E1FCEE",
+        primary: {
+          DEFAULT: "#06513D",
+          dark: "#007755",
+          light: "#059669"
+        },
+        secondary: {
+          DEFAULT: "#4ADE80",
+          light: "#E1FCEE",
+          dark: "#059669"
+        },
         foreground: "#1A1A1A",
         border: "#E2E8F0",
         dark: "#000000",
         light: "#ffffff",
-        charts: {
-          "1": "#007755",
-          "2": "#0066CC",
-          "3": "#FF6B6B",
-          "4": "#8A2BE2",
-          "5": "#FFB30F",
+
+        /*** ✅ HSL-based Theme Colors (for dark/light mode support) ***/
+        background: "hsl(var(--background))",
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))"
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))"
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))"
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))"
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))"
+        },
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        chart: {
+          1: "hsl(var(--chart-1))",
+          2: "hsl(var(--chart-2))",
+          3: "hsl(var(--chart-3))",
+          4: "hsl(var(--chart-4))",
+          5: "hsl(var(--chart-5))"
         },
         sidebar: {
-          DEFAULT: "#00553E",
-          foreground: "#FFFFFF",
-          primary: "#4ADE80",
-          border: "#006B4D",
-          ring: "#4ADE80",
-        },
-        greanalytic: {
-          DEFAULT: "#007755",
-          light: "#4ADE80",
-          dark: "#00553E",
-          accent: "#FFB30F",
-        },
-        status: {
-          success: "#22C55E",
-          warning: "#FFB30F",
-          danger: "#FF3B30",
-          info: "#0066CC",
-        },
-        cards: {
-          emission: "#FFE6E6",
-          fuel: "#E6F7FF",
-          distance: "#E0F7EA",
-          status: "#F3E8FF",
-        },
+          DEFAULT: "hsl(var(--sidebar-background))",
+          foreground: "hsl(var(--sidebar-foreground))",
+          primary: "hsl(var(--sidebar-primary))",
+          "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
+          accent: "hsl(var(--sidebar-accent))",
+          "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
+          border: "hsl(var(--sidebar-border))",
+          ring: "hsl(var(--sidebar-ring))"
+        }
       },
+
+      /*** ✅ Border Radius ***/
       borderRadius: {
         lg: "8px",
         md: "6px",
-        sm: "4px",
-      },
-    },
+        sm: "4px"
+      }
+    }
   },
-  plugins: [],
+  plugins: []
 };
+
 export default config;

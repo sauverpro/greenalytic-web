@@ -26,13 +26,14 @@ export default function AddUserDrawer({
     username: "",
     email: "",
     password: "",
-    phoneNumber: ""
+    phoneNumber: "",
+    gender: ""
   });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setUserData((prev) => ({ ...prev, [name]: value }));
   };
@@ -42,12 +43,16 @@ export default function AddUserDrawer({
     setError(null);
     try {
       // Signup the new user
-      const response = await signup(userData);
+const response = await signup(userData);
 
-      // Fetch the user by ID after creation
-      const newUserReponse = await getUserById(response.userInformation.id); // Assuming `response.user.id` is available
-      addUserToState(newUserReponse.user); // Add user to the existing state in UserTable
-console.log(newUserReponse.user);
+if (response.success) {
+  // Fetch the user by ID after creation
+  const newUserResponse = await getUserById(response.message); // Assuming `response.message` contains the user ID
+  addUserToState(newUserResponse.user); // Add user to the existing state in UserTable
+  console.log(newUserResponse.user);
+} else {
+  setError(`Failed to add user. ${response.message}`);
+}
       // Close the drawer
       onOpenChange(false);
     } catch (error) {
@@ -93,6 +98,16 @@ console.log(newUserReponse.user);
               placeholder="Password"
               className="w-full p-2 border rounded"
             />
+            <select
+              name="gender"
+              value={userData.gender}
+              onChange={handleInputChange}
+              className="w-full p-2 border rounded">
+              <option value="">Select Gender</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+            </select>
+
             <input
               type="text"
               name="phoneNumber"

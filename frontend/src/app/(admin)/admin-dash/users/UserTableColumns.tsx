@@ -40,6 +40,7 @@ export const getDataGridColumns = (
       renderCell: (params) => (
         <div className="text-gray-600">{params.value}</div>
       )
+      
     },
     {
       field: "role",

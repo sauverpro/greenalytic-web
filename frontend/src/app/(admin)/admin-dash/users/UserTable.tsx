@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { DataGrid, GridRowSelectionModel } from "@mui/x-data-grid";
 import Box from "@mui/material/Box";
+import CircularProgress from "@mui/material/CircularProgress";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -184,16 +185,9 @@ const UserTable = () => {
     pagination
   );
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin h-10 w-10 border-4 border-blue-600 rounded-full border-t-transparent"></div>
-      </div>
-    );
-  }
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-[100%]">
+    <div className="container mx-auto px-4 py-6">
       <Card className="w-full bg-white shadow-md">
         <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b">
           <div className="flex justify-between items-center">
@@ -243,10 +237,16 @@ const UserTable = () => {
           <Box
             sx={{
               height: "auto",
-              width: "100%",
+           
               borderRadius: "8px",
-              overflow: "hidden"
+              overflow: "hidden",
+                  position: "relative"
             }}>
+               {loading && (
+    <div className="absolute inset-0 flex justify-center items-center bg-white bg-opacity-50">
+      <CircularProgress size={40} /> {/* MUI Loader */}
+    </div>
+  )}
             <DataGrid
               rows={filteredUsers}
               columns={columns}
