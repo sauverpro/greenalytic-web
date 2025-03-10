@@ -3,9 +3,17 @@ import Image from "next/image";
 import { Button } from "./ui/button";
 import { useRouter } from "next/navigation";
 import { handleLogout } from "@/api/services/userService";
+import { useEffect, useState } from "react";
 
 export default function Header() {
   const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setIsAuthenticated(!!localStorage.getItem("AUTH_TOKEN"));
+    }
+  }, []);
 
   const onLogout = async (e: any) => {
     e.preventDefault();
@@ -32,10 +40,7 @@ export default function Header() {
         <Link href="#">Community</Link>
       </div>
       <div className="flex gap-4 items-center">
-        {/* <Link href="/login">
-          <Button variant="default">Login</Button>
-        </Link> */}
-        {localStorage.getItem("AUTH_TOKEN") ? (
+        {isAuthenticated ? (
           <Button variant="default" onClick={onLogout}>
             Logout
           </Button>
