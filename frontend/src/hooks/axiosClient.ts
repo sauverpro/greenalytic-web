@@ -15,7 +15,6 @@ const useAxiosClient = (token?: string): AxiosInstance => {
   const client = axios.create({
     baseURL, 
     headers,
-    timeout: 60000,
     withCredentials: false,
   });
 

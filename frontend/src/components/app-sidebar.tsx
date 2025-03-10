@@ -28,16 +28,16 @@ import {
   Home,
   Users,
   Radio,
-  BarChart2,
   Settings,
   MessageSquare,
   FileText,
-  Bell,
   MapPin,
   Leaf,
   Sparkles,
   LogOut
 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { handleLogout } from "@/api/services/userService";
 
 const adminItems = [
   { title: "Dashboard", url: "/admin-dash", icon: Home },
@@ -54,27 +54,40 @@ const clientItems = [
 ];
 
 export function AppSidebar() {
+  const router = useRouter();
   const [activeItem, setActiveItem] = useState("Dashboard");
   const { state: isCollapsed } = useSidebar();
   const [isLogoHovered, setIsLogoHovered] = useState(false);
   const [items, setItems] = useState(clientItems);
 
-    useEffect(() => {
-      const role = localStorage.getItem("USER_ROLE");
-      if (role === "admin") {
-        setItems(adminItems);
-      } else {
-        setItems(clientItems);
-      }
-    }, []);
+  useEffect(() => {
+    const role = localStorage.getItem("USER_ROLE");
+    const token = localStorage.getItem("AUTH_TOKEN");
+    if (!token) {
+      router.push("/login");
+    } else if (role === "admin") {
+      setItems(adminItems);
+    } else {
+      setItems(clientItems);
+    }
+  }, [router]);
 
-  // Logo Branding with Card Design
+  // Handle logout function
+  const onLogout = (e:any) => {
+    e.preventDefault();
+    const loggedOut = handleLogout();
+    if (loggedOut) {
+      router.push("/login");
+    }
+  };
+
   const LogoBranding = () => (
     <Card
       className={`relative bg-emerald-900/50 border border-emerald-700 shadow-lg shadow-emerald-500/20 rounded-lg overflow-hidden mb-4 
         ${isCollapsed === "expanded" ? "p-2" : "p-2"}`}
       onMouseEnter={() => setIsLogoHovered(true)}
-      onMouseLeave={() => setIsLogoHovered(false)}>
+      onMouseLeave={() => setIsLogoHovered(false)}
+    >
       <CardContent className="flex flex-col items-center">
         {isCollapsed === "expanded" ? (
           <>
@@ -82,7 +95,8 @@ export function AppSidebar() {
             <motion.div
               animate={{ scale: isLogoHovered ? 1.1 : 1 }}
               transition={{ duration: 0.3 }}
-              className="relative group">
+              className="relative group"
+            >
               <div className="absolute inset-0 bg-emerald-400 blur-lg opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
               <Image
                 src={logo}
@@ -96,7 +110,8 @@ export function AppSidebar() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="flex flex-col items-center space-y-2 mt-2">
+              className="flex flex-col items-center space-y-2 mt-2"
+            >
               <div className="flex items-center space-x-2">
                 <Sparkles className="w-4 h-4 text-emerald-300" />
                 <h2 className="text-emerald-50 font-bold text-xl bg-gradient-to-r from-emerald-300 to-emerald-100 bg-clip-text text-transparent">
@@ -207,9 +222,9 @@ export function AppSidebar() {
             <TooltipProvider delayDuration={0}>
               <Tooltip>
                 <SidebarMenuButton asChild>
-                  <Link
-                    href="/"
-                    className={`flex items-center transition-all duration-300 relative my-2 py-4 rounded-lg
+                  <button
+                    onClick={onLogout}
+                    className={`flex items-center transition-all duration-300 relative my-2 py-4 rounded-lg w-full
                       ${
                         isCollapsed === "expanded"
                           ? "px-4 gap-3"
@@ -229,7 +244,7 @@ export function AppSidebar() {
                         Logout
                       </span>
                     )}
-                  </Link>
+                  </button>
                 </SidebarMenuButton>
                 {isCollapsed !== "expanded" && (
                   <TooltipContent
