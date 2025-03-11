@@ -27,7 +27,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   Home,
   Users,
-  Radio,
+  LocateFixed,
+  Fuel,
+  Router,
   Settings,
   MessageSquare,
   FileText,
@@ -38,18 +40,21 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { handleLogout } from "@/api/services/userService";
+import { useAuth } from "@/hooks/useAuth";
 
 const adminItems = [
-  { title: "Dashboard", url: "/admin-dash", icon: Home },
-  { title: "Users", url: "/admin-dash/users", icon: Users },
+  { title: "Dashboard", url: "/admin", icon: Home },
+  { title: "Users", url: "/admin/users", icon: Users },
   { title: "Messages", url: "#", icon: MessageSquare },
   { title: "Reports", url: "#", icon: FileText },
-  { title: "Map", url: "/admin-dash/map", icon: MapPin },
+  { title: "Map", url: "/admin/map", icon: MapPin },
 ];
 
 const clientItems = [
-  { title: "Dashboard", url: "/client-dash", icon: Home },
-  { title: "Live", url: "/client-dash/live-info", icon: Radio },
+  { title: "Dashboard", url: "/client", icon: Home },
+  { title: "gps", url: "/client/gps", icon: LocateFixed },
+  { title: "fuels", url: "/client/fuels", icon: Fuel },
+  { title: "emissions", url: "/client/emissions", icon: Router },
   { title: "settings", url: "#", icon: Settings },
 ];
 
@@ -59,6 +64,8 @@ export function AppSidebar() {
   const { state: isCollapsed } = useSidebar();
   const [isLogoHovered, setIsLogoHovered] = useState(false);
   const [items, setItems] = useState(clientItems);
+
+  useAuth();
 
   useEffect(() => {
     const role = localStorage.getItem("USER_ROLE");
@@ -72,8 +79,7 @@ export function AppSidebar() {
     }
   }, [router]);
 
-  // Handle logout function
-  const onLogout = (e:any) => {
+  const onLogout = (e: any) => {
     e.preventDefault();
     const loggedOut = handleLogout();
     if (loggedOut) {
@@ -83,7 +89,7 @@ export function AppSidebar() {
 
   const LogoBranding = () => (
     <Card
-      className={`relative bg-emerald-900/50 border border-emerald-700 shadow-lg shadow-emerald-500/20 rounded-lg overflow-hidden mb-4 
+      className={`relative bg-emerald-900/50 border border-emerald-700 shadow-lg shadow-emerald-500/20 rounded-lg overflow-hidden mb-4
         ${isCollapsed === "expanded" ? "p-2" : "p-2"}`}
       onMouseEnter={() => setIsLogoHovered(true)}
       onMouseLeave={() => setIsLogoHovered(false)}
@@ -91,7 +97,6 @@ export function AppSidebar() {
       <CardContent className="flex flex-col items-center">
         {isCollapsed === "expanded" ? (
           <>
-            {/* Logo with glow effect */}
             <motion.div
               animate={{ scale: isLogoHovered ? 1.1 : 1 }}
               transition={{ duration: 0.3 }}
@@ -104,8 +109,6 @@ export function AppSidebar() {
                 className="w-32 h-16 relative z-10"
               />
             </motion.div>
-
-            {/* Animated title section */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -138,15 +141,12 @@ export function AppSidebar() {
   return (
     <Sidebar
       collapsible="icon"
-      className={`fixed top-0 border-r border-emerald-600/20 shadow-lg h-[calc(100vh-4rem) overflow-y-auto] 
-        ${isCollapsed === "expanded" ? "w-64" : "w-16"} 
+      className={`fixed top-0 border-r border-emerald-600/20 shadow-lg h-[calc(100vh-4rem) overflow-y-auto]
+        ${isCollapsed === "expanded" ? "w-64" : "w-16"}
         transition-all duration-300 ease-in-out`}
     >
       <SidebarContent className="bg-gradient-to-b from-emerald-800 to-emerald-900 w-full h-full">
-        {/* Logo Branding Section */}
         <LogoBranding />
-
-        {/* Navigation Menu */}
         <SidebarGroup className="h-3/4 overflow-y-auto">
           <SidebarGroupContent>
             <SidebarMenu>
@@ -187,7 +187,6 @@ export function AppSidebar() {
                               {item.title}
                             </span>
                           )}
-                          {/* Active indicator dot */}
                           {activeItem === item.title && (
                             <span
                               className={`absolute w-2 h-2 rounded-full bg-orange-500 shadow-lg shadow-emerald-300/50
@@ -215,14 +214,12 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-
-        {/* Logout Button */}
-        <div className="absolute bottom-10 w-full p-4  border-emerald-700 bg-emerald-900/30 mt-8">
+        <div className="absolute bottom-10 w-full p-4 border-emerald-700 bg-emerald-900/30 mt-8">
           <SidebarMenuItem>
             <TooltipProvider delayDuration={0}>
               <Tooltip>
                 <SidebarMenuButton asChild>
-                  <button
+                  <div
                     onClick={onLogout}
                     className={`flex items-center transition-all duration-300 relative my-2 py-4 rounded-lg w-full
                       ${
@@ -244,7 +241,7 @@ export function AppSidebar() {
                         Logout
                       </span>
                     )}
-                  </button>
+                  </div>
                 </SidebarMenuButton>
                 {isCollapsed !== "expanded" && (
                   <TooltipContent
@@ -258,8 +255,6 @@ export function AppSidebar() {
             </TooltipProvider>
           </SidebarMenuItem>
         </div>
-
-        {/* Footer */}
         <div className="absolute bottom-0 w-full p-4 border-t border-emerald-700 bg-emerald-800/50">
           {isCollapsed === "expanded" ? (
             <div className="flex items-center justify-center space-x-2">

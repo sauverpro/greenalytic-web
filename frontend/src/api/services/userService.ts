@@ -25,7 +25,6 @@ export const handleLogout = () => {
   localStorage.removeItem("AUTH_TOKEN");
   localStorage.removeItem("USER_ROLE");
 
-  // Return true to indicate successful logout
   return true;
 };
 export const signup = async (formData: {

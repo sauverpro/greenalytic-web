@@ -50,10 +50,10 @@ function generateRandomData (vehicleId, latitude, longitude) {
     case 'emission':
       return {
         type,
-        co2Percentage: (Math.random() * 100).toFixed(2),
-        coPercentage: (Math.random() * 100).toFixed(2),
-        o2Percentage: (Math.random() * 100).toFixed(2),
-        hcPPM: (Math.random() * 100).toFixed(2),
+        co2Percentage: (Math.random() * 100),
+        coPercentage: (Math.random() * 100),
+        o2Percentage: (Math.random() * 100),
+        hcPPM: (Math.random() * 100),
         vehicleId,
         plateNumber: `ABC${vehicleId}`
       }

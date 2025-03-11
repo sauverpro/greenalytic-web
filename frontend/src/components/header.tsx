@@ -1,12 +1,10 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "./ui/button";
-import { useRouter } from "next/navigation";
 import { handleLogout } from "@/api/services/userService";
 import { useEffect, useState } from "react";
 
 export default function Header() {
-  const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
@@ -17,9 +15,9 @@ export default function Header() {
 
   const onLogout = async (e: any) => {
     e.preventDefault();
-    const loggedOut = await handleLogout();
+    const loggedOut =  handleLogout();
     if (loggedOut) {
-      router.push("/");
+      setIsAuthenticated(false);
     }
   };
 
@@ -36,8 +34,8 @@ export default function Header() {
       </div>
       <div className="flex gap-5 justify-center items-center text-lg">
         <Link href="./">Home</Link>
-        <Link href="#">Blog</Link>
-        <Link href="#">Community</Link>
+        <Link href="#">about</Link>
+        <Link href="#">Contact us</Link>
       </div>
       <div className="flex gap-4 items-center">
         {isAuthenticated ? (

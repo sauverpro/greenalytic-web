@@ -51,9 +51,9 @@ const Login: React.FC = () => {
         const result = await login(formData);
         if (result.success) {
           if (result.role === "admin") {
-            router.push("/admin-dash");
+            router.push("/admin");
           } else {
-            router.push("/client-dash");
+            router.push("/client");
           }
           toast.success("Login successful!");
         } else {
@@ -145,18 +145,11 @@ const Login: React.FC = () => {
               </div>
               <div className="justify-center w-full">
                 {isLoading ? (
-                  <Button
-                    type="button"
-                    disabled
-                  >
+                  <Button type="button" disabled>
                     Loading...
                   </Button>
                 ) : (
-                  <Button
-                    type="submit"
-                  >
-                    Login
-                  </Button>
+                  <Button type="submit">Login</Button>
                 )}
               </div>
             </form>
