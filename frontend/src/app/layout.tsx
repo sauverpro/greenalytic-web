@@ -4,16 +4,15 @@ import Footer from "@/components/footer";
 import Header from "@/components/header";
 import { usePathname } from "next/navigation";
 
-
 export default function RootLayout({
-  children
+  children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-    const pathname = usePathname();
-    const isAdminDash = pathname?.startsWith("/admin-dash");
-    const isFamilyDash = pathname?.startsWith("/client-dash");
-    const shouldShowHeaderFooter = !isAdminDash && !isFamilyDash;
+  const pathname = usePathname();
+  const isAdminDash = pathname?.startsWith("/admin");
+  const isFamilyDash = pathname?.startsWith("/client");
+  const shouldShowHeaderFooter = !isAdminDash && !isFamilyDash;
   return (
     <html lang="en">
       <head>
@@ -58,9 +57,7 @@ export default function RootLayout({
       <body>
         <div className="flex flex-col min-h-screen">
           {shouldShowHeaderFooter && <Header />}
-          <main className="flex-grow bg-light h-[30rem]">
-            {children}
-          </main>
+          <main className="flex-grow bg-light h-[30rem]">{children}</main>
           {shouldShowHeaderFooter && <Footer />}
         </div>
       </body>

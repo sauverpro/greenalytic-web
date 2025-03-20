@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { errorHandler } from "../utils/errorHandler.js";
+import { VehicleService } from "../services/vehiclesService/vehicleService.js";
 
 const prisma = new PrismaClient();
 
@@ -9,18 +10,25 @@ const prisma = new PrismaClient();
  */
 export class vehicleDataController {
   /**
-   * Check if a vehicle exists in the database
-   * @param {number} vehicleId - The ID of the vehicle to check
-   * @returns {Promise<boolean>} - True if the vehicle exists, false otherwise
+   * Get all vehicles belonging to a user
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
    */
-  static async vehicleExists(vehicleId) {
-    const vehicle = await prisma.vehicle.findUnique({
-      where: { id: vehicleId },
-    });
-    return !!vehicle;
-  }
+  static getVehiclesByUserId = async (req, res) => {
+    try {
+      const userId = req.userId;
 
-  
+      const vehicles = await VehicleService.getVehiclesByUserId(userId);
+
+      return res.status(200).json({
+        success: true,
+        data: vehicles,
+      });
+    } catch (error) {
+      return errorHandler(res, error);
+    }
+  };
+
   /**
    * Get emission data for a specific vehicle within a time range
    * @param {Object} req - Express request object
@@ -30,6 +38,7 @@ export class vehicleDataController {
     try {
       const { vehicleId } = req.params;
       const { startDate, endDate } = req.query;
+      const userId = req.userId;
 
       if (!vehicleId || !startDate || !endDate) {
         return res.status(400).json({
@@ -40,13 +49,20 @@ export class vehicleDataController {
 
       const parsedVehicleId = parseInt(vehicleId);
       const parsedStartDate = new Date(startDate);
-      const parsedEndDate = new Date(endDate);
 
-      const vehicleExists = await this.vehicleExists(parsedVehicleId);
-      if (!vehicleExists) {
+      // Maximize the end date to include the full day
+      const parsedEndDate = new Date(endDate);
+      parsedEndDate.setHours(23, 59, 59, 999);
+
+      const vehicleExistsAndBelongs =
+        await VehicleService.vehicleExistsAndBelongsToUser(
+          parsedVehicleId,
+          userId
+        );
+      if (!vehicleExistsAndBelongs) {
         return res.status(404).json({
           success: false,
-          message: "Vehicle not found",
+          message: "Vehicle not found or does not belong to the user",
         });
       }
 
@@ -85,6 +101,7 @@ export class vehicleDataController {
     try {
       const { vehicleId } = req.params;
       const { startDate, endDate } = req.query;
+      const userId = req.userId;
 
       if (!vehicleId || !startDate || !endDate) {
         return res.status(400).json({
@@ -95,13 +112,20 @@ export class vehicleDataController {
 
       const parsedVehicleId = parseInt(vehicleId);
       const parsedStartDate = new Date(startDate);
-      const parsedEndDate = new Date(endDate);
 
-      const vehicleExists = await this.vehicleExists(parsedVehicleId);
-      if (!vehicleExists) {
+      // Maximize the end date to include the full day
+      const parsedEndDate = new Date(endDate);
+      parsedEndDate.setHours(23, 59, 59, 999);
+
+      const vehicleExistsAndBelongs =
+        await VehicleService.vehicleExistsAndBelongsToUser(
+          parsedVehicleId,
+          userId
+        );
+      if (!vehicleExistsAndBelongs) {
         return res.status(404).json({
           success: false,
-          message: "Vehicle not found",
+          message: "Vehicle not found or does not belong to the user",
         });
       }
 
@@ -140,6 +164,7 @@ export class vehicleDataController {
     try {
       const { vehicleId } = req.params;
       const { startDate, endDate } = req.query;
+      const userId = req.userId;
 
       if (!vehicleId || !startDate || !endDate) {
         return res.status(400).json({
@@ -150,13 +175,20 @@ export class vehicleDataController {
 
       const parsedVehicleId = parseInt(vehicleId);
       const parsedStartDate = new Date(startDate);
-      const parsedEndDate = new Date(endDate);
 
-      const vehicleExists = await this.vehicleExists(parsedVehicleId);
-      if (!vehicleExists) {
+      // Maximize the end date to include the full day
+      const parsedEndDate = new Date(endDate);
+      parsedEndDate.setHours(23, 59, 59, 999);
+
+      const vehicleExistsAndBelongs =
+        await VehicleService.vehicleExistsAndBelongsToUser(
+          parsedVehicleId,
+          userId
+        );
+      if (!vehicleExistsAndBelongs) {
         return res.status(404).json({
           success: false,
-          message: "Vehicle not found",
+          message: "Vehicle not found or does not belong to the user",
         });
       }
 

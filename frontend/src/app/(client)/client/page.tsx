@@ -1,0 +1,425 @@
+"use client";
+import { useState, useEffect, useCallback } from "react";
+import useAxiosClient from "../../../hooks/axiosClient";
+import VehicleSelector from "../../../components/vehicleData/vehicleSelector";
+import DateRangePicker, {
+  formatDateForServer,
+} from "../../../components/vehicleData/dateRangePicker";
+import { useSearchParams } from "next/navigation";
+import DashboardOverview from "@/components/vehicleData/dashboardOverview";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MapPin, Droplet, Wind } from "lucide-react";
+import Link from "next/link";
+import { start } from "repl";
+
+interface Vehicle {
+  id: number;
+  plateNumber: string;
+  vehicleModel: string;
+  yearOfManufacture: string;
+}
+
+export default function DashboardPage() {
+  const client = useAxiosClient();
+  const searchParams = useSearchParams();
+
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [selectedVehicleId, setSelectedVehicleId] = useState<number | null>(
+    null
+  );
+  const [startDate, setStartDate] = useState<Date | null>(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
+  const [endDate, setEndDate] = useState<Date | null>(new Date());
+  const [isClient, setIsClient] = useState(false);
+
+  // Data states
+  const [gpsData, setGpsData] = useState([]);
+  const [fuelData, setFuelData] = useState([]);
+  const [emissionsData, setEmissionsData] = useState([]);
+
+  // Loading and error states
+  const [error, setError] = useState({
+    gps: null,
+    fuel: null,
+    emissions: null,
+    vehicles: null,
+  });
+  const [isLoading, setIsLoading] = useState({
+    gps: false,
+    fuel: false,
+    emissions: false,
+    vehicles: false,
+    initial: true, // Add this new flag
+  });
+
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+
+  const fetchGPSData = useCallback(async () => {
+    if (selectedVehicleId === null || !startDate || !endDate) return;
+
+    setIsLoading((prev) => ({ ...prev, gps: true }));
+    setError((prev) => ({ ...prev, gps: null }));
+
+    try {
+      const formattedStartDate = formatDateForServer(startDate);
+      const formattedEndDate = formatDateForServer(endDate, true);
+
+      const response = await client.get(
+        `/vehicles/${selectedVehicleId}/gps/range`,
+        {
+          params: {
+            startDate: formattedStartDate,
+            endDate: formattedEndDate,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        setGpsData(response.data.data);
+      } else {
+        setError((prev: any) => ({ ...prev, gps: "Failed to fetch GPS data" }));
+      }
+    } catch (error) {
+      setError((prev: any) => ({
+        ...prev,
+        gps: "Error connecting to the server",
+      }));
+    } finally {
+      setIsLoading((prev) => ({ ...prev, gps: false }));
+    }
+  }, [selectedVehicleId, startDate, endDate]);
+
+  const fetchFuelData = useCallback(async () => {
+    if (selectedVehicleId === null || !startDate || !endDate) return;
+
+    setIsLoading((prev) => ({ ...prev, fuel: true }));
+    setError((prev) => ({ ...prev, fuel: null }));
+
+    try {
+      const formattedStartDate = formatDateForServer(startDate);
+      const formattedEndDate = formatDateForServer(endDate, true);
+
+      const response = await client.get(
+        `/vehicles/${selectedVehicleId}/fuels/range`,
+        {
+          params: {
+            startDate: formattedStartDate,
+            endDate: formattedEndDate,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        setFuelData(response.data.data);
+      } else {
+        setError((prev: any) => ({
+          ...prev,
+          fuel: "Failed to fetch fuel data",
+        }));
+      }
+    } catch (error) {
+      setError((prev: any) => ({
+        ...prev,
+        fuel: "Error connecting to the server",
+      }));
+    } finally {
+      setIsLoading((prev) => ({ ...prev, fuel: false }));
+    }
+  }, [selectedVehicleId, startDate, endDate]);
+
+  const fetchEmissionsData = useCallback(async () => {
+    if (selectedVehicleId === null || !startDate || !endDate) return;
+
+    setIsLoading((prev) => ({ ...prev, emissions: true }));
+    setError((prev) => ({ ...prev, emissions: null }));
+
+    try {
+      const formattedStartDate = formatDateForServer(startDate);
+      const formattedEndDate = formatDateForServer(endDate, true);
+
+      const response = await client.get(
+        `/vehicles/${selectedVehicleId}/emissions/range`,
+        {
+          params: {
+            startDate: formattedStartDate,
+            endDate: formattedEndDate,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        setEmissionsData(response.data.data);
+      } else {
+        setError((prev: any) => ({
+          ...prev,
+          emissions: "Failed to fetch emissions data",
+        }));
+      }
+    } catch (error) {
+      setError((prev: any) => ({
+        ...prev,
+        emissions: "Error connecting to the server",
+      }));
+    } finally {
+      setIsLoading((prev) => ({ ...prev, emissions: false }));
+    }
+  }, [selectedVehicleId, startDate, endDate]);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (!startDate) {
+      setStartDate(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
+    }
+    if (!endDate) {
+      setEndDate(new Date());
+    }
+  }, [startDate, endDate]);
+
+  useEffect(() => {
+    const fetchVehicles = async () => {
+      setIsLoading((prev) => ({ ...prev, vehicles: true }));
+      try {
+        const response = await client.get("/vehicles");
+        if (response.data.success) {
+          setVehicles(response.data.data);
+
+          const vehicleIdParam = searchParams.get("vehicleId");
+          if (
+            vehicleIdParam &&
+            response.data.data.some(
+              (v:any) => v.id === Number.parseInt(vehicleIdParam)
+            )
+          ) {
+            setSelectedVehicleId(Number.parseInt(vehicleIdParam));
+          } else if (response.data.data.length > 0) {
+            setSelectedVehicleId(response.data.data[0].id);
+          }
+
+          setInitialLoadComplete(true);
+        } else {
+          setError((prev:any) => ({
+            ...prev,
+            vehicles: "Failed to fetch vehicles",
+          }));
+        }
+      } catch (err) {
+        setError((prev:any) => ({
+          ...prev,
+          vehicles: "Error connecting to the server",
+        }));
+      } finally {
+        setIsLoading((prev) => ({ ...prev, vehicles: false, initial: false }));
+      }
+    };
+
+    fetchVehicles();
+  }, [searchParams]);
+
+  // Fetch all data types
+  const fetchAllData = useCallback(async () => {
+    if (selectedVehicleId === null || !startDate || !endDate) return;
+
+    await Promise.all([fetchGPSData(), fetchFuelData(), fetchEmissionsData()]);
+  }, [selectedVehicleId, fetchGPSData, fetchFuelData, fetchEmissionsData]);
+
+  // Fetch all data when vehicle changes or date range changes
+  useEffect(() => {
+    if (selectedVehicleId !== null && initialLoadComplete) {
+      fetchAllData();
+    }
+  }, [
+    selectedVehicleId,
+    startDate,
+    endDate,
+    initialLoadComplete,
+    fetchAllData,
+  ]);
+
+  // Get the selected vehicle details
+  const selectedVehicle =
+    vehicles.find((v: any) => v.id === selectedVehicleId) || null;
+
+  if (isLoading.initial) {
+    return (
+      <div className="flex flex-col h-full items-center justify-center bg-gray-50">
+        <div className="text-primary">Loading dashboard...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col h-full bg-gray-50">
+      <div className="bg-white shadow-sm px-6 py-4 border-b border-gray-200">
+        <h1 className="text-2xl font-bold text-primary mb-4">
+          Vehicle Dashboard
+        </h1>
+        <div className="flex flex-col md:flex-row gap-4 mb-4">
+          <VehicleSelector
+            vehicles={vehicles}
+            selectedVehicleId={selectedVehicleId || 0}
+            onSelect={(id) => setSelectedVehicleId(id)}
+          />
+          {isClient && startDate && endDate && (
+            <DateRangePicker
+              startDate={startDate}
+              endDate={endDate}
+              setStartDate={setStartDate}
+              setEndDate={setEndDate}
+              fetchAllData={fetchAllData}
+            />
+          )}
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-auto p-6">
+        {/* Vehicle Info Card */}
+        {selectedVehicle && (
+          <Card className="mb-6">
+            <CardHeader className="pb-2">
+              <CardTitle>Vehicle Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Plate Number
+                  </p>
+                  <p className="text-lg font-semibold">
+                    {/* {selectedVehicle.plateNumber || "N/A"} */}
+                    {selectedVehicle.plateNumber || "N/A"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Model
+                  </p>
+                  <p className="text-lg font-semibold">
+                    {/* {selectedVehicle.model || "N/A"} */}
+                    {selectedVehicle.vehicleModel || "N/A"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Year
+                  </p>
+                  <p className="text-lg font-semibold">
+                    {/* {selectedVehicle.year || "N/A"} */}
+                    {selectedVehicle.yearOfManufacture || "N/A"}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Dashboard Overview */}
+        <DashboardOverview
+          gpsData={gpsData}
+          fuelData={fuelData}
+          emissionsData={emissionsData}
+          isLoading={isLoading}
+          error={error}
+        />
+
+        {/* Detailed Sections Tabs */}
+        <Tabs defaultValue="gps" className="mt-6">
+          <TabsList className="grid grid-cols-3 mb-4">
+            <TabsTrigger value="gps" className="flex items-center gap-2">
+              <MapPin className="h-4 w-4" />
+              <span>GPS</span>
+            </TabsTrigger>
+            <TabsTrigger value="fuel" className="flex items-center gap-2">
+              <Droplet className="h-4 w-4" />
+              <span>Fuel</span>
+            </TabsTrigger>
+            <TabsTrigger value="emissions" className="flex items-center gap-2">
+              <Wind className="h-4 w-4" />
+              <span>Emissions</span>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="gps" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>GPS Tracking</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="text-lg font-semibold">Recent Activity</h3>
+                    <p className="text-muted-foreground">
+                      {gpsData.length > 0
+                        ? `${gpsData.length} data points collected`
+                        : "No recent GPS data available"}
+                    </p>
+                  </div>
+                  <Link
+                    href={`client/gps?vehicleId=${selectedVehicleId}`}
+                    className="text-primary hover:underline"
+                  >
+                    View detailed GPS data →
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="fuel" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Fuel Consumption</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="text-lg font-semibold">Fuel Status</h3>
+                    <p className="text-muted-foreground">
+                      {fuelData.length > 0
+                        ? `${fuelData.length} fuel records collected`
+                        : "No recent fuel data available"}
+                    </p>
+                  </div>
+                  <Link
+                    href={`/client/fuels?vehicleId=${selectedVehicleId}`}
+                    className="text-primary hover:underline"
+                  >
+                    View detailed fuel data →
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="emissions" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Emissions Monitoring</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="text-lg font-semibold">Emissions Status</h3>
+                    <p className="text-muted-foreground">
+                      {emissionsData.length > 0
+                        ? `${emissionsData.length} emission records collected`
+                        : "No recent emissions data available"}
+                    </p>
+                  </div>
+                  <Link
+                    href={`/client/emissions?vehicleId=${selectedVehicleId}`}
+                    className="text-primary hover:underline"
+                  >
+                    View detailed emissions data →
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+}

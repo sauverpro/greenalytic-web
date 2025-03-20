@@ -18,8 +18,8 @@ export const getAllVehiclesController = async (req, res) => {
 // Controller to handle getting vehicles for a specific user by userId
 export const getVehiclesByUserIdController = async (req, res) => {
   try {
-    const { userId } = req.params // Get userId from URL parameter
-    const pagination = req.pagination // Get pagination details from middleware
+    const { userId } = req.params
+    const pagination = req.pagination 
 
     // Call the service to get vehicles with pagination for the user
     const vehiclesData = await getVehiclesByUserIdService(userId, pagination)

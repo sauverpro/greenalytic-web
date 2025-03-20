@@ -1,7 +1,5 @@
-// Built-in/External library imports
 import express from 'express'
-
-// Controller imports
+import { verifyingtoken } from "../utils/jwtfunctions.js";
 import { addVehicleToUserController } from '../controllers/vehicleControllers/addVehicleToUserController.js'
 import {
   getVehicleByIdController,
@@ -35,21 +33,28 @@ VehicleRouter.get(
   getVehicleHistoryController
 )
 
+
 // VEHICLE DATA for emission, fuel, and GPS data
+VehicleRouter.use(verifyingtoken);
+
+VehicleRouter.get(
+  "/",
+  vehicleDataController.getVehiclesByUserId
+);
 
 VehicleRouter.get(
   '/:vehicleId/emissions/range',
   vehicleDataController.getEmissionsDataByTimeRange
-)
+);
 
 VehicleRouter.get(
   '/:vehicleId/fuels/range',
   vehicleDataController.getFuelsDataByTimeRange
-)
+);
 
 VehicleRouter.get(
   '/:vehicleId/gps/range',
   vehicleDataController.getGPSDataByTimeRange
-)
+);
 
 export default VehicleRouter
