@@ -236,8 +236,8 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
     };
 
     // Determine emissions status
-    const co2Threshold = 150; // Example threshold
-    const coThreshold = 2.0; // Example threshold
+    const co2Threshold = 150; 
+    const coThreshold = 2.0; 
 
     const co2Status = currentCO2 < co2Threshold;
     const coStatus =
@@ -269,7 +269,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         <CardContent>
           {isLoading.gps ? (
             <div className="h-[150px] flex items-center justify-center">
-              <p className="text-muted-foreground">Loading GPS data...</p>
+              <p className="text-muted-foreground">Loading GPS data.dffsd..</p>
             </div>
           ) : error.gps ? (
             <div className="h-[150px] flex items-center justify-center">

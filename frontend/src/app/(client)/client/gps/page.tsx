@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import useAxiosClient from "../../../../hooks/axiosClient";
 import VehicleSelector from "../../../../components/vehicleData/vehicleSelector";
 import DateRangePicker, {
@@ -10,7 +10,7 @@ import { useLoadScript } from "@react-google-maps/api";
 import { useSearchParams } from "next/navigation";
 import  GPSChartSection from "@/components/vehicleData/GPSchartSection";
 
-export default function GPSPage() {
+function GPSPageContent() {
   const client = useAxiosClient();
   const searchParams = useSearchParams();
 
@@ -145,7 +145,7 @@ export default function GPSPage() {
     <div className="flex flex-col h-full bg-gray-50">
       <div className="bg-white shadow-sm px-6 py-4 border-b border-gray-200">
         <h1 className="text-2xl font-bold text-primary mb-4">GPS Tracking</h1>
-        <div className="flex flex-col md:flex-row gap-4 mb-4">
+        <div className="flex md:block flex-col md:flex-row gap-4 mb-4">
           <VehicleSelector
             vehicles={vehicles}
             selectedVehicleId={selectedVehicleId || 0}
@@ -240,4 +240,12 @@ export default function GPSPage() {
       </div>
     </div>
   );
+}
+
+export default function GPSPage() {
+  return (
+    <Suspense>
+      <GPSPageContent />
+    </Suspense>
+  )
 }

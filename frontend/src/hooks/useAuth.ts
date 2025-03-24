@@ -1,25 +1,18 @@
-// useAuth.ts
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+// // useAuth.ts
+// import {  useEffect, useLayoutEffect } from "react";
+// import { useRouter } from "next/navigation";
 
-export function useAuth() {
-  const router = useRouter();
+// import {  useState } from "react";
 
-  useEffect(() => {
-    const token = localStorage.getItem("AUTH_TOKEN");
-    const role = localStorage.getItem("USER_ROLE");
+// export function useAuth() {
 
-    if (!token) {
-      router.push("/login");
-      return;
-    }
+//   // const [isAuthChecked, setIsAuthChecked] = useState(false);
 
-    if (window.location.pathname.startsWith("/admin") && role !== "admin") {
-      router.push("/client");
-    }
+//   useEffect(() => {
 
-    if (window.location.pathname.startsWith("/client") && role === "admin") {
-      router.push("/admin");
-    }
-  }, [router]);
-}
+
+//     // setIsAuthChecked(true);
+//   }, []);
+
+//   return  null;
+// }

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import useAxiosClient from "../../../../hooks/axiosClient";
 import VehicleSelector from "../../../../components/vehicleData/vehicleSelector";
 import DateRangePicker, {
@@ -8,7 +8,7 @@ import DateRangePicker, {
 import { useSearchParams } from "next/navigation";
 import EmissionsChartSection from "@/components/vehicleData/EmissionChartSection";
 
-export default function EmissionsPage() {
+ function  EmissionsPageContent() {
   const client = useAxiosClient();
   const searchParams = useSearchParams();
 
@@ -35,7 +35,6 @@ export default function EmissionsPage() {
   });
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
-  // Fetch vehicles on component mount
   useEffect(() => {
     const fetchVehicles = async () => {
       setIsLoading((prev) => ({ ...prev, vehicles: true }));
@@ -44,7 +43,6 @@ export default function EmissionsPage() {
         if (response.data.success) {
           setVehicles(response.data.data);
 
-          // Set selected vehicle from URL params or first vehicle
           const vehicleIdParam = searchParams.get("vehicleId");
           if (
             vehicleIdParam &&
@@ -206,5 +204,13 @@ export default function EmissionsPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function EmissionsPage() {
+  return (
+    <Suspense>
+      <EmissionsPageContent />
+    </Suspense>
   );
 }

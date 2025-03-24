@@ -1,4 +1,7 @@
-import React from "react";
+"use client";
+
+import type React from "react";
+import { useState, useEffect } from "react";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -10,6 +13,11 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import {
+  ChartSkeleton,
+  EmptyDataMessage,
+  ErrorMessage,
+} from "./emissionSkeleton";
 
 ChartJS.register(
   CategoryScale,
@@ -78,149 +86,183 @@ const EmissionsChartSection: React.FC<EmissionsChartSectionProps> = ({
   isLoading,
   error,
 }) => {
-  // Sort data by timestamp to ensure chronological order
-  const sortedData = [...emissionsData].sort(
-    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-  );
-
-  // Prepare combined date+time labels for x-axis
-  const dateTimeLabels = sortedData.map((item) => {
-    const date = new Date(item.timestamp);
-    return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    })}`;
+  // State to control what to display
+  const [displayState, setDisplayState] = useState<
+    "loading" | "data" | "empty" | "error"
+  >("loading");
+  const [sortedData, setSortedData] = useState<EmissionsDataItem[]>([]);
+  const [chartData, setChartData] = useState<{
+    co2: any;
+    co: any;
+    o2: any;
+    hc: any;
+  }>({
+    co2: null,
+    co: null,
+    o2: null,
+    hc: null,
   });
-
-  // Prepare data for CO2 chart
-  const co2ChartData = {
-    labels: dateTimeLabels,
-    datasets: [
-      {
-        label: "CO2 Percentage",
-        data: sortedData.map((item) => item.co2Percentage),
-        borderColor: "rgb(75, 192, 192)",
-        backgroundColor: "rgba(75, 192, 192, 0.2)",
-        fill: true,
-        tension: 0.4,
-      },
-    ],
-  };
-
-  // Prepare data for CO chart
-  const coChartData = {
-    labels: dateTimeLabels,
-    datasets: [
-      {
-        label: "CO Percentage",
-        data: sortedData.map((item) => item.coPercentage),
-        borderColor: "rgb(255, 99, 132)",
-        backgroundColor: "rgba(255, 99, 132, 0.2)",
-        fill: true,
-        tension: 0.4,
-      },
-    ],
-  };
-
-  // Prepare data for O2 chart
-  const o2ChartData = {
-    labels: dateTimeLabels,
-    datasets: [
-      {
-        label: "O2 Percentage",
-        data: sortedData.map((item) => item.o2Percentage),
-        borderColor: "rgb(54, 162, 235)",
-        backgroundColor: "rgba(54, 162, 235, 0.2)",
-        fill: true,
-        tension: 0.4,
-      },
-    ],
-  };
-
-  // Prepare data for HC chart
-  const hcChartData = {
-    labels: dateTimeLabels,
-    datasets: [
-      {
-        label: "HC (PPM)",
-        data: sortedData.map((item) => item.hcPPM),
-        borderColor: "rgb(255, 159, 64)",
-        backgroundColor: "rgba(255, 159, 64, 0.2)",
-        fill: true,
-        tension: 0.4,
-      },
-    ],
-  };
-
-  // Calculate summary statistics
-  const calculateStats = () => {
-    if (sortedData.length === 0) return null;
-
-    const currentCO2 = sortedData[sortedData.length - 1].co2Percentage;
-    const currentCO = sortedData[sortedData.length - 1].coPercentage;
-    const currentO2 = sortedData[sortedData.length - 1].o2Percentage;
-    const currentHC = sortedData[sortedData.length - 1].hcPPM;
-
-    const avgCO2 =
-      sortedData.reduce((sum, item) => sum + item.co2Percentage, 0) /
-      sortedData.length;
-    const avgCO =
-      sortedData.reduce((sum, item) => sum + item.coPercentage, 0) /
-      sortedData.length;
-    const avgO2 =
-      sortedData.reduce((sum, item) => sum + item.o2Percentage, 0) /
-      sortedData.length;
-    const avgHC =
-      sortedData.reduce((sum, item) => sum + item.hcPPM, 0) / sortedData.length;
-
-    return {
-      current: {
-        co2: currentCO2,
-        co: currentCO,
-        o2: currentO2,
-        hc: currentHC,
-      },
-      average: {
-        co2: avgCO2,
-        co: avgCO,
-        o2: avgO2,
-        hc: avgHC,
-      },
+  const [stats, setStats] = useState<{
+    current: {
+      co2: number;
+      co: number;
+      o2: number;
+      hc: number;
     };
-  };
+    average: {
+      co2: number;
+      co: number;
+      o2: number;
+      hc: number;
+    };
+  } | null>(null);
 
-  const stats = calculateStats();
+  // Always show skeleton first, then process data
+  useEffect(() => {
+    // Set initial loading state
+    setDisplayState("loading");
 
-  if (isLoading.emissions) {
-    return (
-      <div className="grid grid-cols-1 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm flex items-center justify-center h-64">
-          <div className="text-gray-500">Loading emissions data...</div>
-        </div>
-      </div>
-    );
+    // Simulate loading delay (remove this in production)
+    const loadingTimer = setTimeout(() => {
+      // Check for errors first
+      if (error.emissions) {
+        setDisplayState("error");
+        return;
+      }
+
+      // If still loading, keep the loading state
+      if (isLoading.emissions) {
+        return;
+      }
+
+      // Process data if available
+      if (emissionsData && emissionsData.length > 0) {
+        // Sort data by timestamp
+        const sorted = [...emissionsData].sort(
+          (a, b) =>
+            new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+        );
+        setSortedData(sorted);
+
+        // Prepare combined date+time labels for x-axis
+        const dateTimeLabels = sorted.map((item) => {
+          const date = new Date(item.timestamp);
+          return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}`;
+        });
+
+        // Set chart data for all emissions types
+        setChartData({
+          co2: {
+            labels: dateTimeLabels,
+            datasets: [
+              {
+                label: "CO2 Percentage",
+                data: sorted.map((item) => item.co2Percentage),
+                borderColor: "rgb(75, 192, 192)",
+                backgroundColor: "rgba(75, 192, 192, 0.2)",
+                fill: true,
+                tension: 0.4,
+              },
+            ],
+          },
+          co: {
+            labels: dateTimeLabels,
+            datasets: [
+              {
+                label: "CO Percentage",
+                data: sorted.map((item) => item.coPercentage),
+                borderColor: "rgb(255, 99, 132)",
+                backgroundColor: "rgba(255, 99, 132, 0.2)",
+                fill: true,
+                tension: 0.4,
+              },
+            ],
+          },
+          o2: {
+            labels: dateTimeLabels,
+            datasets: [
+              {
+                label: "O2 Percentage",
+                data: sorted.map((item) => item.o2Percentage),
+                borderColor: "rgb(54, 162, 235)",
+                backgroundColor: "rgba(54, 162, 235, 0.2)",
+                fill: true,
+                tension: 0.4,
+              },
+            ],
+          },
+          hc: {
+            labels: dateTimeLabels,
+            datasets: [
+              {
+                label: "HC (PPM)",
+                data: sorted.map((item) => item.hcPPM),
+                borderColor: "rgb(255, 159, 64)",
+                backgroundColor: "rgba(255, 159, 64, 0.2)",
+                fill: true,
+                tension: 0.4,
+              },
+            ],
+          },
+        });
+
+        // Calculate summary statistics
+        const currentCO2 = sorted[sorted.length - 1].co2Percentage;
+        const currentCO = sorted[sorted.length - 1].coPercentage;
+        const currentO2 = sorted[sorted.length - 1].o2Percentage;
+        const currentHC = sorted[sorted.length - 1].hcPPM;
+
+        const avgCO2 =
+          sorted.reduce((sum, item) => sum + item.co2Percentage, 0) /
+          sorted.length;
+        const avgCO =
+          sorted.reduce((sum, item) => sum + item.coPercentage, 0) /
+          sorted.length;
+        const avgO2 =
+          sorted.reduce((sum, item) => sum + item.o2Percentage, 0) /
+          sorted.length;
+        const avgHC =
+          sorted.reduce((sum, item) => sum + item.hcPPM, 0) / sorted.length;
+
+        setStats({
+          current: {
+            co2: currentCO2,
+            co: currentCO,
+            o2: currentO2,
+            hc: currentHC,
+          },
+          average: {
+            co2: avgCO2,
+            co: avgCO,
+            o2: avgO2,
+            hc: avgHC,
+          },
+        });
+
+        setDisplayState("data");
+      } else {
+        // No data available
+        setDisplayState("empty");
+      }
+    }, 1000); // Simulate 1 second loading time
+
+    return () => clearTimeout(loadingTimer);
+  }, [emissionsData, isLoading.emissions, error.emissions]);
+
+  // Render based on display state
+  if (displayState === "loading") {
+    return <ChartSkeleton type="quad" height={300} />;
   }
 
-  if (error.emissions) {
-    return (
-      <div className="grid grid-cols-1 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm flex items-center justify-center h-64">
-          <div className="text-red-500">{error.emissions}</div>
-        </div>
-      </div>
-    );
+  if (displayState === "error") {
+    return <ErrorMessage message={error.emissions || "An error occurred"} />;
   }
 
-  if (sortedData.length === 0) {
-    return (
-      <div className="grid grid-cols-1 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm flex items-center justify-center h-64">
-          <div className="text-gray-500">
-            No emissions data available for the selected time range
-          </div>
-        </div>
-      </div>
-    );
+  if (displayState === "empty") {
+    return <EmptyDataMessage message="No emissions data available" />;
   }
 
   return (
@@ -231,7 +273,7 @@ const EmissionsChartSection: React.FC<EmissionsChartSectionProps> = ({
           🏭 CO2 Emissions
         </h2>
         <div className="min-h-[300px]">
-          <Line data={co2ChartData} options={chartOptions} />
+          <Line data={chartData.co2} options={chartOptions} />
         </div>
       </div>
 
@@ -241,7 +283,7 @@ const EmissionsChartSection: React.FC<EmissionsChartSectionProps> = ({
           🏭 CO Emissions
         </h2>
         <div className="min-h-[300px]">
-          <Line data={coChartData} options={chartOptions} />
+          <Line data={chartData.co} options={chartOptions} />
         </div>
       </div>
 
@@ -249,7 +291,7 @@ const EmissionsChartSection: React.FC<EmissionsChartSectionProps> = ({
       <div className="bg-white p-6 rounded-lg shadow-sm">
         <h2 className="text-xl font-bold mb-4 text-gray-800">💨 O2 Levels</h2>
         <div className="min-h-[300px]">
-          <Line data={o2ChartData} options={chartOptions} />
+          <Line data={chartData.o2} options={chartOptions} />
         </div>
       </div>
 
@@ -259,7 +301,7 @@ const EmissionsChartSection: React.FC<EmissionsChartSectionProps> = ({
           🔥 HC Emissions
         </h2>
         <div className="min-h-[300px]">
-          <Line data={hcChartData} options={chartOptions} />
+          <Line data={chartData.hc} options={chartOptions} />
         </div>
       </div>
 

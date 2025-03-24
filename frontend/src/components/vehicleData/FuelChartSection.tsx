@@ -1,4 +1,6 @@
-import React from "react";
+"use client";
+
+import React, { useState, useEffect } from "react";
 import { Line, Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -11,6 +13,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import { ChartSkeleton, EmptyDataMessage, ErrorMessage } from "./fuelSkeleton"; 
 
 ChartJS.register(
   CategoryScale,
@@ -71,106 +74,30 @@ const chartOptions = {
   maintainAspectRatio: false,
 };
 
-const FuelChartSection: React.FC<FuelChartSectionProps> = ({
-  fuelData,
-  isLoading,
-  error,
-}) => {
-  // Sort data by timestamp to ensure chronological order
-  const sortedData = [...fuelData].sort(
-    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-  );
+const FuelDataContext = React.createContext<{
+  displayState: "loading" | "data" | "empty" | "error";
+  sortedData: FuelDataItem[];
+  errorMessage: string | null;
+  stats: {
+    currentFuelLevel: number;
+    totalConsumption: number;
+    avgConsumption: number;
+    fuelDepletion: number;
+  } | null;
+  fuelLevelChartData: any;
+  fuelConsumptionChartData: any;
+}>({
+  displayState: "loading",
+  sortedData: [],
+  errorMessage: null,
+  stats: null,
+  fuelLevelChartData: null,
+  fuelConsumptionChartData: null,
+});
 
-  // Prepare combined date+time labels for x-axis
-  const dateTimeLabels = sortedData.map((item) => {
-    const date = new Date(item.timestamp);
-    return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    })}`;
-  });
-
-  // Prepare data for Fuel Level chart
-  const fuelLevelChartData = {
-    labels: dateTimeLabels,
-    datasets: [
-      {
-        label: "Fuel Level (%)",
-        data: sortedData.map((item) => item.fuelLevel),
-        borderColor: "rgb(54, 162, 235)",
-        backgroundColor: "rgba(54, 162, 235, 0.2)",
-        fill: true,
-        tension: 0.4,
-      },
-    ],
-  };
-
-  // Prepare data for Fuel Consumption chart
-  const fuelConsumptionChartData = {
-    labels: dateTimeLabels,
-    datasets: [
-      {
-        label: "Fuel Consumption (L/100km)",
-        data: sortedData.map((item) => item.fuelConsumption),
-        backgroundColor: "rgba(255, 99, 132, 0.8)",
-      },
-    ],
-  };
-
-  // Calculate summary statistics
-  const calculateStats = () => {
-    if (sortedData.length === 0) return null;
-
-    const currentFuelLevel = sortedData[sortedData.length - 1].fuelLevel;
-    const totalConsumption = sortedData.reduce(
-      (sum, item) => sum + item.fuelConsumption,
-      0
-    );
-    const avgConsumption = totalConsumption / sortedData.length;
-    const fuelDepletion =
-      sortedData[0].fuelLevel - sortedData[sortedData.length - 1].fuelLevel;
-
-    return {
-      currentFuelLevel,
-      totalConsumption,
-      avgConsumption,
-      fuelDepletion,
-    };
-  };
-
-  const stats = calculateStats();
-
-  if (isLoading.fuel) {
-    return (
-      <div className="grid grid-cols-1 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm flex items-center justify-center h-64">
-          <div className="text-gray-500">Loading fuel data...</div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error.fuel) {
-    return (
-      <div className="grid grid-cols-1 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm flex items-center justify-center h-64">
-          <div className="text-red-500">{error.fuel}</div>
-        </div>
-      </div>
-    );
-  }
-
-  if (sortedData.length === 0) {
-    return (
-      <div className="grid grid-cols-1 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm flex items-center justify-center h-64">
-          <div className="text-gray-500">
-            No fuel data available for the selected time range
-          </div>
-        </div>
-      </div>
-    );
-  }
+const FuelChartData = () => {
+  const { stats, fuelLevelChartData, fuelConsumptionChartData } =
+    React.useContext(FuelDataContext);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -235,6 +162,137 @@ const FuelChartSection: React.FC<FuelChartSectionProps> = ({
         </div>
       )}
     </div>
+  );
+};
+
+const FuelChartSection: React.FC<FuelChartSectionProps> = ({
+  fuelData,
+  isLoading,
+  error,
+}) => {
+  // State to control what to display
+  const [displayState, setDisplayState] = useState<
+    "loading" | "data" | "empty" | "error"
+  >("loading");
+  const [sortedData, setSortedData] = useState<FuelDataItem[]>([]);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [stats, setStats] = useState<{
+    currentFuelLevel: number;
+    totalConsumption: number;
+    avgConsumption: number;
+    fuelDepletion: number;
+  } | null>(null);
+  const [fuelLevelChartData, setFuelLevelChartData] = useState<any>(null);
+  const [fuelConsumptionChartData, setFuelConsumptionChartData] =
+    useState<any>(null);
+
+  // Always show skeleton first, then process data
+  useEffect(() => {
+    setDisplayState("loading");
+
+    // Simulate loading delay (remove this in production)
+    const loadingTimer = setTimeout(() => {
+      // Check for errors first
+      if (error.fuel) {
+        setErrorMessage(error.fuel);
+        setDisplayState("error");
+        return;
+      }
+
+      // If still loading, keep the loading state
+      if (isLoading.fuel) {
+        return;
+      }
+
+      // Process data if available
+      if (fuelData && fuelData.length > 0) {
+        // Sort data by timestamp
+        const sorted = [...fuelData].sort(
+          (a, b) =>
+            new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+        );
+        setSortedData(sorted);
+
+        // Prepare chart data
+        const dateTimeLabels = sorted.map((item) => {
+          const date = new Date(item.timestamp);
+          return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}`;
+        });
+
+        // Set fuel level chart data
+        setFuelLevelChartData({
+          labels: dateTimeLabels,
+          datasets: [
+            {
+              label: "Fuel Level (%)",
+              data: sorted.map((item) => item.fuelLevel),
+              borderColor: "rgb(54, 162, 235)",
+              backgroundColor: "rgba(54, 162, 235, 0.2)",
+              fill: true,
+              tension: 0.4,
+            },
+          ],
+        });
+
+        // Set fuel consumption chart data
+        setFuelConsumptionChartData({
+          labels: dateTimeLabels,
+          datasets: [
+            {
+              label: "Fuel Consumption (L/100km)",
+              data: sorted.map((item) => item.fuelConsumption),
+              backgroundColor: "rgba(255, 99, 132, 0.8)",
+            },
+          ],
+        });
+
+        const currentFuelLevel = sorted[sorted.length - 1].fuelLevel;
+        const totalConsumption = sorted.reduce(
+          (sum, item) => sum + item.fuelConsumption,
+          0
+        );
+        const avgConsumption = totalConsumption / sorted.length;
+        const fuelDepletion =
+          sorted[0].fuelLevel - sorted[sorted.length - 1].fuelLevel;
+
+        setStats({
+          currentFuelLevel,
+          totalConsumption,
+          avgConsumption,
+          fuelDepletion,
+        });
+
+        setDisplayState("data");
+      } else {
+        // No data available
+        setDisplayState("empty");
+      }
+    }, 1000);
+
+    return () => clearTimeout(loadingTimer);
+  }, [fuelData, isLoading.fuel, error.fuel]);
+
+  const contextValue = {
+    displayState,
+    sortedData,
+    errorMessage,
+    stats,
+    fuelLevelChartData,
+    fuelConsumptionChartData,
+  };
+
+  return (
+    <FuelDataContext.Provider value={contextValue}>
+      {displayState === "loading" && <ChartSkeleton />}
+      {displayState === "data" && <FuelChartData />}
+      {displayState === "empty" && <EmptyDataMessage />}
+      {displayState === "error" && (
+        <ErrorMessage message={errorMessage || "An error occurred"} />
+      )}
+    </FuelDataContext.Provider>
   );
 };
 

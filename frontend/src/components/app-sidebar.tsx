@@ -1,16 +1,18 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import type React from "react";
+import { useEffect, useState } from "react";
 import { useSidebar } from "@/components/ui/sidebar";
 import Image from "next/image";
 import logo from "../../public/images/logo.png";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { usePathname } from "next/navigation";
 
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-  TooltipProvider
+  TooltipProvider,
 } from "@/components/ui/tooltip";
 import {
   Sidebar,
@@ -19,7 +21,7 @@ import {
   SidebarGroupContent,
   SidebarMenu,
   SidebarMenuButton,
-  SidebarMenuItem
+  SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -36,36 +38,48 @@ import {
   MapPin,
   Leaf,
   Sparkles,
-  LogOut
+  LogOut,
+  ChevronRight,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { handleLogout } from "@/api/services/userService";
-import { useAuth } from "@/hooks/useAuth";
 
 const adminItems = [
   { title: "Dashboard", url: "/admin", icon: Home },
   { title: "Users", url: "/admin/users", icon: Users },
-  { title: "Messages", url: "#", icon: MessageSquare },
-  { title: "Reports", url: "#", icon: FileText },
+  { title: "Messages", url: "/admin/messages", icon: MessageSquare },
+  { title: "Reports", url: "/admin/reports", icon: FileText },
   { title: "Map", url: "/admin/map", icon: MapPin },
 ];
 
 const clientItems = [
   { title: "Dashboard", url: "/client", icon: Home },
-  { title: "gps", url: "/client/gps", icon: LocateFixed },
-  { title: "fuels", url: "/client/fuels", icon: Fuel },
-  { title: "emissions", url: "/client/emissions", icon: Router },
-  { title: "settings", url: "#", icon: Settings },
+  { title: "GPS Tracking", url: "/client/gps", icon: LocateFixed },
+  { title: "Fuel Analytics", url: "/client/fuels", icon: Fuel },
+  { title: "Emissions Data", url: "/client/emissions", icon: Router },
+  { title: "Live Vehicle Status", url: "/client/live-status", icon: Sparkles },
+  { title: "Settings", url: "/client/settings", icon: Settings },
 ];
 
 export function AppSidebar() {
   const router = useRouter();
-  const [activeItem, setActiveItem] = useState("Dashboard");
+  const pathname = usePathname();
   const { state: isCollapsed } = useSidebar();
   const [isLogoHovered, setIsLogoHovered] = useState(false);
   const [items, setItems] = useState(clientItems);
+  const [activeItem, setActiveItem] = useState("");
 
-  useAuth();
+  useEffect(() => {
+    const currentPath = pathname;
+    const currentItem = [...adminItems, ...clientItems].find(
+      (item) =>
+        currentPath === item.url || currentPath.startsWith(`${item.url}/`)
+    );
+
+    if (currentItem) {
+      setActiveItem(currentItem.title);
+    }
+  }, [pathname]);
 
   useEffect(() => {
     const role = localStorage.getItem("USER_ROLE");
@@ -79,7 +93,7 @@ export function AppSidebar() {
     }
   }, [router]);
 
-  const onLogout = (e: any) => {
+  const onLogout = (e: React.MouseEvent) => {
     e.preventDefault();
     const loggedOut = handleLogout();
     if (loggedOut) {
@@ -89,50 +103,47 @@ export function AppSidebar() {
 
   const LogoBranding = () => (
     <Card
-      className={`relative bg-emerald-900/50 border border-emerald-700 shadow-lg shadow-emerald-500/20 rounded-lg overflow-hidden mb-4
-        ${isCollapsed === "expanded" ? "p-2" : "p-2"}`}
+      className={`relative overflow-hidden border-0  my-4 bg-gradient-to-br from-emerald-800 to-emerald-900 shadow-lg shadow-emerald-900/30
+        ${isCollapsed === "expanded" ? "mx-3 p-3" : "mx-1 p-1"}`}
       onMouseEnter={() => setIsLogoHovered(true)}
       onMouseLeave={() => setIsLogoHovered(false)}
     >
-      <CardContent className="flex flex-col items-center">
+      <CardContent className="flex flex-col items-center p-0">
         {isCollapsed === "expanded" ? (
           <>
             <motion.div
-              animate={{ scale: isLogoHovered ? 1.1 : 1 }}
+              animate={{ scale: isLogoHovered ? 1.05 : 1 }}
               transition={{ duration: 0.3 }}
-              className="relative group"
+              className="relative group w-full flex justify-center py-3"
             >
-              <div className="absolute inset-0 bg-emerald-400 blur-lg opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-              <Image
-                src={logo}
-                alt="GreenAlytics Logo"
-                className="w-32 h-16 relative z-10"
-              />
+              <div className="absolute inset-0 bg-emerald-400 blur-xl opacity-20 group-hover:opacity-30 transition-opacity duration-500 rounded-full"></div>
+              <div className="h-20 flex items-center justify-center overflow-hidden">
+                <Image
+                  src={logo || "/placeholder.svg"}
+                  alt="GreenAlytics Logo"
+                  width={300}
+                  height={80}
+                  className="w-full h-auto object-contain object-center transform hover:scale-110 transition-transform duration-300 ease-in-out"
+                />
+              </div>
             </motion.div>
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="flex flex-col items-center space-y-2 mt-2"
-            >
-              <div className="flex items-center space-x-2">
-                <Sparkles className="w-4 h-4 text-emerald-300" />
-                <h2 className="text-emerald-50 font-bold text-xl bg-gradient-to-r from-emerald-300 to-emerald-100 bg-clip-text text-transparent">
-                  GREENALYTIC MOTORS
-                </h2>
-                <Sparkles className="w-4 h-4 text-emerald-300" />
-              </div>
-              <p className="text-emerald-300 text-sm font-medium tracking-wide">
-                Data Insights Platform
-              </p>
-            </motion.div>
+              className="flex flex-col items-center space-y-1 mt-1 mb-2 px-2"
+            ></motion.div>
           </>
         ) : (
-          <Image
-            src={logo}
-            alt="Logo"
-            className="w-10 h-10 transition-all duration-300"
-          />
+          <div className="flex items-center justify-center py-2">
+            <motion.div
+              whileHover={{ rotate: 360 }}
+              transition={{ duration: 0.5 }}
+              className="bg-emerald-700 rounded-full p-1.5 shadow-lg"
+            >
+              <Leaf className="w-6 h-6 text-white" />
+            </motion.div>
+          </div>
         )}
       </CardContent>
     </Card>
@@ -141,13 +152,14 @@ export function AppSidebar() {
   return (
     <Sidebar
       collapsible="icon"
-      className={`fixed top-0 border-r border-emerald-600/20 shadow-lg h-[calc(100vh-4rem) overflow-y-auto]
-        ${isCollapsed === "expanded" ? "w-64" : "w-16"}
+      className={`fixed top-0 border-r border-emerald-700/30 shadow-xl h-screen overflow-hidden
+        ${isCollapsed === "expanded" ? "w-64" : "w-20"}
         transition-all duration-300 ease-in-out`}
     >
-      <SidebarContent className="bg-gradient-to-b from-emerald-800 to-emerald-900 w-full h-full">
+      <SidebarContent className="bg-gradient-to-b from-emerald-900 via-emerald-900 to-emerald-950 w-full h-full">
         <LogoBranding />
-        <SidebarGroup className="h-3/4 overflow-y-auto">
+
+        <SidebarGroup className="h-[calc(100vh-16rem)] overflow-y-auto px-2">
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
@@ -158,47 +170,52 @@ export function AppSidebar() {
                         <Link
                           href={item.url}
                           onClick={() => setActiveItem(item.title)}
-                          className={`flex items-center transition-all duration-300 relative my-2 py-4 rounded-lg
+                          className={`flex items-center transition-all duration-300 relative my-1.5 py-3 rounded-xl
                             ${
                               isCollapsed === "expanded"
                                 ? "px-4 gap-3"
-                                : "w-12 h-12 mx-auto justify-center"
+                                : "w-14 h-14 mx-auto justify-center"
                             }
                             ${
                               activeItem === item.title
-                                ? "bg-emerald-600 text-white font-medium shadow-lg shadow-emerald-900/30 border border-emerald-500"
-                                : "text-emerald-100 hover:bg-secondary"
+                                ? "bg-gradient-to-r from-emerald-600 to-emerald-700 text-white font-medium shadow-lg shadow-emerald-900/30"
+                                : "text-emerald-100 hover:bg-emerald-800/50"
                             }`}
                         >
                           <TooltipTrigger>
-                            <div className="flex items-center justify-center">
+                            <div className="flex items-center justify-center relative">
                               <item.icon
-                                className={`w-8 h-8 transition-transform duration-300
+                                className={`w-6 h-6 transition-transform duration-300
                                 ${
                                   activeItem === item.title
-                                    ? "text-white scale-110"
-                                    : "text-emerald-200"
+                                    ? "text-white"
+                                    : "text-emerald-300"
                                 }`}
                               />
+
+                              {activeItem === item.title && (
+                                <motion.div
+                                  initial={{ scale: 0 }}
+                                  animate={{ scale: 1 }}
+                                  className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-orange-400 shadow-lg shadow-orange-500/30"
+                                />
+                              )}
                             </div>
                           </TooltipTrigger>
+
                           {isCollapsed === "expanded" && (
-                            <span className="transition-all duration-300">
+                            <span className="transition-all duration-300 flex-1">
                               {item.title}
                             </span>
                           )}
-                          {activeItem === item.title && (
-                            <span
-                              className={`absolute w-2 h-2 rounded-full bg-orange-500 shadow-lg shadow-emerald-300/50
-                              ${
-                                isCollapsed === "expanded"
-                                  ? "right-2"
-                                  : "right-1"
-                              }`}
-                            ></span>
-                          )}
+
+                          {isCollapsed === "expanded" &&
+                            activeItem === item.title && (
+                              <ChevronRight className="w-4 h-4 text-emerald-200" />
+                            )}
                         </Link>
                       </SidebarMenuButton>
+
                       {isCollapsed !== "expanded" && (
                         <TooltipContent
                           side="right"
@@ -214,39 +231,41 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        <div className="absolute bottom-10 w-full p-4 border-emerald-700 bg-emerald-900/30 mt-8">
+
+        {/* Logout Button */}
+        <div className="absolute bottom-20 w-full px-3">
           <SidebarMenuItem>
             <TooltipProvider delayDuration={0}>
               <Tooltip>
                 <SidebarMenuButton asChild>
-                  <div
+                  <button
                     onClick={onLogout}
-                    className={`flex items-center transition-all duration-300 relative my-2 py-4 rounded-lg w-full
+                    className={`flex items-center transition-all duration-300 relative py-3 rounded-xl w-full
                       ${
                         isCollapsed === "expanded"
                           ? "px-4 gap-3"
-                          : "w-12 h-12 mx-auto justify-center"
+                          : "w-14 h-14 mx-auto justify-center"
                       }
-                      text-emerald-100 hover:bg-emerald-700/40`}
+                      bg-red-500/10 hover:bg-red-500/15 text-red-200 hover:text-red-500 font-medium shadow-lg `}
                   >
                     <TooltipTrigger>
                       <div className="flex items-center justify-center">
-                        <LogOut
-                          className={`w-8 h-8 transition-transform duration-300 text-emerald-200`}
-                        />
+                        <LogOut className="w-6 h-6 transition-transform duration-300 text-red-300" />
                       </div>
                     </TooltipTrigger>
+
                     {isCollapsed === "expanded" && (
-                      <span className="transition-all duration-300">
+                      <span className="transition-all duration-300 font-medium">
                         Logout
                       </span>
                     )}
-                  </div>
+                  </button>
                 </SidebarMenuButton>
+
                 {isCollapsed !== "expanded" && (
                   <TooltipContent
                     side="right"
-                    className="bg-emerald-900 text-emerald-50 border-emerald-700 shadow-xl"
+                    className="bg-red text-red-50 border shadow-xl"
                   >
                     Logout
                   </TooltipContent>
@@ -255,11 +274,15 @@ export function AppSidebar() {
             </TooltipProvider>
           </SidebarMenuItem>
         </div>
-        <div className="absolute bottom-0 w-full p-4 border-t border-emerald-700 bg-emerald-800/50">
+
+        {/* Footer */}
+        <div className="absolute bottom-0 w-full p-4 border-t border-emerald-700/50 bg-emerald-950/50">
           {isCollapsed === "expanded" ? (
             <div className="flex items-center justify-center space-x-2">
               <Leaf className="h-4 w-4 text-emerald-400" />
-              <p className="text-emerald-200 text-sm">GREENALYTIC MOTORS</p>
+              <p className="text-emerald-400 text-xs">
+                © 2023 GREENALYTIC MOTORS
+              </p>
             </div>
           ) : (
             <div className="flex justify-center">

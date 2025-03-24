@@ -1,4 +1,7 @@
-import React from "react";
+"use client";
+
+import type React from "react";
+import { useState, useEffect } from "react";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -10,6 +13,11 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import {
+  ChartSkeleton,
+  EmptyDataMessage,
+  ErrorMessage,
+} from "./gpsSkeleton";
 
 ChartJS.register(
   CategoryScale,
@@ -76,109 +84,124 @@ const GPSChartSection: React.FC<GPSChartSectionProps> = ({
   isLoading,
   error,
 }) => {
-  // Sort data by timestamp to ensure chronological order
-  const sortedData = [...gpsData].sort(
-    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-  );
+  // State to control what to display
+  const [displayState, setDisplayState] = useState<
+    "loading" | "data" | "empty" | "error"
+  >("loading");
+  const [sortedData, setSortedData] = useState<GPSDataItem[]>([]);
+  const [speedChartData, setSpeedChartData] = useState<any>(null);
+  const [stats, setStats] = useState<{
+    currentSpeed: number;
+    avgSpeed: number;
+    maxSpeed: number;
+    totalDistance: number;
+  } | null>(null);
 
-  // Prepare combined date+time labels for x-axis
-  const dateTimeLabels = sortedData.map((item) => {
-    const date = new Date(item.timestamp);
-    return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    })}`;
-  });
+  // Always show skeleton first, then process data
+  useEffect(() => {
+    // Set initial loading state
+    setDisplayState("loading");
 
-  // Prepare data for Speed chart
-  const speedChartData = {
-    labels: dateTimeLabels,
-    datasets: [
-      {
-        label: "Speed (km/h)",
-        data: sortedData.map((item) => item.speed),
-        borderColor: "rgb(75, 192, 192)",
-        backgroundColor: "rgba(75, 192, 192, 0.2)",
-        fill: true,
-        tension: 0.4,
-      },
-    ],
-  };
+    // Simulate loading delay (remove this in production)
+    const loadingTimer = setTimeout(() => {
+      // Check for errors first
+      if (error.gps) {
+        setDisplayState("error");
+        return;
+      }
 
-  // Calculate summary statistics
-  const calculateStats = () => {
-    if (sortedData.length === 0) return null;
+      // If still loading, keep the loading state
+      if (isLoading.gps) {
+        return;
+      }
 
-    const speeds = sortedData.map((item) => item.speed);
-    const currentSpeed = sortedData[sortedData.length - 1].speed;
-    const avgSpeed =
-      speeds.reduce((sum, speed) => sum + speed, 0) / speeds.length;
-    const maxSpeed = Math.max(...speeds);
-    const totalDistance = sortedData.reduce((distance, item, index) => {
-      if (index === 0) return 0;
+      // Process data if available
+      if (gpsData && gpsData.length > 0) {
+        const sorted = [...gpsData].sort(
+          (a, b) =>
+            new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+        );
+        setSortedData(sorted);
 
-      // Calculate distance between consecutive points (simple approximation)
-      const prevLat = sortedData[index - 1].latitude;
-      const prevLng = sortedData[index - 1].longitude;
-      const currLat = item.latitude;
-      const currLng = item.longitude;
+        const dateTimeLabels = sorted.map((item) => {
+          const date = new Date(item.timestamp);
+          return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}`;
+        });
 
-      // Using Haversine formula would be more accurate for real-world applications
-      const R = 6371; // Earth's radius in km
-      const dLat = ((currLat - prevLat) * Math.PI) / 180;
-      const dLng = ((currLng - prevLng) * Math.PI) / 180;
-      const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos((prevLat * Math.PI) / 180) *
-          Math.cos((currLat * Math.PI) / 180) *
-          Math.sin(dLng / 2) *
-          Math.sin(dLng / 2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      const d = R * c; // Distance in km
+        setSpeedChartData({
+          labels: dateTimeLabels,
+          datasets: [
+            {
+              label: "Speed (km/h)",
+              data: sorted.map((item) => item.speed),
+              borderColor: "rgb(75, 192, 192)",
+              backgroundColor: "rgba(75, 192, 192, 0.2)",
+              fill: true,
+              tension: 0.4,
+            },
+          ],
+        });
 
-      return distance + d;
-    }, 0);
+        // Calculate stats
+        const speeds = sorted.map((item) => item.speed);
+        const currentSpeed = sorted[sorted.length - 1].speed;
+        const avgSpeed =
+          speeds.reduce((sum, speed) => sum + speed, 0) / speeds.length;
+        const maxSpeed = Math.max(...speeds);
+        const totalDistance = sorted.reduce((distance, item, index) => {
+          if (index === 0) return 0;
 
-    return {
-      currentSpeed,
-      avgSpeed,
-      maxSpeed,
-      totalDistance,
-    };
-  };
+          const prevLat = sorted[index - 1].latitude;
+          const prevLng = sorted[index - 1].longitude;
+          const currLat = item.latitude;
+          const currLng = item.longitude;
 
-  const stats = calculateStats();
+          const R = 6371;
+          const dLat = ((currLat - prevLat) * Math.PI) / 180;
+          const dLng = ((currLng - prevLng) * Math.PI) / 180;
+          const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos((prevLat * Math.PI) / 180) *
+              Math.cos((currLat * Math.PI) / 180) *
+              Math.sin(dLng / 2) *
+              Math.sin(dLng / 2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          const d = R * c;
 
-  if (isLoading.gps) {
-    return (
-      <div className="grid grid-cols-1 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm flex items-center justify-center h-64">
-          <div className="text-gray-500">Loading GPS data...</div>
-        </div>
-      </div>
-    );
+          return distance + d;
+        }, 0);
+
+        setStats({
+          currentSpeed,
+          avgSpeed,
+          maxSpeed,
+          totalDistance,
+        });
+
+        setDisplayState("data");
+      } else {
+        // No data available
+        setDisplayState("empty");
+      }
+    }, 1000); // Simulate 1 second loading time
+
+    return () => clearTimeout(loadingTimer);
+  }, [gpsData, isLoading.gps, error.gps]);
+
+  // Render based on display state
+  if (displayState === "loading") {
+    return <ChartSkeleton />;
   }
 
-  if (error.gps) {
-    return (
-      <div className="grid grid-cols-1 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm flex items-center justify-center h-64">
-          <div className="text-red-500">{error.gps}</div>
-        </div>
-      </div>
-    );
+  if (displayState === "error") {
+    return <ErrorMessage message={error.gps || "An error occurred"} />;
   }
 
-  if (sortedData.length === 0) {
-    return (
-      <div className="grid grid-cols-1 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm flex items-center justify-center h-64">
-          <div className="text-gray-500">
-            No GPS data available for the selected time range
-          </div>
-        </div>
-      </div>
-    );
+  if (displayState === "empty") {
+    return <EmptyDataMessage message="No GPS data available" />;
   }
 
   return (
