@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import useAxiosClient from "../../../hooks/axiosClient";
 import VehicleSelector from "../../../components/vehicleData/vehicleSelector";
 import DateRangePicker, {
@@ -11,7 +11,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MapPin, Droplet, Wind } from "lucide-react";
 import Link from "next/link";
-import { start } from "repl";
 
 interface Vehicle {
   id: number;
@@ -20,7 +19,7 @@ interface Vehicle {
   yearOfManufacture: string;
 }
 
-export default function DashboardPage() {
+function DashboardPageContent() {
   const client = useAxiosClient();
   const searchParams = useSearchParams();
 
@@ -28,16 +27,16 @@ export default function DashboardPage() {
   const [selectedVehicleId, setSelectedVehicleId] = useState<number | null>(
     null
   );
-  const [startDate, setStartDate] = useState<Date | null>(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
+  const [startDate, setStartDate] = useState<Date | null>(
+    new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+  );
   const [endDate, setEndDate] = useState<Date | null>(new Date());
   const [isClient, setIsClient] = useState(false);
 
-  // Data states
   const [gpsData, setGpsData] = useState([]);
   const [fuelData, setFuelData] = useState([]);
   const [emissionsData, setEmissionsData] = useState([]);
 
-  // Loading and error states
   const [error, setError] = useState({
     gps: null,
     fuel: null,
@@ -49,7 +48,7 @@ export default function DashboardPage() {
     fuel: false,
     emissions: false,
     vehicles: false,
-    initial: true, // Add this new flag
+    initial: true,
   });
 
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
@@ -190,7 +189,7 @@ export default function DashboardPage() {
           if (
             vehicleIdParam &&
             response.data.data.some(
-              (v:any) => v.id === Number.parseInt(vehicleIdParam)
+              (v: any) => v.id === Number.parseInt(vehicleIdParam)
             )
           ) {
             setSelectedVehicleId(Number.parseInt(vehicleIdParam));
@@ -200,13 +199,13 @@ export default function DashboardPage() {
 
           setInitialLoadComplete(true);
         } else {
-          setError((prev:any) => ({
+          setError((prev: any) => ({
             ...prev,
             vehicles: "Failed to fetch vehicles",
           }));
         }
       } catch (err) {
-        setError((prev:any) => ({
+        setError((prev: any) => ({
           ...prev,
           vehicles: "Error connecting to the server",
         }));
@@ -218,14 +217,12 @@ export default function DashboardPage() {
     fetchVehicles();
   }, [searchParams]);
 
-  // Fetch all data types
   const fetchAllData = useCallback(async () => {
     if (selectedVehicleId === null || !startDate || !endDate) return;
 
     await Promise.all([fetchGPSData(), fetchFuelData(), fetchEmissionsData()]);
   }, [selectedVehicleId, fetchGPSData, fetchFuelData, fetchEmissionsData]);
 
-  // Fetch all data when vehicle changes or date range changes
   useEffect(() => {
     if (selectedVehicleId !== null && initialLoadComplete) {
       fetchAllData();
@@ -238,30 +235,25 @@ export default function DashboardPage() {
     fetchAllData,
   ]);
 
-  // Get the selected vehicle details
   const selectedVehicle =
     vehicles.find((v: any) => v.id === selectedVehicleId) || null;
 
-  if (isLoading.initial) {
-    return (
-      <div className="flex flex-col h-full items-center justify-center bg-gray-50">
-        <div className="text-primary">Loading dashboard...</div>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex flex-col h-full bg-gray-50">
+    <div className="flex flex-col h-full  bg-gray-50">
       <div className="bg-white shadow-sm px-6 py-4 border-b border-gray-200">
         <h1 className="text-2xl font-bold text-primary mb-4">
           Vehicle Dashboard
         </h1>
-        <div className="flex flex-col md:flex-row gap-4 mb-4">
-          <VehicleSelector
-            vehicles={vehicles}
-            selectedVehicleId={selectedVehicleId || 0}
-            onSelect={(id) => setSelectedVehicleId(id)}
-          />
+        <div className="flex flex-col md:block gap-4 mb-4">
+          {isLoading.vehicles ? (
+            <div className="w-full md:w-64 h-10 bg-gray-200 animate-pulse rounded"></div>
+          ) : (
+            <VehicleSelector
+              vehicles={vehicles}
+              selectedVehicleId={selectedVehicleId || 0}
+              onSelect={(id) => setSelectedVehicleId(id)}
+            />
+          )}
           {isClient && startDate && endDate && (
             <DateRangePicker
               startDate={startDate}
@@ -275,8 +267,25 @@ export default function DashboardPage() {
       </div>
 
       <div className="flex-1 overflow-auto p-6">
-        {/* Vehicle Info Card */}
-        {selectedVehicle && (
+        {isLoading.vehicles ? (
+          <Card className="mb-6">
+            <CardHeader className="pb-2">
+              <CardTitle>Vehicle Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i}>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Loading...
+                    </p>
+                    <div className="h-7 bg-gray-200 animate-pulse rounded mt-1"></div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        ) : selectedVehicle ? (
           <Card className="mb-6">
             <CardHeader className="pb-2">
               <CardTitle>Vehicle Information</CardTitle>
@@ -288,7 +297,6 @@ export default function DashboardPage() {
                     Plate Number
                   </p>
                   <p className="text-lg font-semibold">
-                    {/* {selectedVehicle.plateNumber || "N/A"} */}
                     {selectedVehicle.plateNumber || "N/A"}
                   </p>
                 </div>
@@ -297,7 +305,6 @@ export default function DashboardPage() {
                     Model
                   </p>
                   <p className="text-lg font-semibold">
-                    {/* {selectedVehicle.model || "N/A"} */}
                     {selectedVehicle.vehicleModel || "N/A"}
                   </p>
                 </div>
@@ -306,14 +313,13 @@ export default function DashboardPage() {
                     Year
                   </p>
                   <p className="text-lg font-semibold">
-                    {/* {selectedVehicle.year || "N/A"} */}
                     {selectedVehicle.yearOfManufacture || "N/A"}
                   </p>
                 </div>
               </div>
             </CardContent>
           </Card>
-        )}
+        ) : null}
 
         {/* Dashboard Overview */}
         <DashboardOverview
@@ -347,7 +353,7 @@ export default function DashboardPage() {
                 <CardTitle>GPS Tracking</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex justify-between items-center">
+                <div className="md:flex block justify-between items-center">
                   <div>
                     <h3 className="text-lg font-semibold">Recent Activity</h3>
                     <p className="text-muted-foreground">
@@ -356,12 +362,14 @@ export default function DashboardPage() {
                         : "No recent GPS data available"}
                     </p>
                   </div>
-                  <Link
-                    href={`client/gps?vehicleId=${selectedVehicleId}`}
-                    className="text-primary hover:underline"
-                  >
-                    View detailed GPS data →
-                  </Link>
+                  <div>
+                    <Link
+                      href={`client/gps?vehicleId=${selectedVehicleId}`}
+                      className="text-primary hover:underline"
+                    >
+                      View detailed GPS data →
+                    </Link>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -421,5 +429,13 @@ export default function DashboardPage() {
         </Tabs>
       </div>
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense>
+      <DashboardPageContent />
+    </Suspense>
   );
 }

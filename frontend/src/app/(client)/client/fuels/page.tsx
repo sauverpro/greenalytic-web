@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import useAxiosClient from "../../../../hooks/axiosClient";
 import VehicleSelector from "../../../../components/vehicleData/vehicleSelector";
 import DateRangePicker, {
@@ -8,7 +8,7 @@ import DateRangePicker, {
 import { useSearchParams } from "next/navigation";
 import FuelChartSection from "@/components/vehicleData/FuelChartSection";
 
-export default function FuelPage() {
+function FuelsPageContent() {
   const client = useAxiosClient();
   const searchParams = useSearchParams();
 
@@ -57,13 +57,13 @@ export default function FuelPage() {
 
           setInitialLoadComplete(true);
         } else {
-          setError((prev:any) => ({
+          setError((prev: any) => ({
             ...prev,
             vehicles: "Failed to fetch vehicles",
           }));
         }
       } catch (err) {
-        setError((prev:any) => ({
+        setError((prev: any) => ({
           ...prev,
           vehicles: "Error connecting to the server",
         }));
@@ -73,7 +73,7 @@ export default function FuelPage() {
     };
 
     fetchVehicles();
-  }, [ searchParams]);
+  }, [searchParams]);
 
   const fetchFuelData = async () => {
     if (selectedVehicleId === null) return;
@@ -98,10 +98,16 @@ export default function FuelPage() {
       if (response.data.success) {
         setFuelData(response.data.data);
       } else {
-        setError((prev:any) => ({ ...prev, fuel: "Failed to fetch fuel data" }));
+        setError((prev: any) => ({
+          ...prev,
+          fuel: "Failed to fetch fuel data",
+        }));
       }
     } catch (error) {
-      setError((prev:any) => ({ ...prev, fuel: "Error connecting to the server" }));
+      setError((prev: any) => ({
+        ...prev,
+        fuel: "Error connecting to the server",
+      }));
     } finally {
       setIsLoading((prev) => ({ ...prev, fuel: false }));
     }
@@ -120,7 +126,7 @@ export default function FuelPage() {
         <h1 className="text-2xl font-bold text-primary mb-4">
           Fuel Consumption
         </h1>
-        <div className="flex flex-col md:flex-row gap-4 mb-4">
+        <div className="flex md:block flex-col md:flex-row gap-4 mb-4">
           <VehicleSelector
             vehicles={vehicles}
             selectedVehicleId={selectedVehicleId || 0}
@@ -195,4 +201,12 @@ export default function FuelPage() {
       </div>
     </div>
   );
+}
+
+export default function FuelsPage() {
+  return (
+    <Suspense>
+      <FuelsPageContent />
+    </Suspense>
+      )
 }

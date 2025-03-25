@@ -10,13 +10,11 @@ interface DateRangePickerProps {
   fetchAllData: () => void;
 }
 
-// Helper function to format date as YYYY-MM-DD
 export const formatDateForServer = (
   date: Date,
   isEndDate: boolean = false
 ): string => {
   if (isEndDate) {
-    // For end dates, we create a copy and set time to 23:59:59 to include the full day
     const adjustedDate = new Date(date);
     adjustedDate.setHours(23, 59, 59, 999);
     date = adjustedDate;
@@ -58,21 +56,25 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
   };
 
   return (
-    <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-4 mb-4">
-      <div className="flex items-center">
-        <span className="mr-2 font-medium">From:</span>
+    <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4 mb-4">
+      <div className="w-full md:w-auto flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2">
+        <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
+          From:
+        </label>
         <DatePicker
           selected={startDate}
           onChange={(date) => date && setStartDate(date)}
           selectsStart
           startDate={startDate}
           endDate={endDate}
-          className="p-2 border rounded-lg"
-          dateFormat="yyyy-MM-dd" 
+          className="w-full sm:w-auto p-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-light"
+          dateFormat="yyyy-MM-dd"
         />
       </div>
-      <div className="flex items-center">
-        <span className="mr-2 font-medium">To:</span>
+      <div className="w-full md:w-auto flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2">
+        <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
+          To:
+        </label>
         <DatePicker
           selected={endDate}
           onChange={(date) => date && setEndDate(date)}
@@ -80,16 +82,19 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
           startDate={startDate}
           endDate={endDate}
           minDate={startDate}
-          className="p-2 border rounded-lg"
+          className="w-full sm:w-auto p-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-light"
           dateFormat="yyyy-MM-dd"
         />
       </div>
-      <button
-        className="bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors shadow-sm"
-        onClick={handleFetchData}
-      >
-        Apply
-      </button>
+      <div className="w-full md:w-auto">
+        <button
+          className="w-[7rem] bg-primary hover:bg-primary-light text-white px-4 py-2 rounded-lg transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          onClick={handleFetchData}
+          disabled={!startDate || !endDate}
+        >
+          Apply
+        </button>
+      </div>
     </div>
   );
 };

@@ -22,7 +22,7 @@ const VehicleSelector: React.FC<VehicleSelectProps> = ({
   };
 
   return (
-    <div className="flex items-center mb-4">
+    <div className="flex items-center mb-4 ">
       <label className="font-bold text-lg text-gray-700">
         🚗 Select Vehicle:
       </label>
