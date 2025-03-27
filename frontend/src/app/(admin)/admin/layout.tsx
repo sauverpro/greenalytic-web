@@ -19,7 +19,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     );
   }
 
-
   useEffect(() => {
     if (typeof window !== "undefined") {
       const storedRole = localStorage.getItem("USER_ROLE");
@@ -44,8 +43,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <SidebarProvider>
       <div className="flex w-full">
         <AppSidebar />
-        <div className="flex flex-col flex-1 overflow-x-hidden">
-          <Topbar />
+        <div className="flex flex-col flex-1">
+          <div className="sticky top-0 z-50  overflow-hidden">
+            <Topbar />
+          </div>
           <main className="h-100vh overflow-y-auto ">
             {!role ? <Loader /> : role != "admin" ? <Loader /> : children}
           </main>

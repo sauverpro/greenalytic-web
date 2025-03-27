@@ -1,355 +1,652 @@
-import { DailyProductSalesChart } from "@/components/charts/DailyProductSalesChart";
-
-import { DynamicLineChart } from "@/components/charts/DynamicLineChart";
-import { DynamicPieChartComponent } from "@/components/charts/DynamicPieChart";
-import { YearlyproductsSalesChart } from "@/components/charts/YearlyproductsSalesChart";
-
+"use client";
+import type React from "react";
+import { useState } from "react";
+import Link from "next/link";
 import {
-  chartConfig,
-  monthlyDeviceSalesData,
-  weeklyClientsData,
-  weeklySalesData
-} from "@/data/monthlyDeviceSalesData";
+  Calendar,
+  Car,
+  Download,
+  Fuel,
+  LineChart,
+  MapPin,
+  MoreHorizontal,
+  Plus,
+  RefreshCw,
+  Users,
+} from "lucide-react";
 
-export default function Home() {
-  const summaryCards = [
-    {
-      title: "Total Devices",
-      items: [
-        {
-          icon: "📡",
-          label: "Emission Trackers",
-          value: "120",
-          change: "↑ (+5%)"
-        },
-        {
-          icon: "⚡",
-          label: "GPS and Speed Monitors",
-          value: "80",
-          change: "↓ (-3%)"
-        },
-        { icon: "⛽", label: "Fuel Sensors", value: "65", change: "↑ (+2%)" }
-      ]
-    },
-    {
-      title: "Active Devices",
-      items: [
-        { icon: "📡", label: "GPS Trackers", value: "110", change: "↑ (+8%)" },
-        { icon: "⚡", label: "Speed Monitors", value: "75", change: "↓ (-2%)" },
-        { icon: "⛽", label: "Fuel Sensors", value: "60", change: "↑ (+4%)" }
-      ]
-    },
-    {
-      title: "Clients",
-      items: [
-        {
-          icon: "🚗",
-          label: "Individual Owners",
-          value: "45",
-          change: "↑ (+10%)"
-        },
-        { icon: "🏢", label: "Fleet Managers", value: "30", change: "↓ (-5%)" },
-        {
-          icon: "🛻",
-          label: "Transport Companies",
-          value: "25",
-          change: "↑ (+3%)"
-        }
-      ]
-    },
-    {
-      title: "User Roles",
-      items: [
-        { icon: "🌐", label: "Web Users", value: "250", change: "↑ (+12%)" },
-        { icon: "🔑", label: "Admins", value: "15", change: "(No Change)" },
-        { icon: "👥", label: "Other Roles", value: "8", change: "↓ (-2%)" }
-      ]
-    }
-  ];
-  const SummaryCard = ({ title, items }: { title: string; items: { icon: string; label: string; value: string; change: string; }[] }) => (
-    <div className="bg-gradient-to-b from-emerald-700 to-emerald-900 p-6 shadow-lg shadow-green-700 rounded-lg text-white">
-      <h3 className="text-lg font-semibold">{title}</h3>
-      <ul className="mt-2">
-        {items.map((item, index) => (
-          <li key={index}>
-            {item.icon} {item.label}: {item.value} {item.change}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
+interface MetricCardProps {
+  title: string;
+  value: string;
+  change: string;
+  trend: "up" | "down" | "neutral";
+  description: string;
+  icon: React.ReactNode;
+}
+
+export default function AdminDashboard() {
+  const [selectedTab, setSelectedTab] = useState("overview");
 
   return (
-    <div className=" flex flex-col gap-6">
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 gap-6 p-6 md:grid-cols-4">
-        {summaryCards.map((card, index) => (
-          <SummaryCard key={index} {...card} />
-        ))}
-      </div>
-
-      {/* Two-Column Layout - Fully Optimized */}
-      <div className="grid grid-cols-1 gap-6 p-6 md:grid-cols-2">
-        {/* Left Card: Revenue Overview */}
-        <div className="bg-white p-6 shadow-lg rounded-lg flex flex-col justify-between">
-          <h3 className="text-lg font-semibold">💰 Revenue Overview</h3>
-
-          <div className="mt-4 flex flex-col space-y-4">
-            {/* Total Revenue */}
-            <div className="flex justify-between items-center bg-gray-100 p-3 rounded">
-              <span className="text-gray-700 font-medium">Total Revenue</span>
-              <span className="text-green-600 text-xl font-bold">$27,600</span>
-            </div>
-
-            {/* Revenue Breakdown */}
-            <div className="grid grid-cols-3 gap-3">
-              <div className="bg-gray-100 p-3 rounded text-center">
-                <span className="block text-sm text-gray-600">
-                  📡 GPS Trackers
-                </span>
-                <span className="block text-green-500 font-semibold">
-                  +7% ↑
-                </span>
-                <span className="block text-gray-700 font-medium">$12,500</span>
-              </div>
-              <div className="bg-gray-100 p-3 rounded text-center">
-                <span className="block text-sm text-gray-600">
-                  ⚡ Speed Monitors
-                </span>
-                <span className="block text-red-500 font-semibold">-4% ↓</span>
-                <span className="block text-gray-700 font-medium">$8,200</span>
-              </div>
-              <div className="bg-gray-100 p-3 rounded text-center">
-                <span className="block text-sm text-gray-600">
-                  ⛽ Fuel Sensors
-                </span>
-                <span className="block text-green-500 font-semibold">
-                  +3% ↑
-                </span>
-                <span className="block text-gray-700 font-medium">$6,900</span>
-              </div>
-            </div>
-          </div>
-
-          <p className="mt-4 text-xs text-gray-400">Compared to last week</p>
+    <div className="flex flex-col min-h-screen bg-gradient-to-b from-emerald-50 to-white">
+      {/* Header */}
+      <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-white px-6 shadow-sm">
+        <div className="flex flex-1 items-center gap-2">
+          <Badge
+            variant="outline"
+            className="ml-2 bg-emerald-100 text-emerald-800 border-emerald-200"
+          >
+            Admin
+          </Badge>
         </div>
+      </header>
 
-        {/* Right Card: Clients Overview */}
-        <div className="bg-white p-6 shadow-lg rounded-lg flex flex-col justify-between">
-          <h3 className="text-lg font-semibold">👥 Clients Overview</h3>
-
-          <div className="mt-4 flex flex-col space-y-4">
-            {/* Total Clients */}
-            <div className="flex justify-between items-center bg-gray-100 p-3 rounded">
-              <span className="text-gray-700 font-medium">Total Clients</span>
-              <span className="text-blue-600 text-xl font-bold">100+</span>
-            </div>
-
-            {/* Client Breakdown */}
-            <div className="grid grid-cols-3 gap-3">
-              <div className="bg-gray-100 p-3 rounded text-center">
-                <span className="block text-sm text-gray-600">
-                  🚗 Individuals
-                </span>
-                <span className="block text-green-500 font-semibold">
-                  +10% ↑
-                </span>
-                <span className="block text-gray-700 font-medium">45</span>
-              </div>
-              <div className="bg-gray-100 p-3 rounded text-center">
-                <span className="block text-sm text-gray-600">🏢 Fleets</span>
-                <span className="block text-red-500 font-semibold">-5% ↓</span>
-                <span className="block text-gray-700 font-medium">30</span>
-              </div>
-              <div className="bg-gray-100 p-3 rounded text-center">
-                <span className="block text-sm text-gray-600">
-                  🛻 Transport
-                </span>
-                <span className="block text-green-500 font-semibold">
-                  +3% ↑
-                </span>
-                <span className="block text-gray-700 font-medium">25</span>
-              </div>
-            </div>
-
-            {/* User Roles */}
-            <div className="grid grid-cols-3 gap-3 mt-4">
-              <div className="bg-gray-100 p-3 rounded text-center">
-                <span className="block text-sm text-gray-600">🛠️ Admins</span>
-                <span className="block text-gray-700 font-medium">12</span>
-              </div>
-              <div className="bg-gray-100 p-3 rounded text-center">
-                <span className="block text-sm text-gray-600">
-                  🌍 Web Users
-                </span>
-                <span className="block text-gray-700 font-medium">60</span>
-              </div>
-              <div className="bg-gray-100 p-3 rounded text-center">
-                <span className="block text-sm text-gray-600">
-                  📱 Mobile Users
-                </span>
-                <span className="block text-gray-700 font-medium">28</span>
-              </div>
-            </div>
-          </div>
-
-          <p className="mt-4 text-xs text-gray-400">Compared to last month</p>
-        </div>
-      </div>
-
-      {/* Main Section */}
-      <div className="grid grid-cols-1 gap-6 p-6 md:grid-cols-[1fr_2fr_1fr]">
-        {/* Right Section: Sales & Clients Overview */}
-        <div className="bg-white p-6 shadow-lg rounded-lg flex flex-col justify-between">
-          <h3 className="text-lg font-semibold mb-4">📊 Daily Statistics</h3>
-
-          {/* Upper: Daily Sales */}
-          <div className="bg-gray-100 p-4 rounded mb-3">
-            <h4 className="text-sm font-medium">📈 Daily Sales</h4>
-            <p className="text-xl font-bold text-green-600">$1,250</p>
-            <span className="text-sm text-gray-500">+5% from yesterday</span>
-          </div>
-
-          {/* Lower: Daily Clients */}
-          <div className="bg-gray-100 p-4 rounded">
-            <h4 className="text-sm font-medium">👥 Daily Clients</h4>
-            <p className="text-xl font-bold text-blue-600">45</p>
-            <span className="text-sm text-gray-500">+3 new today</span>
-          </div>
-        </div>
-
-        {/* Middle Section: Interactive Map */}
-        <div className="bg-white p-6 shadow-lg rounded-lg flex flex-col justify-between">
-          <h3 className="text-lg font-semibold mb-4">🗺️ Vehicle Tracking</h3>
-
-          {/* Map Placeholder */}
-          <div className="bg-gray-200 h-48 rounded flex items-center justify-center">
-            <span className="text-gray-600">[locations]</span>
-          </div>
-
-          {/* Expandable Button */}
-          <button className="mt-4 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
-            Expand Map
-          </button>
-        </div>
-
-        {/* Left Section: Messages & Active Devices */}
-        <div className="bg-white p-6 shadow-lg rounded-lg flex flex-col justify-between">
-          <h3 className="text-lg font-semibold mb-4">📩 Notifications</h3>
-
-          {/* Messages */}
-          <div className="bg-gray-100 p-4 rounded mb-3">
-            <h4 className="text-sm font-medium">📬 New Messages</h4>
-            <p className="text-lg font-bold text-gray-800">3 Unread</p>
-          </div>
-
-          {/* Today's Active Devices */}
-          <div className="bg-gray-100 p-4 rounded">
-            <h4 className="text-sm font-medium">📡 Active Devices</h4>
-            <p className="text-lg font-bold text-green-600">125</p>
-            <span className="text-sm text-gray-500">+10 from yesterday</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Yearly Statistics */}
-      <div className="p-6">
-        <h2 className="text-xl font-bold mb-2  self-center grid justify-center items-center flex-cols-1 bg-gray-50">
-          📅 Yearly Statistics
-        </h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Device Sales (Line Chart) */}
-          <div className="bg-white  shadow-lg rounded-lg h-[500px]">
-            {/* Placeholder for Chart */}
-
-            <DynamicLineChart
-              data={monthlyDeviceSalesData}
-              config={chartConfig}
-              xAxisKey="month"
-              yAxisLabel="Sales"
-              title="  📈 Device Sales Trend Over the Year"
-              description="Shows the sales trend for three devices over the months of the year"
-              height="350px"
-              width="100%"
-            />
-          </div>
-
-          {/* Car Clients (Bar Chart) */}
-          <div className=" p-6 shadow-lg rounded-lg">
-            <h3 className="text-lg font-semibold mb-3">
-              🚗 Clients by Car Type
-            </h3>
-
-            {/* Placeholder for Chart */}
-            <div className="flex items-center justify-center rounded">
-              <YearlyproductsSalesChart />
-            </div>
-
-            {/* Summary */}
-            <p className="mt-3 text-sm text-gray-500">
-              <span className="font-semibold text-red-600">-3%</span> decline
-              from last year.
+      <main className="flex-1 overflow-auto p-6">
+        <div className="mb-6 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight text-emerald-900">
+              Welcome back, Admin
+            </h2>
+            <p className="text-muted-foreground">
+              Here's what's happening across your platform today.
             </p>
           </div>
+
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="h-9">
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Refresh Data
+            </Button>
+            <Button variant="outline" size="sm" className="h-9">
+              <Download className="mr-2 h-4 w-4" />
+              Export
+            </Button>
+            <Button
+              size="sm"
+              className="h-9 bg-emerald-600 hover:bg-emerald-700"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add New Client
+            </Button>
+          </div>
         </div>
-      </div>
 
-      {/* Weekly Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-2  gap-6 p-6">
-        {/* Weekly Sales (Devices) */}
-        <DynamicPieChartComponent
-          title="Weekly Sales"
-          description="Sales distribution of 3 device types"
-          data={weeklySalesData}
-        />
+        <Tabs
+          defaultValue="overview"
+          className="space-y-6"
+          onValueChange={setSelectedTab}
+        >
+          <div className="flex justify-between">
+            <TabsList className="bg-muted/50">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="clients">Clients</TabsTrigger>
+              <TabsTrigger value="vehicles">Vehicles</TabsTrigger>
+              <TabsTrigger value="devices">Devices</TabsTrigger>
+              <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            </TabsList>
 
-        {/* Weekly Clients (Car Types) */}
-        <DynamicPieChartComponent
-          title="Weekly Clients"
-          description="Client distribution across 3 car types"
-          data={weeklyClientsData}
-        />
-      </div>
+            <div className="flex items-center gap-2">
+              <Select defaultValue="today">
+                <SelectTrigger className="h-9 w-[180px]">
+                  <SelectValue placeholder="Select timeframe" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="today">Today</SelectItem>
+                  <SelectItem value="yesterday">Yesterday</SelectItem>
+                  <SelectItem value="week">This Week</SelectItem>
+                  <SelectItem value="month">This Month</SelectItem>
+                  <SelectItem value="quarter">This Quarter</SelectItem>
+                  <SelectItem value="year">This Year</SelectItem>
+                </SelectContent>
+              </Select>
 
-      {/* Daily Statistics */}
-      <div className="p-6 ">
-        <div className=" flex items-center justify-center  shadow-lg rounded-lg min-h-48 max-h-[10%]">
-          <DailyProductSalesChart />
-        </div>
-      </div>
+              <Button variant="outline" size="icon" className="h-9 w-9">
+                <Calendar className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
 
-      {/* Recent Clients Table */}
-      <div className="p-6">
-        <h2 className="text-xl font-bold mb-4">Recent Clients</h2>
-        <div className="overflow-x-auto">
-          <table className="min-w-full border-collapse border border-gray-300">
-            <thead>
-              <tr className="bg-gray-200 text-left">
-                <th className="border border-gray-300 p-3">Name</th>
-                <th className="border border-gray-300 p-3">Car Plate</th>
-                <th className="border border-gray-300 p-3">Email</th>
-                <th className="border border-gray-300 p-3">Phone</th>
-                <th className="border border-gray-300 p-3">Device ID</th>
-                <th className="border border-gray-300 p-3">Device Type</th>
-                <th className="border border-gray-300 p-3">Date of Deal</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td className="border border-gray-300 p-3">John Doe</td>
-                <td className="border border-gray-300 p-3">RAC-1234</td>
-                <td className="border border-gray-300 p-3">john@example.com</td>
-                <td className="border border-gray-300 p-3">+250 78 123 4567</td>
-                <td className="border border-gray-300 p-3">DVC-001</td>
-                <td className="border border-gray-300 p-3">GPS Tracker</td>
-                <td className="border border-gray-300 p-3">2025-02-08</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+          {/* Overview Tab Content */}
+          <TabsContent value="overview" className="space-y-6">
+            {/* Key Metrics */}
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+              <MetricCard
+                title="Total Clients"
+                value="128"
+                change="+12%"
+                trend="up"
+                description="From previous period"
+                icon={<Users className="h-5 w-5 text-emerald-600" />}
+              />
+              <MetricCard
+                title="Active Vehicles"
+                value="342"
+                change="+8%"
+                trend="up"
+                description="Currently online"
+                icon={<Car className="h-5 w-5 text-emerald-600" />}
+              />
+              <MetricCard
+                title="Total Devices"
+                value="512"
+                change="+5%"
+                trend="up"
+                description="Deployed in the field"
+                icon={<Fuel className="h-5 w-5 text-emerald-600" />}
+              />
+              <MetricCard
+                title="System Health"
+                value="98.7%"
+                change="-0.3%"
+                trend="down"
+                description="Overall uptime"
+                icon={<LineChart className="h-5 w-5 text-emerald-600" />}
+              />
+            </div>
+
+            {/* Charts Section */}
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <Card className="col-span-2">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <div className="space-y-1">
+                    <CardTitle>Client Growth</CardTitle>
+                    <CardDescription>
+                      New client acquisitions over time
+                    </CardDescription>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem>View Details</DropdownMenuItem>
+                      <DropdownMenuItem>Export Data</DropdownMenuItem>
+                      <DropdownMenuItem>Set Alert</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[300px] w-full bg-emerald-50 rounded-md flex items-center justify-center">
+                    <p className="text-muted-foreground">Client Growth Chart</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle>Device Distribution</CardTitle>
+                  <CardDescription>By type and status</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[300px] w-full bg-emerald-50 rounded-md flex items-center justify-center">
+                    <p className="text-muted-foreground">
+                      Device Distribution Chart
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Recent Activity & Alerts */}
+            <div className="grid gap-6 md:grid-cols-2">
+              <Card>
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle>Recent Activity</CardTitle>
+                    <Button variant="ghost" size="sm" className="h-8 text-xs">
+                      View All
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <div
+                        key={i}
+                        className="flex items-start gap-4 rounded-lg border p-3"
+                      >
+                        <Avatar className="mt-1 h-9 w-9">
+                          <AvatarFallback
+                            className={`bg-emerald-${i * 100} text-white`}
+                          >
+                            {String.fromCharCode(64 + i)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 space-y-1">
+                          <p className="text-sm font-medium">
+                            New client registered
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Client #{i} registered a new account and added 3
+                            vehicles
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            2 hours ago
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle>System Alerts</CardTitle>
+                    <Badge
+                      variant="outline"
+                      className="bg-red-50 text-red-500 border-red-200"
+                    >
+                      5 New
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {[
+                      {
+                        title: "Device Offline",
+                        desc: "GPS Tracker #GT-2234 is offline for 3 hours",
+                        severity: "high",
+                      },
+                      {
+                        title: "Fuel Level Critical",
+                        desc: "Vehicle R789B fuel level below 10%",
+                        severity: "medium",
+                      },
+                      {
+                        title: "Emissions Alert",
+                        desc: "Vehicle T456C emissions above threshold",
+                        severity: "high",
+                      },
+                      {
+                        title: "System Update Required",
+                        desc: "New firmware available for 23 devices",
+                        severity: "low",
+                      },
+                      {
+                        title: "License Expiring",
+                        desc: "Client #45 license expires in 7 days",
+                        severity: "medium",
+                      },
+                    ].map((alert, i) => (
+                      <div
+                        key={i}
+                        className="flex items-start gap-4 rounded-lg border p-3"
+                      >
+                        <div
+                          className={`mt-1 h-2 w-2 rounded-full ${
+                            alert.severity === "high"
+                              ? "bg-red-500"
+                              : alert.severity === "medium"
+                              ? "bg-amber-500"
+                              : "bg-blue-500"
+                          }`}
+                        />
+                        <div className="flex-1 space-y-1">
+                          <p className="text-sm font-medium">{alert.title}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {alert.desc}
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <Badge
+                              variant="outline"
+                              className={`text-xs ${
+                                alert.severity === "high"
+                                  ? "bg-red-50 text-red-500 border-red-200"
+                                  : alert.severity === "medium"
+                                  ? "bg-amber-50 text-amber-500 border-amber-200"
+                                  : "bg-blue-50 text-blue-500 border-blue-200"
+                              }`}
+                            >
+                              {alert.severity.toUpperCase()}
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">
+                              1 hour ago
+                            </span>
+                          </div>
+                        </div>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Client Map */}
+            <Card>
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Client Vehicle Map</CardTitle>
+                    <CardDescription>
+                      Real-time location of all tracked vehicles
+                    </CardDescription>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge className="bg-green-100 text-green-700 hover:bg-green-200">
+                      <div className="mr-1 h-2 w-2 rounded-full bg-green-500" />
+                      Online: 287
+                    </Badge>
+                    <Badge
+                      variant="outline"
+                      className="bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    >
+                      <div className="mr-1 h-2 w-2 rounded-full bg-gray-500" />
+                      Offline: 55
+                    </Badge>
+                    <Button variant="outline" size="sm" className="h-8">
+                      <MapPin className="mr-2 h-3 w-3" />
+                      Expand Map
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[400px] w-full bg-emerald-50 rounded-md flex items-center justify-center">
+                  <p className="text-muted-foreground">
+                    Interactive Map with Vehicle Locations
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Recent Clients Table */}
+            <Card>
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle>Recent Clients</CardTitle>
+                  <Button variant="outline" size="sm" className="h-8">
+                    View All Clients
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="border-b text-left">
+                        <th className="pb-2 pt-3 font-medium">Client Name</th>
+                        <th className="pb-2 pt-3 font-medium">Vehicles</th>
+                        <th className="pb-2 pt-3 font-medium">Devices</th>
+                        <th className="pb-2 pt-3 font-medium">Status</th>
+                        <th className="pb-2 pt-3 font-medium">Last Active</th>
+                        <th className="pb-2 pt-3 font-medium text-right">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        {
+                          name: "Acme Corporation",
+                          vehicles: 12,
+                          devices: 24,
+                          status: "active",
+                          lastActive: "2 mins ago",
+                        },
+                        {
+                          name: "TechDrive Fleet",
+                          vehicles: 8,
+                          devices: 16,
+                          status: "active",
+                          lastActive: "15 mins ago",
+                        },
+                        {
+                          name: "EcoTransport Ltd",
+                          vehicles: 5,
+                          devices: 10,
+                          status: "active",
+                          lastActive: "1 hour ago",
+                        },
+                        {
+                          name: "City Logistics",
+                          vehicles: 15,
+                          devices: 30,
+                          status: "inactive",
+                          lastActive: "2 days ago",
+                        },
+                        {
+                          name: "Green Delivery Co",
+                          vehicles: 7,
+                          devices: 14,
+                          status: "active",
+                          lastActive: "5 mins ago",
+                        },
+                      ].map((client, i) => (
+                        <tr key={i} className="border-b">
+                          <td className="py-3">
+                            <div className="flex items-center gap-2">
+                              <Avatar className="h-8 w-8">
+                                <AvatarFallback className="bg-emerald-100 text-emerald-700">
+                                  {client.name.charAt(0)}
+                                </AvatarFallback>
+                              </Avatar>
+                              <Link
+                                href={`/admin/clients/${i + 1}`}
+                                className="font-medium hover:text-emerald-600"
+                              >
+                                {client.name}
+                              </Link>
+                            </div>
+                          </td>
+                          <td className="py-3">{client.vehicles}</td>
+                          <td className="py-3">{client.devices}</td>
+                          <td className="py-3">
+                            <Badge
+                              className={
+                                client.status === "active"
+                                  ? "bg-green-100 text-green-700"
+                                  : "bg-gray-100 text-gray-700"
+                              }
+                            >
+                              {client.status}
+                            </Badge>
+                          </td>
+                          <td className="py-3 text-muted-foreground">
+                            {client.lastActive}
+                          </td>
+                          <td className="py-3 text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                >
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem asChild>
+                                  <Link href={`/admin/clients/${i + 1}`}>
+                                    View Details
+                                  </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>Edit Client</DropdownMenuItem>
+                                <DropdownMenuItem>
+                                  Manage Vehicles
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                  Manage Devices
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem className="text-red-500">
+                                  Deactivate
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+              <CardFooter className="flex items-center justify-between border-t px-6 py-3">
+                <div className="text-sm text-muted-foreground">
+                  Showing 5 of 128 clients
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" disabled>
+                    Previous
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    Next
+                  </Button>
+                </div>
+              </CardFooter>
+            </Card>
+          </TabsContent>
+
+          {/* Other Tabs Content */}
+          <TabsContent value="clients" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Clients Management</CardTitle>
+                <CardDescription>
+                  View and manage all client accounts
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[400px] flex items-center justify-center bg-muted rounded-md">
+                  <p className="text-muted-foreground">
+                    Clients Management Interface
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="vehicles" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Vehicles Management</CardTitle>
+                <CardDescription>
+                  View and manage all registered vehicles
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[400px] flex items-center justify-center bg-muted rounded-md">
+                  <p className="text-muted-foreground">
+                    Vehicles Management Interface
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="devices" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Devices Management</CardTitle>
+                <CardDescription>
+                  View and manage all tracking devices
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[400px] flex items-center justify-center bg-muted rounded-md">
+                  <p className="text-muted-foreground">
+                    Devices Management Interface
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="analytics" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Advanced Analytics</CardTitle>
+                <CardDescription>
+                  Detailed platform analytics and insights
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[400px] flex items-center justify-center bg-muted rounded-md">
+                  <p className="text-muted-foreground">
+                    Advanced Analytics Dashboard
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </main>
     </div>
+  );
+}
+
+// Metric Card Component with proper TypeScript typing
+function MetricCard({
+  title,
+  value,
+  change,
+  trend,
+  description,
+  icon,
+}: MetricCardProps) {
+  return (
+    <Card>
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-muted-foreground">{title}</p>
+            <div className="flex items-baseline gap-2">
+              <p className="text-3xl font-bold">{value}</p>
+              <Badge
+                className={`${
+                  trend === "up"
+                    ? "bg-green-100 text-green-700"
+                    : trend === "down"
+                    ? "bg-red-100 text-red-700"
+                    : "bg-gray-100 text-gray-700"
+                }`}
+              >
+                {change}
+              </Badge>
+            </div>
+            <p className="text-xs text-muted-foreground">{description}</p>
+          </div>
+          <div className="rounded-full bg-emerald-50 p-3">{icon}</div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
