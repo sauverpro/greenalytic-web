@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useEffect, Suspense } from "react";
-import useAxiosClient from "../../../../hooks/axiosClient";
 import VehicleSelector from "../../../../components/vehicleData/vehicleSelector";
 import DateRangePicker, {
   formatDateForServer,
@@ -9,9 +8,11 @@ import MapSection from "../../../../components/vehicleData/mapSection";
 import { useLoadScript } from "@react-google-maps/api";
 import { useSearchParams } from "next/navigation";
 import  GPSChartSection from "@/components/vehicleData/GPSchartSection";
+import { DAY } from "@/utils/constants";
+import { getGPSData} from "@/services/vehicleData";
+import { getUserVehicles } from "@/services/vehicleService";
 
 function GPSPageContent() {
-  const client = useAxiosClient();
   const searchParams = useSearchParams();
 
   const [vehicles, setVehicles] = useState([]);
@@ -19,7 +20,7 @@ function GPSPageContent() {
     null
   );
   const [startDate, setStartDate] = useState(
-    new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    new Date(Date.now() - DAY)
   );
   const [endDate, setEndDate] = useState(new Date());
   const [gpsData, setGpsData] = useState([]);
@@ -40,26 +41,24 @@ function GPSPageContent() {
   });
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
-  // Fetch vehicles on component mount
   useEffect(() => {
     const fetchVehicles = async () => {
       setIsLoading((prev) => ({ ...prev, vehicles: true }));
       try {
-        const response = await client.get("/vehicles");
-        if (response.data.success) {
-          setVehicles(response.data.data);
+        const response = await getUserVehicles();
+        if (response.success) {
+          setVehicles(response.data);
 
-          // Set selected vehicle from URL params or first vehicle
           const vehicleIdParam = searchParams.get("vehicleId");
           if (
             vehicleIdParam &&
-            response.data.data.some(
+            response.data.some(
               (v: any) => v.id === parseInt(vehicleIdParam)
             )
           ) {
             setSelectedVehicleId(parseInt(vehicleIdParam));
-          } else if (response.data.data.length > 0) {
-            setSelectedVehicleId(response.data.data[0].id);
+          } else if (response.data.length > 0) {
+            setSelectedVehicleId(response.data[0].id);
           }
 
           setInitialLoadComplete(true);
@@ -92,25 +91,20 @@ function GPSPageContent() {
       const formattedStartDate = formatDateForServer(startDate);
       const formattedEndDate = formatDateForServer(endDate, true);
 
-      const response = await client.get(
-        `/vehicles/${selectedVehicleId}/gps/range`,
-        {
-          params: {
-            startDate: formattedStartDate,
-            endDate: formattedEndDate,
-          },
-        }
+      const response = await getGPSData(
+        selectedVehicleId,
+        { startDate: formattedStartDate, endDate: formattedEndDate }
       );
 
-      if (response.data.success) {
-        setGpsData(response.data.data);
-        if (response.data.data.length > 0) {
-          const path = response.data.data.map((point: any) => ({
+      if (response.success) {
+        setGpsData(response.data);
+        if (response.data.length > 0) {
+          const path = response.data.map((point: any) => ({
             lat: point.latitude,
             lng: point.longitude,
           }));
           setPathHistory(path);
-          const mostRecent = response.data.data[response.data.data.length - 1];
+          const mostRecent = response.data[response.data.length - 1];
           setCurrentLocation({
             lat: mostRecent.latitude,
             lng: mostRecent.longitude,

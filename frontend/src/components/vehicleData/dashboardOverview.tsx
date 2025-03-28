@@ -337,7 +337,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-2xl font-bold">
-                    {fuelStats.currentFuelLevel}%
+                    {fuelStats.currentFuelLevel.toFixed(3)}...%
                   </p>
                   <p className="text-xs text-muted-foreground">
                     Current Fuel Level

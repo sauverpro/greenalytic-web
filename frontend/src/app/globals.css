@@ -2,12 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-*{
+* {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
   font-family: "Poppins", sans-serif;
-  
 }
 
 body {
@@ -105,7 +104,7 @@ body {
 /* Strongly Styled WebKit Scrollbar */
 ::-webkit-scrollbar {
   width: 10px; /* Width of the scrollbar */
-  height: 10px; /* Height for horizontal scrollbars */
+  height: 0; /* Height for horizontal scrollbars */
 }
 
 /* Scrollbar Track */
@@ -118,6 +117,7 @@ body {
 ::-webkit-scrollbar-thumb {
   background: linear-gradient(135deg, #22c55e, #16a34a); /* Gradient effect */
   border-radius: 10px;
+
   border: 2px solid #0f172a; /* Border to blend with track */
 }
 

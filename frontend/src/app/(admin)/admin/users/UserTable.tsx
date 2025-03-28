@@ -10,14 +10,12 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription
+  CardDescription,
 } from "@/components/ui/card";
 import { Search, Plus, Users } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { getAllUsers } from "@/api/services/userService";
+import { getAllUsers } from "../../../../services/userService";
 import { User } from "@/types/types";
-
-
 
 import AddUserDrawer from "./AddUserDrawer";
 import EditUserDrawer from "./EditUserDrawer";
@@ -29,7 +27,6 @@ import BulkActions from "./BulkActions";
 import PaginationControls from "./PaginationControls";
 import TableToolbar from "./TableToolbar";
 import ViewUserDrawer from "./ViewUserDrawer";
-
 
 const UserTable = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -49,7 +46,7 @@ const UserTable = () => {
     currentPage: 1,
     totalPages: 1,
     totalItems: 0,
-    limit: 10
+    limit: 10,
   });
 
   // Fetch users with pagination
@@ -118,7 +115,7 @@ const UserTable = () => {
     setFilteredUsers((prevUsers) => [newUser, ...prevUsers]);
     setPagination((prev) => ({
       ...prev,
-      totalItems: prev.totalItems + 1
+      totalItems: prev.totalItems + 1,
     }));
     setOpenAddUserDrawer(false);
   };
@@ -166,7 +163,7 @@ const UserTable = () => {
         ...prev,
         limit: response.users.length,
         currentPage: 1,
-        totalItems: response.users.length
+        totalItems: response.users.length,
       }));
     } catch (error) {
       console.error("Failed to fetch all records", error);
@@ -177,7 +174,6 @@ const UserTable = () => {
 
   // Get columns with action handlers
   const columns = getDataGridColumns(
-    
     handleEditUser,
     handleOpenAddVehicleDrawer,
     handleViewUser,
@@ -185,9 +181,8 @@ const UserTable = () => {
     pagination
   );
 
-
   return (
-    <div className="container mx-auto px-4 py-6">
+    <div className="container mx-auto px-4 py-6 w-full overflow-hidden">
       <Card className="w-full bg-white shadow-md">
         <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b">
           <div className="flex justify-between items-center">
@@ -202,7 +197,8 @@ const UserTable = () => {
             <Button
               onClick={() => setOpenAddUserDrawer(true)}
               variant="default"
-              className="bg-blue-600 hover:bg-blue-700">
+              className="bg-primary hover:bg-primary-dark text-white rounded-md shadow-sm"
+            >
               <Plus size={16} className="mr-1" /> Add User
             </Button>
           </div>
@@ -237,16 +233,17 @@ const UserTable = () => {
           <Box
             sx={{
               height: "auto",
-           
+
               borderRadius: "8px",
               overflow: "hidden",
-                  position: "relative"
-            }}>
-               {loading && (
-    <div className="absolute inset-0 flex justify-center items-center bg-white bg-opacity-50">
-      <CircularProgress size={40} /> {/* MUI Loader */}
-    </div>
-  )}
+              position: "relative",
+            }}
+          >
+            {loading && (
+              <div className="absolute inset-0 flex justify-center items-center bg-white bg-opacity-50">
+                <CircularProgress size={40} /> {/* MUI Loader */}
+              </div>
+            )}
             <DataGrid
               rows={filteredUsers}
               columns={columns}
@@ -262,12 +259,12 @@ const UserTable = () => {
               rowSelectionModel={selectionModel}
               paginationModel={{
                 page: pagination.currentPage - 1,
-                pageSize: pagination.limit
+                pageSize: pagination.limit,
               }}
               onPaginationModelChange={(newPaginationModel) =>
                 setPagination((prev) => ({
                   ...prev,
-                  currentPage: newPaginationModel.page + 1
+                  currentPage: newPaginationModel.page + 1,
                 }))
               }
               slots={{
@@ -279,70 +276,39 @@ const UserTable = () => {
                     handleExportExcel={handleExportExcel}
                     {...props}
                   />
-                )
+                ),
               }}
               className="border rounded-md shadow-sm"
               sx={{
                 "& .MuiDataGrid-columnHeaders": {
                   backgroundColor: "#f9fafb",
                   fontSize: "0.875rem",
-                  fontWeight: "600"
+                  fontWeight: "600",
                 },
                 "& .MuiDataGrid-row:hover": {
-                  backgroundColor: "#f3f4f6"
+                  backgroundColor: "#f3f4f6",
                 },
                 "& .MuiDataGrid-cell": {
-                  padding: "12px 16px"
+                  padding: "12px 16px",
                 },
                 "& .MuiDataGrid-footerContainer": {
                   backgroundColor: "#f9fafb",
-                  borderTop: "1px solid #e5e7eb"
+                  borderTop: "1px solid #e5e7eb",
                 },
                 "& .MuiTablePagination-root": {
-                  color: "#4b5563"
+                  color: "#4b5563",
                 },
                 "& .MuiCheckbox-root": {
-                  color: "#6b7280"
+                  color: "#6b7280",
                 },
                 "& .MuiDataGrid-columnSeparator": {
-                  display: "none"
-                }
+                  display: "none",
+                },
               }}
             />
           </Box>
         </CardContent>
       </Card>
-
-      {/* Separate component drawers */}
-      <AddVehicleDrawer
-        open={openAddVehicleDrawer}
-        onOpenChange={setOpenAddVehicleDrawer}
-        userId={selectedUserId ?? ""}
-        refetchVehicles={() =>
-          fetchUsers(pagination.currentPage, pagination.limit)
-        }
-      />
-
-      <AddUserDrawer
-        open={openAddUserDrawer}
-        onOpenChange={setOpenAddUserDrawer}
-        addUserToState={handleUserAdded}
-      />
-      {/* View User Drawer */}
-      <ViewUserDrawer
-        open={openViewUserDialog}
-        // onOpenChange={setOpenViewUserDialog}
-        onOpenChange={setOpenViewUserDialog}
-        user={selectedUser}
-      />
-      <EditUserDrawer
-        open={openEditUserDrawer}
-        onOpenChange={setOpenEditUserDrawer}
-        user={selectedUser}
-        refetchUsers={() =>
-          fetchUsers(pagination.currentPage, pagination.limit)
-        }
-      />
     </div>
   );
 };

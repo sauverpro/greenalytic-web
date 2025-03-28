@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { addVehicleToUser } from "@/api/services/vehicleService";
+import { addVehicleToUser } from "../../../../services/vehicleService";
 import { Button } from "@/components/ui/button";
 import { Vehicle } from "@/types/types";
 
 const VehicleForm = ({
   userId,
-  onSubmit
+  onSubmit,
 }: {
   userId: string;
   onSubmit: () => void;
@@ -25,7 +25,7 @@ const VehicleForm = ({
     trackingDevice: undefined,
     deletedAt: undefined,
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -33,7 +33,7 @@ const VehicleForm = ({
     setVehicleData((prev) => ({
       ...prev,
       [name]:
-        name === "yearOfManufacture" ? Number(value) || 0 : value || undefined
+        name === "yearOfManufacture" ? Number(value) || 0 : value || undefined,
     }));
   };
 
@@ -58,9 +58,9 @@ const VehicleForm = ({
           {
             name: "yearOfManufacture",
             label: "Year of Manufacture",
-            type: "number"
+            type: "number",
           },
-          { name: "usage", label: "Usage", type: "text" }
+          { name: "usage", label: "Usage", type: "text" },
         ].map((field) => (
           <div key={field.name}>
             <label className="block text-sm mb-1">{field.label}</label>

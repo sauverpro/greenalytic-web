@@ -49,53 +49,29 @@ import {
   LifeBuoy,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { handleLogout } from "@/api/services/userService";
-
-// const adminItems = [
-//   { title: "Dashboard", url: "/admin", icon: Home },
-//   { title: "Client Management", url: "/admin/clients", icon: Users },
-//   { title: "Fleet Overview", url: "/admin/fleet", icon: Truck },
-//   { title: "Device Inventory", url: "/admin/devices", icon: Gauge },
-//   { title: "Analytics Hub", url: "/admin/analytics", icon: BarChart3 },
-//   { title: "Emissions Reports", url: "/admin/emissions", icon: Leaf },
-//   { title: "Tracking Map", url: "/admin/map", icon: MapPin },
-//   { title: "System Settings", url: "/admin/settings", icon: Settings },
-//   { title: "Users", url: "/admin/users", icon: Users },
-//   { title: "Messages", url: "/admin/messages", icon: MessageSquare },
-//   { title: "Reports", url: "/admin/reports", icon: FileText },
-//   { title: "Map", url: "/admin/map", icon: MapPin },
-//   { title: "Audit Logs", url: "/admin/logs", icon: ClipboardList },
-//   { title: "Help Center", url: "/admin/help", icon: HelpCircle },
-//   { title: "Support Tickets", url: "/admin/support", icon: LifeBuoy },
-// ];
+import { handleLogout } from "../services/userService";
 
 const adminItems = [
   { title: "Dashboard", url: "/admin", icon: Home },
-  { title: "Client Management", url: "#", icon: Users },
-  { title: "Fleet Overview", url: "#", icon: Truck },
   { title: "Device Inventory", url: "#", icon: Gauge },
-  { title: "Analytics Hub", url: "#", icon: BarChart3 },
-  { title: "Emissions Reports", url: "#", icon: Leaf },
-  { title: "Tracking Map", url: "#", icon: MapPin },
-  { title: "System Settings", url: "#", icon: Settings },
   { title: "Users", url: "/admin/users", icon: Users },
   { title: "Messages", url: "#", icon: MessageSquare },
-  { title: "Reports", url: "#", icon: FileText },
-  { title: "Map", url: "#", icon: MapPin },
+  { title: "Vehicles", url: "/admin/vehicles", icon: Truck },
+  { title: "Devices", url: "/admin/devices", icon: Gauge },
+  { title: "Tracking Map", url: "#", icon: MapPin },
+  { title: "Analytics Hub", url: "#", icon: BarChart3 },
+  { title: "System Settings", url: "#", icon: Settings },
   { title: "Audit Logs", url: "#", icon: ClipboardList },
   { title: "Help Center", url: "#", icon: HelpCircle },
-  { title: "Support Tickets", url: "#", icon: LifeBuoy },
 ];
-
-
 
 const clientItems = [
   { title: "Dashboard", url: "/client", icon: Home },
   { title: "GPS Tracking", url: "/client/gps", icon: LocateFixed },
   { title: "Fuel Analytics", url: "/client/fuels", icon: Fuel },
   { title: "Emissions Data", url: "/client/emissions", icon: Router },
-  { title: "Live Vehicle Status", url: "/client/live-status", icon: Sparkles },
-  { title: "Settings", url: "/client/settings", icon: Settings },
+  { title: "Live Vehicle Status", url: "#", icon: Sparkles },
+  { title: "Settings", url: "#", icon: Settings },
 ];
 
 export function AppSidebar() {
@@ -203,7 +179,7 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <TooltipProvider delayDuration={0}>
                     <Tooltip>
-                      <SidebarMenuButton asChild>
+                      <SidebarMenuButton asChild={true}>
                         <Link
                           href={item.url}
                           onClick={() => setActiveItem(item.title)}
@@ -274,7 +250,7 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <TooltipProvider delayDuration={0}>
               <Tooltip>
-                <SidebarMenuButton asChild>
+                <SidebarMenuButton asChild={true}>
                   <button
                     onClick={onLogout}
                     className={`flex items-center transition-all duration-300 relative py-3 rounded-xl w-full

@@ -1,18 +1,15 @@
-
-"use cleint";
-// 3. UserActions component (UserActions.tsx)
-import React, { useState } from "react";
+"use client";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { UserCog, Plus, ChevronDown, Eye } from "lucide-react";
-import { DeleteUserDialog } from "./deleteUserDialog";
-import { User } from "@/types/types";
+import { MoreHorizontal } from "lucide-react";
+import type { User } from "@/types/types";
+import Link from "next/link";
 
 interface UserActionsProps {
   user: User;
@@ -27,50 +24,29 @@ const UserActions = ({
   onEditUser,
   onAddVehicle,
   onViewUser,
-  refetchUsers
+  refetchUsers,
 }: UserActionsProps) => {
-  const [open, setOpen] = useState(false);
-
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
+    <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="h-8 px-2 bg-white">
-          Actions <ChevronDown size={14} className="ml-1" />
+        <Button variant="ghost" size="icon" className="h-8 w-8">
+          <MoreHorizontal className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-48">
-        <DropdownMenuItem
-          onClick={() => onViewUser(user)}
-          className="flex items-center gap-2 cursor-pointer">
-          <Eye size={14} />
-          View Details
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem asChild>
+          <Link href={`/admin/users/${user.id}`}>View Details</Link>
         </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => onEditUser(user)}
-          className="flex items-center gap-2 cursor-pointer">
-          <UserCog size={14} />
-          Edit User
+        <DropdownMenuItem onClick={() => onEditUser(user)}>
+          Edit Client
         </DropdownMenuItem>
-
-        <DropdownMenuItem
-          onClick={() => onAddVehicle(user.id.toString())}
-          className="flex items-center gap-2 cursor-pointer">
-          <Plus size={14} />
-          Add Vehicle
+        <DropdownMenuItem >
+          Manage Vehicles
         </DropdownMenuItem>
-
+        <DropdownMenuItem>Manage Devices</DropdownMenuItem>
         <DropdownMenuSeparator />
-
-        <DropdownMenuItem
-          onSelect={(event) => {
-            event.preventDefault();
-            setOpen(false);
-          }}
-          asChild>
-          <DeleteUserDialog
-            userId={user.id.toString()}
-            refetchUsers={refetchUsers}
-          />
+        <DropdownMenuItem className="text-red-500">
+          Delete User
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -78,3 +54,4 @@ const UserActions = ({
 };
 
 export default UserActions;
+

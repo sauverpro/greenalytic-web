@@ -1,0 +1,262 @@
+"use client";
+
+import { useState } from "react";
+import { Car } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { addVehicleToUser } from "../../services/vehicleService";
+import { toast } from "sonner";
+
+// Define the form schema with validation
+const vehicleFormSchema = z.object({
+  plateNumber: z.string().min(3, "Plate number must be at least 3 characters"),
+  chassisNumber: z
+    .string()
+    .min(5, "Chassis number must be at least 5 characters"),
+  vehicleType: z.string().min(1, "Vehicle type is required"),
+  vehicleModel: z.string().min(1, "Vehicle model is required"),
+  yearOfManufacture: z.coerce
+    .number()
+    .min(1990, "Year must be 1990 or later")
+    .max(
+      new Date().getFullYear() + 1,
+      `Year cannot be later than ${new Date().getFullYear() + 1}`
+    ),
+  usage: z.string().min(1, "Usage is required"),
+});
+
+type VehicleFormValues = z.infer<typeof vehicleFormSchema>;
+
+interface AddVehicleModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  userId: string;
+  onSuccess?: () => void;
+}
+
+export function AddVehicleModal({
+  isOpen,
+  onClose,
+  userId,
+  onSuccess,
+}: AddVehicleModalProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const form = useForm<VehicleFormValues>({
+    resolver: zodResolver(vehicleFormSchema),
+    defaultValues: {
+      plateNumber: "",
+      chassisNumber: "",
+      vehicleType: "",
+      vehicleModel: "",
+      yearOfManufacture: new Date().getFullYear(),
+      usage: "",
+    },
+  });
+
+  async function onSubmit(data: VehicleFormValues) {
+    setIsSubmitting(true);
+    try {
+      await addVehicleToUser(userId, data);
+      toast("Vehicle added successfully");
+      form.reset();
+      onSuccess?.();
+      onClose();
+    } catch (error) {
+      console.error("Failed to add vehicle:", error);
+      toast("Failed to add vehicle");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <div className="flex items-center gap-2">
+            <div className="rounded-full bg-emerald-100 p-2">
+              <Car className="h-5 w-5 text-emerald-700" />
+            </div>
+            <DialogTitle>Add New Vehicle</DialogTitle>
+          </div>
+          <DialogDescription>
+            Add a new vehicle to this client's account.
+          </DialogDescription>
+        </DialogHeader>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="plateNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Plate Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="ABC1234" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="chassisNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Chassis Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="XW8FG98765" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="vehicleType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Vehicle Type</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select vehicle type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Sedan">Sedan</SelectItem>
+                        <SelectItem value="SUV">SUV</SelectItem>
+                        <SelectItem value="Truck">Truck</SelectItem>
+                        <SelectItem value="Van">Van</SelectItem>
+                        <SelectItem value="Hatchback">Hatchback</SelectItem>
+                        <SelectItem value="Coupe">Coupe</SelectItem>
+                        <SelectItem value="Convertible">Convertible</SelectItem>
+                        <SelectItem value="Wagon">Wagon</SelectItem>
+                        <SelectItem value="Minivan">Minivan</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="vehicleModel"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Vehicle Model</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Toyota RAV4" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="yearOfManufacture"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Year of Manufacture</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="usage"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Usage</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select usage type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Personal">Personal</SelectItem>
+                        <SelectItem value="Commercial">Commercial</SelectItem>
+                        <SelectItem value="Fleet">Fleet</SelectItem>
+                        <SelectItem value="Rental">Rental</SelectItem>
+                        <SelectItem value="Delivery">Delivery</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <DialogFooter className="mt-6">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="bg-emerald-600 hover:bg-emerald-700"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Adding..." : "Add Vehicle"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}

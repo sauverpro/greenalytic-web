@@ -226,7 +226,7 @@ const GPSChartSection: React.FC<GPSChartSectionProps> = ({
                 Current Speed
               </h3>
               <p className="text-2xl font-bold text-green-600">
-                {stats.currentSpeed} km/h
+                {stats.currentSpeed.toFixed(3)}... km/h
               </p>
             </div>
             <div className="bg-blue-50 p-4 rounded-lg">

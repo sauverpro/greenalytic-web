@@ -49,8 +49,6 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
   }, [startDate, endDate, setStartDate, setEndDate]);
 
   const handleFetchData = () => {
-    console.log("Formatted startDate:", formatDateForServer(startDate));
-    console.log("Formatted endDate:", formatDateForServer(endDate, true)); // Note the true flag for endDate
 
     fetchAllData();
   };

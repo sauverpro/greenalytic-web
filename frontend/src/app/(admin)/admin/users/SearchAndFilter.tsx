@@ -8,6 +8,7 @@ import { Search } from "lucide-react";
 interface SearchAndFilterProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
+  placeholder?: string;
 }
 
 const SearchAndFilter = ({
@@ -21,7 +22,7 @@ const SearchAndFilter = ({
         size={18}
       />
       <Input
-        placeholder="Search users by name, email, role..."
+        placeholder="Search ............"
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
         className="pl-10 bg-white"

@@ -1,217 +1,168 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
-import {
-  ArrowLeft,
-  Car,
-  Download,
-  Edit,
-  Fuel,
-  Mail,
-  MapPin,
-  MoreHorizontal,
-  Phone,
-  Plus,
-  Router,
-  Trash,
-} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-
-// Define TypeScript interfaces for client data
-interface ClientDevice {
-  gps: number;
-  fuel: number;
-  emissions: number;
-}
-
-interface ClientBillingInfo {
-  plan: string;
-  nextBilling: string;
-  amount: string;
-  paymentMethod: string;
-}
-
-interface ClientData {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  address: string;
-  status: string;
-  joinDate: string;
-  subscription: string;
-  vehicles: number;
-  devices: ClientDevice;
-  contactPerson: string;
-  contactRole: string;
-  contactEmail: string;
-  contactPhone: string;
-  billingInfo: ClientBillingInfo;
-}
-
-interface VehicleData {
-  id: string;
-  plate: string;
-  model: string;
-  year: string;
-  status: string;
-  devices: string[];
-}
-
-interface DeviceData {
-  id: string;
-  type: string;
-  vehicle: string;
-  date: string;
-  status: string;
-  lastPing: string;
-}
+import { AddVehicleModal } from "@/components/adminComponents/add-vehicle-modal";
+import { AddDeviceModal } from "@/components/adminComponents/add-device-modal";
+import { ClientData, DeviceData, VehicleData } from "@/types/types";
+// import { getVehiclesForUser } from "@/services/vehicleService";
+import { getUserById } from "@/services/userService";
+import { CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
+import { Card, CardHeader, CardContent } from "@mui/material";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { ArrowLeft, Mail, Edit, Download, Phone, MapPin, Car, Fuel, Plus, Router, MoreHorizontal, Trash } from "lucide-react";
+import { toast } from "sonner";
 
 export default function ClientDetails() {
-  const [selectedTab, setSelectedTab] = useState("vehicles");
+  const params = useParams();
+  const rawUserId = params?.userId || params?.id;
+  const userId = Array.isArray(rawUserId)
+    ? rawUserId[0]
+    : (rawUserId as string);
 
-  // Mock client data
-  const client: ClientData = {
-    id: "CL-1234",
-    name: "Acme Corporation",
-    email: "contact@acmecorp.com",
-    phone: "+1 (555) 123-4567",
-    address: "123 Business Ave, Corporate Park, CA 94103",
-    status: "active",
-    joinDate: "Jan 15, 2023",
-    subscription: "Enterprise",
-    vehicles: 12,
-    devices: {
-      gps: 12,
-      fuel: 10,
-      emissions: 8,
-    },
-    contactPerson: "John Smith",
-    contactRole: "Fleet Manager",
-    contactEmail: "john.smith@acmecorp.com",
-    contactPhone: "+1 (555) 987-6543",
-    billingInfo: {
-      plan: "Annual Enterprise",
-      nextBilling: "Dec 31, 2023",
-      amount: "$12,000",
-      paymentMethod: "Credit Card (ending in 4567)",
-    },
+  const [selectedTab, setSelectedTab] = useState("vehicles");
+  const [isAddVehicleModalOpen, setIsAddVehicleModalOpen] = useState(false);
+  const [isAddDeviceModalOpen, setIsAddDeviceModalOpen] = useState(false);
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
+  const [client, setClient] = useState<ClientData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [vehicles, setVehicles] = useState<VehicleData[]>([]);
+  const [devices, setDevices] = useState<DeviceData[]>([]);
+
+  // Fetch client data based on userId
+  useEffect(() => {
+    const fetchClientData = async () => {
+      if (!userId) {
+        console.log("No userId found in params");
+        return;
+      }
+
+      setLoading(true);
+      console.log("Fetching client data for userId:", userId);
+
+      try {
+        const clientData = await getUserById(userId);
+
+           setClient({
+             id: clientData.user.id.toString(),
+             name: clientData.user.username,
+             email: clientData.user.email,
+             phone: clientData.user.phoneNumber,
+             status: clientData.user.verified ? "active" : "pending",
+             image: clientData.user.image,
+             totalGPS: clientData.user.totalGpsData,
+             totalFuel: clientData.user.totalFuelData,
+             totalEmissions: clientData.user.totalEmissions,
+             joinDate: new Date(clientData.user.createdAt).toLocaleDateString(),
+             subscription: "Standard",
+             vehicles: clientData.user.vehicles.length,
+             GPSDevices: clientData.user.deviceCounts.gps,
+             fuelDevices: clientData.user.deviceCounts.fuel,
+             emissionsDevices: clientData.user.deviceCounts.emissions,
+             totalDevices: clientData.user.deviceCounts.total,
+             billingInfo: {
+               plan: "Standard Plan",
+               nextBilling: "N/A",
+               amount: "$0.00",
+               paymentMethod: "Credit Card",
+             },
+           });
+
+        console.log("Fetched client data .data : ========= ", clientData);
+
+   const extractedDevices: DeviceData[] = clientData.user.trackingDevices.map(
+     (device: any) => ({
+       id: device.id.toString(),
+       type: `${
+         device.type.charAt(0).toUpperCase() +
+         device.type.slice(1).toLowerCase()
+       } Tracker`,
+       vehicle: "Unassigned", 
+       date: new Date(device.createdAt || "2023-01-01").toLocaleDateString(),
+       status: device.isActive ? "online" : "offline",
+       lastPing: "N/A", 
+     })
+   );
+   setDevices(extractedDevices);
+
+
+        // const fetchedVehicles = await getVehiclesForUser(userId);
+        const mappedVehicles = clientData.user.vehicles.map((vehicle: any) => {
+          const deviceTypes = [];
+          if (vehicle._count.gpsDatas > 0) deviceTypes.push("GPS");
+          if (vehicle._count.fuelDatas > 0) deviceTypes.push("Fuel");
+          if (vehicle._count.emissionDatas > 0) deviceTypes.push("Emissions");
+
+          return {
+            id: vehicle.id.toString(),
+            plate: vehicle.plateNumber,
+            model: vehicle.vehicleModel,
+            year: "2020", 
+            status: vehicle.vehicleType === "SUV" ? "Personal" : "Fleet", 
+            devices: deviceTypes,
+          };
+        });
+
+        setVehicles(mappedVehicles);
+
+        console.log("Fetched vehicles data: =============== ", mappedVehicles);
+
+      } catch (error) {
+        console.error("Error fetching client data:", error);
+        toast("Error fetching client data");
+
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchClientData();
+  }, [userId]);
+
+  const handleDeviceAdded = () => {
+    toast("The device has been successfully added to the vehicle.");
+    // I want to refetch the devices data here
   };
 
-  // Mock vehicles data
-  const vehicles: VehicleData[] = [
-    {
-      id: "V-001",
-      plate: "ABC123",
-      model: "Toyota Prius",
-      year: "2022",
-      status: "active",
-      devices: ["GPS", "Fuel", "Emissions"],
-    },
-    {
-      id: "V-002",
-      plate: "XYZ789",
-      model: "Tesla Model 3",
-      year: "2023",
-      status: "active",
-      devices: ["GPS", "Emissions"],
-    },
-    {
-      id: "V-003",
-      plate: "DEF456",
-      model: "Ford F-150",
-      year: "2021",
-      status: "maintenance",
-      devices: ["GPS", "Fuel"],
-    },
-    {
-      id: "V-004",
-      plate: "GHI789",
-      model: "Honda Civic",
-      year: "2022",
-      status: "active",
-      devices: ["GPS", "Fuel", "Emissions"],
-    },
-    {
-      id: "V-005",
-      plate: "JKL012",
-      model: "Chevrolet Bolt",
-      year: "2023",
-      status: "inactive",
-      devices: ["GPS"],
-    },
-  ];
+  const handleVehicleAdded = () => {
+    toast("The vehicle has been successfully added to this client.");
+    // I want to refetch the vehicles data here
+  };
 
-  // Mock devices data
-  const devices: DeviceData[] = [
-    {
-      id: "D-001",
-      type: "GPS Tracker",
-      vehicle: "ABC123",
-      date: "Jan 15, 2023",
-      status: "online",
-      lastPing: "2 mins ago",
-    },
-    {
-      id: "D-002",
-      type: "Fuel Sensor",
-      vehicle: "ABC123",
-      date: "Jan 15, 2023",
-      status: "online",
-      lastPing: "5 mins ago",
-    },
-    {
-      id: "D-003",
-      type: "Emissions Monitor",
-      vehicle: "ABC123",
-      date: "Jan 15, 2023",
-      status: "online",
-      lastPing: "3 mins ago",
-    },
-    {
-      id: "D-004",
-      type: "GPS Tracker",
-      vehicle: "XYZ789",
-      date: "Feb 20, 2023",
-      status: "online",
-      lastPing: "1 min ago",
-    },
-    {
-      id: "D-005",
-      type: "Emissions Monitor",
-      vehicle: "XYZ789",
-      date: "Feb 20, 2023",
-      status: "offline",
-      lastPing: "2 days ago",
-    },
-  ];
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500"></div>
+      </div>
+    );
+  }
+
+  if (!userId) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen">
+        <h2 className="text-xl font-bold mb-2">Client Not Found</h2>
+        <p className="text-muted-foreground mb-4">
+          The requested client could not be found.
+        </p>
+        <Button asChild>
+          <Link href="/admin/users">Back to Users</Link>
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-emerald-50 to-white">
       {/* Header */}
       <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-white px-6 shadow-sm">
         <Button variant="ghost" size="icon" asChild>
-          <Link href="/admin">
+          <Link href="/admin/users">
             <ArrowLeft className="h-5 w-5" />
           </Link>
         </Button>
@@ -224,7 +175,7 @@ export default function ClientDetails() {
             variant="outline"
             className="ml-2 bg-emerald-100 text-emerald-800 border-emerald-200"
           >
-            {client.id}
+            {userId}
           </Badge>
         </div>
 
@@ -259,37 +210,41 @@ export default function ClientDetails() {
             <CardContent className="space-y-4">
               <div className="flex flex-col items-center text-center">
                 <Avatar className="h-24 w-24 mb-2">
-                  <AvatarFallback className="bg-emerald-100 text-emerald-800 text-2xl">
-                    {client.name.charAt(0)}
-                  </AvatarFallback>
+                  {client?.image ? (
+                    <img src={client.image} />
+                  ) : (
+                    <AvatarFallback className="bg-emerald-100 text-emerald-800 text-2xl">
+                      {client?.name?.charAt(0) || "U"}
+                    </AvatarFallback>
+                  )}
                 </Avatar>
-                <h3 className="text-xl font-bold">{client.name}</h3>
+                <h3 className="text-xl font-bold">{client?.name}</h3>
                 <Badge
                   className={
-                    client.status === "active"
+                    client?.status === "active"
                       ? "bg-green-100 text-green-700"
                       : "bg-gray-100 text-gray-700"
                   }
                 >
-                  {client.status.toUpperCase()}
+                  {client?.status.toUpperCase()}
                 </Badge>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Client since {client.joinDate}
+                  {/* Client since {client?.joinDate} */}
                 </p>
               </div>
 
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">{client.email}</span>
+                  <span className="text-sm">{client?.email}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">{client.phone}</span>
+                  <span className="text-sm">{client?.phone}</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
-                  <span className="text-sm">{client.address}</span>
+                  <span className="text-sm">{client?.address}</span>
                 </div>
               </div>
 
@@ -299,7 +254,7 @@ export default function ClientDetails() {
                   variant="outline"
                   className="bg-blue-50 text-blue-700 border-blue-200"
                 >
-                  {client.subscription}
+                  {client?.subscription}
                 </Badge>
               </div>
             </CardContent>
@@ -310,70 +265,113 @@ export default function ClientDetails() {
               <CardTitle>Account Summary</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-6 sm:grid-cols-3">
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-muted-foreground">
+              {/* Account Summary */}
+              <div className="space-y-6">
+                <div className="space-y-3">
+                  <h4 className="text-lg font-semibold text-muted-foreground">
                     Vehicles
                   </h4>
-                  <div className="flex items-center gap-2">
-                    <div className="rounded-full bg-emerald-100 p-2">
-                      <Car className="h-5 w-5 text-emerald-700" />
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-full bg-emerald-100 p-3">
+                      <Car className="h-10 w-10 text-emerald-700" />
                     </div>
-                    <span className="text-2xl font-bold">
-                      {client.vehicles}
-                    </span>
+                    <div>
+                      <span className="text-3xl font-bold">
+                        {client?.vehicles}
+                      </span>
+                      <p className="text-sm text-muted-foreground">
+                        Total vehicles
+                      </p>
+                    </div>
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-muted-foreground">
-                    GPS Trackers
+                <div className="space-y-3">
+                  <h4 className="text-lg font-semibold text-muted-foreground">
+                    Tracking Devices
                   </h4>
-                  <div className="flex items-center gap-2">
-                    <div className="rounded-full bg-blue-100 p-2">
-                      <MapPin className="h-5 w-5 text-blue-700" />
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <div className="rounded-lg border bg-card p-4 shadow-sm">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="rounded-full bg-blue-100 p-2">
+                          <MapPin className="h-5 w-5 text-blue-700" />
+                        </div>
+                        <h5 className="font-medium">GPS Trackers</h5>
+                      </div>
+                      <div className="flex flex-col">
+                        <div className="flex items-baseline justify-between">
+                          <span className="text-2xl font-bold">
+                            {client?.GPSDevices}
+                          </span>
+                          <span className="text-sm text-muted-foreground">
+                            Devices
+                          </span>
+                        </div>
+                        <div className="flex items-baseline justify-between mt-1">
+                          <span className="text-lg font-medium text-blue-600">
+                            {client?.totalGPS}
+                          </span>
+                          <span className="text-sm text-muted-foreground">
+                            Data points
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <span className="text-2xl font-bold">
-                      {client.devices.gps}
-                    </span>
-                  </div>
-                </div>
 
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-muted-foreground">
-                    Fuel Sensors
-                  </h4>
-                  <div className="flex items-center gap-2">
-                    <div className="rounded-full bg-amber-100 p-2">
-                      <Fuel className="h-5 w-5 text-amber-700" />
+                    <div className="rounded-lg border bg-card p-4 shadow-sm">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="rounded-full bg-amber-100 p-2">
+                          <Fuel className="h-5 w-5 text-amber-700" />
+                        </div>
+                        <h5 className="font-medium">Fuel Sensors</h5>
+                      </div>
+                      <div className="flex flex-col">
+                        <div className="flex items-baseline justify-between">
+                          <span className="text-2xl font-bold">
+                            {client?.fuelDevices}
+                          </span>
+                          <span className="text-sm text-muted-foreground">
+                            Devices
+                          </span>
+                        </div>
+                        <div className="flex items-baseline justify-between mt-1">
+                          <span className="text-lg font-medium text-amber-600">
+                            {client?.totalFuel}
+                          </span>
+                          <span className="text-sm text-muted-foreground">
+                            Data points
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <span className="text-2xl font-bold">
-                      {client.devices.fuel}
-                    </span>
-                  </div>
-                </div>
-              </div>
 
-              <div className="mt-6">
-                <h4 className="text-sm font-medium mb-2">Primary Contact</h4>
-                <div className="flex items-center gap-4 rounded-lg border p-3">
-                  <Avatar className="h-10 w-10">
-                    <AvatarFallback className="bg-blue-100 text-blue-700">
-                      {client.contactPerson
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="font-medium">{client.contactPerson}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {client.contactRole}
-                    </p>
-                  </div>
-                  <div className="ml-auto flex flex-col text-sm">
-                    <span>{client.contactEmail}</span>
-                    <span>{client.contactPhone}</span>
+                    {/* Emission Sensors */}
+                    <div className="rounded-lg border bg-card p-4 shadow-sm">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="rounded-full bg-green-100 p-2">
+                          <Router className="h-5 w-5 text-green-700" />
+                        </div>
+                        <h5 className="font-medium">Emission Sensors</h5>
+                      </div>
+                      <div className="flex flex-col">
+                        <div className="flex items-baseline justify-between">
+                          <span className="text-2xl font-bold">
+                            {client?.emissionsDevices}
+                          </span>
+                          <span className="text-sm text-muted-foreground">
+                            Devices
+                          </span>
+                        </div>
+                        <div className="flex items-baseline justify-between mt-1">
+                          <span className="text-lg font-medium text-green-600">
+                            {client?.totalEmissions}
+                          </span>
+                          <span className="text-sm text-muted-foreground">
+                            Data points
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -386,7 +384,7 @@ export default function ClientDetails() {
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Plan:</span>
                     <span className="text-sm font-medium">
-                      {client.billingInfo.plan}
+                      {client?.billingInfo.plan}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -394,7 +392,7 @@ export default function ClientDetails() {
                       Next Billing:
                     </span>
                     <span className="text-sm font-medium">
-                      {client.billingInfo.nextBilling}
+                      {client?.billingInfo.nextBilling}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -402,7 +400,7 @@ export default function ClientDetails() {
                       Amount:
                     </span>
                     <span className="text-sm font-medium">
-                      {client.billingInfo.amount}
+                      {client?.billingInfo.amount}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -410,7 +408,7 @@ export default function ClientDetails() {
                       Payment Method:
                     </span>
                     <span className="text-sm font-medium">
-                      {client.billingInfo.paymentMethod}
+                      {client?.billingInfo.paymentMethod}
                     </span>
                   </div>
                 </div>
@@ -437,7 +435,10 @@ export default function ClientDetails() {
           <TabsContent value="vehicles" className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-bold">Client Vehicles</h2>
-              <Button className="bg-emerald-600 hover:bg-emerald-700">
+              <Button
+                className="bg-emerald-600 hover:bg-emerald-700"
+                onClick={() => setIsAddVehicleModalOpen(true)}
+              >
                 <Plus className="mr-2 h-4 w-4" />
                 Add Vehicle
               </Button>
@@ -453,7 +454,7 @@ export default function ClientDetails() {
                         <th className="p-4 font-medium">Plate Number</th>
                         <th className="p-4 font-medium">Model</th>
                         <th className="p-4 font-medium">Year</th>
-                        <th className="p-4 font-medium">Status</th>
+                        <th className="p-4 font-medium">Usage</th>
                         <th className="p-4 font-medium">Devices</th>
                         <th className="p-4 font-medium text-right">Actions</th>
                       </tr>
@@ -520,20 +521,28 @@ export default function ClientDetails() {
                                   <MoreHorizontal className="h-4 w-4" />
                                 </Button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem>
-                                  View Details
+                              <DropdownMenuContent align="end" className="w-48">
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    setSelectedVehicleId(vehicle.id);
+                                    setIsAddDeviceModalOpen(true);
+                                  }}
+                                >
+                                  {/* <Plus /> */}
+                                  Add Device
                                 </DropdownMenuItem>
                                 <DropdownMenuItem>
+                                  {/* <Edit /> */}
                                   Edit Vehicle
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>
+                                {/* <DropdownMenuItem>
+                                  <Router />
                                   Manage Devices
-                                </DropdownMenuItem>
+                                </DropdownMenuItem> */}
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem className="text-red-500">
-                                  <Trash className="mr-2 h-4 w-4" />
-                                  Remove Vehicle
+                                  {/* <Trash /> */}
+                                  Delete Vehicle
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -546,7 +555,7 @@ export default function ClientDetails() {
               </CardContent>
               <CardFooter className="flex items-center justify-between border-t px-6 py-3">
                 <div className="text-sm text-muted-foreground">
-                  Showing {vehicles.length} of {client.vehicles} vehicles
+                  Showing {vehicles.length} of {client?.vehicles || 0} vehicles
                 </div>
                 <div className="flex items-center gap-2">
                   <Button variant="outline" size="sm" disabled>
@@ -564,7 +573,18 @@ export default function ClientDetails() {
           <TabsContent value="devices" className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-bold">Client Devices</h2>
-              <Button className="bg-emerald-600 hover:bg-emerald-700">
+              <Button
+                className="bg-emerald-600 hover:bg-emerald-700"
+                onClick={() => {
+                  // If no vehicle is selected, you might want to show a message or handle differently
+                  if (vehicles.length === 0) {
+                    toast("Please add a vehicle first before adding devices.");
+                  }
+                  // Alternatively, you could pre-select the first vehicle
+                  // setSelectedVehicleId(vehicles[0]?.id || "");
+                  setIsAddDeviceModalOpen(true);
+                }}
+              >
                 <Plus className="mr-2 h-4 w-4" />
                 Add Device
               </Button>
@@ -654,10 +674,10 @@ export default function ClientDetails() {
               </CardContent>
               <CardFooter className="flex items-center justify-between border-t px-6 py-3">
                 <div className="text-sm text-muted-foreground">
-                  Showing {devices.length} of{" "}
-                  {client.devices.gps +
-                    client.devices.fuel +
-                    client.devices.emissions}{" "}
+                  Showing {devices.length} of {" "}
+                  {parseInt(String(client?.GPSDevices ?? 0)) +
+                    parseInt(String(client?.fuelDevices ?? 0)) +
+                    parseInt(String(client?.emissionsDevices ?? 0))}
                   devices
                 </div>
                 <div className="flex items-center gap-2">
@@ -728,6 +748,23 @@ export default function ClientDetails() {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Add Vehicle Modal */}
+      <AddVehicleModal
+        isOpen={isAddVehicleModalOpen}
+        onClose={() => setIsAddVehicleModalOpen(false)}
+        userId={client?.id || ""}
+        onSuccess={handleVehicleAdded}
+      />
+
+      {/* Add Device Modal */}
+      <AddDeviceModal
+        isOpen={isAddDeviceModalOpen}
+        onClose={() => setIsAddDeviceModalOpen(false)}
+        vehicleId={selectedVehicleId || ""}
+        availableVehicles={vehicles.map((v) => ({ id: v.id, plate: v.plate }))}
+        onSuccess={handleDeviceAdded}
+      />
     </div>
   );
 }

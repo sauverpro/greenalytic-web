@@ -6,20 +6,20 @@ import {
   DrawerClose,
   DrawerContent,
   DrawerHeader,
-  DrawerTitle
+  DrawerTitle,
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getUserVehicles } from "@/api/services/vehicleService";
+import { getUserVehicles, getVehiclesForUser } from "../../../../services/vehicleService";
 import { User, Vehicle } from "@/types/types";
 import { Car, Phone, Mail, User as UserIcon, Fuel } from "lucide-react";
 
 export default function ViewUserDrawer({
   open,
   onOpenChange,
-  user
+  user,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -37,7 +37,7 @@ export default function ViewUserDrawer({
       setError(null);
 
       try {
-        const response = await getUserVehicles(user.id.toString());
+        const response = await getVehiclesForUser(user.id.toString());
         setVehicles(response || []);
       } catch (err) {
         setError(`Failed to fetch vehicles: ${err}`);
@@ -67,7 +67,8 @@ export default function ViewUserDrawer({
             <Button
               variant="ghost"
               size="icon"
-              className="text-white hover:bg-blue-700">
+              className="text-white hover:bg-blue-700"
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="24"
@@ -78,7 +79,8 @@ export default function ViewUserDrawer({
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="lucide lucide-x">
+                className="lucide lucide-x"
+              >
                 <path d="M18 6 6 18" />
                 <path d="m6 6 12 12" />
               </svg>
@@ -131,7 +133,8 @@ export default function ViewUserDrawer({
                   <span className="text-gray-600">Status</span>
                   <Badge
                     // variant={user.isActive ? "success" : "destructive"}
-                    className="text-xs px-2">
+                    className="text-xs px-2"
+                  >
                     {/* {user.isActive ? "Active" : "Inactive"} */}
                   </Badge>
                 </div>
@@ -217,7 +220,8 @@ export default function ViewUserDrawer({
                             <td className="px-4 py-3 whitespace-nowrap">
                               <Badge
                                 variant="outline"
-                                className="text-xs capitalize">
+                                className="text-xs capitalize"
+                              >
                                 {vehicle.vehicleType}
                               </Badge>
                             </td>
@@ -228,8 +232,9 @@ export default function ViewUserDrawer({
                                     <div
                                       className="bg-green-500 h-2 rounded-full"
                                       style={{
-                                        width: `${vehicle.fuelDatas[0].fuelLevel}%`
-                                      }}></div>
+                                        width: `${vehicle.fuelDatas[0].fuelLevel}%`,
+                                      }}
+                                    ></div>
                                   </div>
                                   <span className="text-xs font-medium">
                                     {vehicle.fuelDatas[0].fuelLevel}%
@@ -246,13 +251,15 @@ export default function ViewUserDrawer({
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  className="h-8 px-2 text-blue-600 border-blue-200 hover:bg-blue-50">
+                                  className="h-8 px-2 text-blue-600 border-blue-200 hover:bg-blue-50"
+                                >
                                   Details
                                 </Button>
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  className="h-8 px-2 text-green-600 border-green-200 hover:bg-green-50">
+                                  className="h-8 px-2 text-green-600 border-green-200 hover:bg-green-50"
+                                >
                                   Fuel Log
                                 </Button>
                               </div>
@@ -277,7 +284,8 @@ export default function ViewUserDrawer({
             <div className="flex gap-2">
               <Button
                 variant="outline"
-                className="bg-white text-blue-600 border-blue-200 hover:bg-blue-50">
+                className="bg-white text-blue-600 border-blue-200 hover:bg-blue-50"
+              >
                 Edit User
               </Button>
               <Button className="bg-blue-600 hover:bg-blue-700">

@@ -1,130 +1,110 @@
+import { faker } from "@faker-js/faker";
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
- 
-  let vehicle1 = await prisma.vehicle.upsert({
-    where: { id: 6 },
-    update: {},
-    create: {
-      id: 6,
-      plateNumber: "RAD456",
-      vehicleType: "Sedan",
-      vehicleModel: "Toyota Corolla",
-      yearOfManufacture: 2020,
-      usage: "Commercial",
-      userId: 1, 
-    },
+  // Keep your original vehicle and device IDs
+  let vehicleId = 5;
+  let plateNumber = "RA002A";
+  let gpsId = 10;
+  let fuelId = 11;
+  let emId = 12;
+
+  // Generate data for the last 30 days
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setDate(endDate.getDate() - 30); // 30 days ago
+
+  // Create arrays to hold our generated data
+  const emissionsData = [];
+  const gpsData = [];
+  const fuelData = [];
+
+  // Generate 100+ records spread across the last 30 days
+  for (let i = 0; i < 120; i++) {
+    // Create a random timestamp between start and end date
+    const timestamp = faker.date.between({ from: startDate, to: endDate });
+
+    // Add random emission data with realistic variations
+    emissionsData.push({
+      vehicleId: vehicleId,
+      timestamp: new Date(timestamp),
+      co2Percentage: faker.number.float({ min: 80, max: 140, precision: 0.1 }),
+      coPercentage: faker.number.float({ min: 0.8, max: 2.4, precision: 0.01 }),
+      o2Percentage: faker.number.float({ min: 0.3, max: 0.9, precision: 0.01 }),
+      hcPPM: faker.number.int({ min: 15, max: 40 }),
+      plateNumber: plateNumber,
+      trackingDeviceId: emId,
+    });
+
+    // Create GPS data points showing movement around Kigali
+    // Central coordinate for Kigali: -1.9403, 30.0596
+    const baseLat = -1.9403;
+    const baseLong = 30.0596;
+
+    // Add some random variation to create a path
+    const latVariance = faker.number.float({
+      min: -0.03,
+      max: 0.03,
+      precision: 0.0001,
+    });
+    const longVariance = faker.number.float({
+      min: -0.03,
+      max: 0.03,
+      precision: 0.0001,
+    });
+
+    gpsData.push({
+      vehicleId: vehicleId,
+      timestamp: new Date(timestamp),
+      latitude: baseLat + latVariance,
+      longitude: baseLong + longVariance,
+      speed: faker.number.float({ min: 0, max: 120, precision: 0.1 }),
+      plateNumber: plateNumber,
+      trackingDeviceId: gpsId,
+    });
+
+    // Add fuel data with realistic decreasing fuel levels and varying consumption
+    fuelData.push({
+      vehicleId: vehicleId,
+      timestamp: new Date(timestamp),
+      fuelLevel: faker.number.float({ min: 5, max: 95, precision: 0.1 }),
+      fuelConsumption: faker.number.float({ min: 8, max: 25, precision: 0.1 }),
+      plateNumber: plateNumber,
+      trackingDeviceId: fuelId,
+    });
+  }
+
+  // Sort all data by timestamp to ensure chronological order
+  emissionsData.sort((a, b) => a.timestamp - b.timestamp);
+  gpsData.sort((a, b) => a.timestamp - b.timestamp);
+  fuelData.sort((a, b) => a.timestamp - b.timestamp);
+
+  // Create more realistic fuel level pattern (gradually decreasing with refills)
+  let currentFuelLevel = 80;
+  fuelData.forEach((item, index) => {
+    // Simulate fuel consumption
+    if (index > 0) {
+      // Random consumption between trips
+      const consumption = faker.number.float({
+        min: 0.5,
+        max: 3,
+        precision: 0.1,
+      });
+      currentFuelLevel -= consumption;
+
+      // Simulate refilling when fuel gets low
+      if (currentFuelLevel < 15) {
+        currentFuelLevel = faker.number.float({
+          min: 75,
+          max: 95,
+          precision: 0.1,
+        });
+      }
+    }
+
+    item.fuelLevel = Math.max(0, currentFuelLevel);
   });
-
-  // Create Vehicle 2
-  let vehicle2 = await prisma.vehicle.upsert({
-    where: { id: 10 },
-    update: {},
-    create: {
-      id: 10,
-      plateNumber: "RAE789",
-      vehicleType: "SUV",
-      vehicleModel: "Honda CR-V",
-      yearOfManufacture: 2021,
-      usage: "Private",
-      userId: 21, 
-    },
-  });
-
-  // Create tracking device for vehicle 1
-  let trackingDevice1 = await prisma.trackingDevice.upsert({
-    where: { vehicleId: 6 },
-    update: {},
-    create: {
-      serialNumber: "TD123456",
-      model: "Tracker 2000",
-      type: "GPS",
-      plateNumber: "RAD456",
-      isActive: true,
-      userId: 21, 
-      vehicleId: 6,
-    },
-  });
-
-  // Create tracking device for vehicle 2
-  let trackingDevice2 = await prisma.trackingDevice.upsert({
-    where: { vehicleId: 10 },
-    update: {},
-    create: {
-      serialNumber: "TD789012",
-      model: "Tracker 2000",
-      type: "GPS",
-      plateNumber: "R123A",
-      isActive: true,
-      userId: 21, 
-      vehicleId: 10,
-    },
-  });
-
-  // Example data to be saved - updated to match schema
-  const emissionsData = [
-    {
-      vehicleId: 6,
-      timestamp: new Date(),
-      co2Percentage: 100,
-      coPercentage: 1.5,
-      o2Percentage: 0.5,
-      hcPPM: 20,
-      plateNumber: "R123A",
-      trackingDeviceId: trackingDevice1.id,
-    },
-    {
-      vehicleId: 10,
-      timestamp: new Date(),
-      co2Percentage: 120,
-      coPercentage: 1.8,
-      o2Percentage: 0.6,
-      hcPPM: 30,
-      plateNumber: "R123A",
-      trackingDeviceId: trackingDevice2.id,
-    },
-  ];
-
-  const gpsData = [
-    {
-      vehicleId: 6,
-      timestamp: new Date(),
-      latitude: -1.9403,
-      longitude: 30.0596,
-      speed: 60,
-      plateNumber: "R123A",
-      trackingDeviceId: trackingDevice1.id,
-    },
-    {
-      vehicleId: 10,
-      timestamp: new Date(),
-      latitude: -1.9453,
-      longitude: 30.0646,
-      speed: 70,
-      plateNumber: "R123A",
-      trackingDeviceId: trackingDevice2.id,
-    },
-  ];
-
-  const fuelData = [
-    {
-      vehicleId: 6,
-      timestamp: new Date(),
-      fuelLevel: 50,
-      fuelConsumption: 15,
-      plateNumber: "R123A",
-      trackingDeviceId: trackingDevice1.id,
-    },
-    {
-      vehicleId: 10,
-      timestamp: new Date(),
-      fuelLevel: 60,
-      fuelConsumption: 18,
-      plateNumber: "R123A",
-      trackingDeviceId: trackingDevice2.id,
-    },
-  ];
 
   // Save emissions data
   await prisma.emissionData.createMany({
@@ -141,7 +121,9 @@ async function main() {
     data: fuelData,
   });
 
-  console.log("Data saved successfully");
+  console.log(
+    `Data saved successfully: ${emissionsData.length} emission records, ${gpsData.length} GPS records, ${fuelData.length} fuel records`
+  );
 }
 
 main()

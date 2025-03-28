@@ -10,7 +10,12 @@ import { GridRowSelectionModel } from "@mui/x-data-grid";
 interface BulkActionsProps {
   selectionModel: GridRowSelectionModel;
   fetchUsers: Function;
-  pagination: { currentPage: number; limit: number };
+  pagination: {
+    currentPage: number;
+    limit: number;
+    totalPages: number;
+    totalItems?: number;
+  };
 }
 
 const BulkActions = ({

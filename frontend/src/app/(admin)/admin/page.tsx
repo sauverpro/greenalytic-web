@@ -12,6 +12,7 @@ import {
   MoreHorizontal,
   Plus,
   RefreshCw,
+  User,
   Users,
 } from "lucide-react";
 
@@ -44,6 +45,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import UserTable from "./users/UserTable";
 
 interface MetricCardProps {
   title: string;
@@ -388,151 +390,7 @@ export default function AdminDashboard() {
             </Card>
 
             {/* Recent Clients Table */}
-            <Card>
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle>Recent Clients</CardTitle>
-                  <Button variant="outline" size="sm" className="h-8">
-                    View All Clients
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr className="border-b text-left">
-                        <th className="pb-2 pt-3 font-medium">Client Name</th>
-                        <th className="pb-2 pt-3 font-medium">Vehicles</th>
-                        <th className="pb-2 pt-3 font-medium">Devices</th>
-                        <th className="pb-2 pt-3 font-medium">Status</th>
-                        <th className="pb-2 pt-3 font-medium">Last Active</th>
-                        <th className="pb-2 pt-3 font-medium text-right">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {[
-                        {
-                          name: "Acme Corporation",
-                          vehicles: 12,
-                          devices: 24,
-                          status: "active",
-                          lastActive: "2 mins ago",
-                        },
-                        {
-                          name: "TechDrive Fleet",
-                          vehicles: 8,
-                          devices: 16,
-                          status: "active",
-                          lastActive: "15 mins ago",
-                        },
-                        {
-                          name: "EcoTransport Ltd",
-                          vehicles: 5,
-                          devices: 10,
-                          status: "active",
-                          lastActive: "1 hour ago",
-                        },
-                        {
-                          name: "City Logistics",
-                          vehicles: 15,
-                          devices: 30,
-                          status: "inactive",
-                          lastActive: "2 days ago",
-                        },
-                        {
-                          name: "Green Delivery Co",
-                          vehicles: 7,
-                          devices: 14,
-                          status: "active",
-                          lastActive: "5 mins ago",
-                        },
-                      ].map((client, i) => (
-                        <tr key={i} className="border-b">
-                          <td className="py-3">
-                            <div className="flex items-center gap-2">
-                              <Avatar className="h-8 w-8">
-                                <AvatarFallback className="bg-emerald-100 text-emerald-700">
-                                  {client.name.charAt(0)}
-                                </AvatarFallback>
-                              </Avatar>
-                              <Link
-                                href={`/admin/clients/${i + 1}`}
-                                className="font-medium hover:text-emerald-600"
-                              >
-                                {client.name}
-                              </Link>
-                            </div>
-                          </td>
-                          <td className="py-3">{client.vehicles}</td>
-                          <td className="py-3">{client.devices}</td>
-                          <td className="py-3">
-                            <Badge
-                              className={
-                                client.status === "active"
-                                  ? "bg-green-100 text-green-700"
-                                  : "bg-gray-100 text-gray-700"
-                              }
-                            >
-                              {client.status}
-                            </Badge>
-                          </td>
-                          <td className="py-3 text-muted-foreground">
-                            {client.lastActive}
-                          </td>
-                          <td className="py-3 text-right">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8"
-                                >
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem asChild>
-                                  <Link href={`/admin/clients/${i + 1}`}>
-                                    View Details
-                                  </Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem>Edit Client</DropdownMenuItem>
-                                <DropdownMenuItem>
-                                  Manage Vehicles
-                                </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                  Manage Devices
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem className="text-red-500">
-                                  Deactivate
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-              <CardFooter className="flex items-center justify-between border-t px-6 py-3">
-                <div className="text-sm text-muted-foreground">
-                  Showing 5 of 128 clients
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" disabled>
-                    Previous
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    Next
-                  </Button>
-                </div>
-              </CardFooter>
-            </Card>
+            <UserTable />
           </TabsContent>
 
           {/* Other Tabs Content */}

@@ -131,7 +131,7 @@ const FuelChartData = () => {
                 Current Fuel Level
               </h3>
               <p className="text-2xl font-bold text-blue-600">
-                {stats.currentFuelLevel}%
+                {stats.currentFuelLevel.toFixed(3)}...%
               </p>
             </div>
             <div className="bg-red-50 p-4 rounded-lg">
@@ -155,7 +155,7 @@ const FuelChartData = () => {
                 Fuel Depletion
               </h3>
               <p className="text-2xl font-bold text-purple-600">
-                {stats.fuelDepletion}%
+                {stats.fuelDepletion.toFixed(3)}...%
               </p>
             </div>
           </div>
@@ -253,7 +253,7 @@ const FuelChartSection: React.FC<FuelChartSectionProps> = ({
         const totalConsumption = sorted.reduce(
           (sum, item) => sum + item.fuelConsumption,
           0
-        );
+        ); // Remove the last element
         const avgConsumption = totalConsumption / sorted.length;
         const fuelDepletion =
           sorted[0].fuelLevel - sorted[sorted.length - 1].fuelLevel;

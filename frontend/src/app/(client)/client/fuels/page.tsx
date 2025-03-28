@@ -1,15 +1,16 @@
 "use client";
 import React, { useState, useEffect, Suspense } from "react";
-import useAxiosClient from "../../../../hooks/axiosClient";
 import VehicleSelector from "../../../../components/vehicleData/vehicleSelector";
 import DateRangePicker, {
   formatDateForServer,
 } from "../../../../components/vehicleData/dateRangePicker";
 import { useSearchParams } from "next/navigation";
 import FuelChartSection from "@/components/vehicleData/FuelChartSection";
+import { DAY } from "@/utils/constants";
+import { getFuelData} from "@/services/vehicleData";
+import { getUserVehicles } from "@/services/vehicleService";
 
 function FuelsPageContent() {
-  const client = useAxiosClient();
   const searchParams = useSearchParams();
 
   const [vehicles, setVehicles] = useState([]);
@@ -17,7 +18,7 @@ function FuelsPageContent() {
     null
   );
   const [startDate, setStartDate] = useState(
-    new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    new Date(Date.now() - DAY)
   );
   const [endDate, setEndDate] = useState(new Date());
   const [fuelData, setFuelData] = useState([]);
@@ -38,21 +39,21 @@ function FuelsPageContent() {
     const fetchVehicles = async () => {
       setIsLoading((prev) => ({ ...prev, vehicles: true }));
       try {
-        const response = await client.get("/vehicles");
-        if (response.data.success) {
-          setVehicles(response.data.data);
+        const response = await getUserVehicles();
+        if (response.success) {
+          setVehicles(response.data);
 
           // Set selected vehicle from URL params or first vehicle
           const vehicleIdParam = searchParams.get("vehicleId");
           if (
             vehicleIdParam &&
-            response.data.data.some(
+            response.some(
               (v: any) => v.id === parseInt(vehicleIdParam)
             )
           ) {
             setSelectedVehicleId(parseInt(vehicleIdParam));
-          } else if (response.data.data.length > 0) {
-            setSelectedVehicleId(response.data.data[0].id);
+          } else if (response.data.length > 0) {
+            setSelectedVehicleId(response.data[0].id);
           }
 
           setInitialLoadComplete(true);
@@ -85,18 +86,12 @@ function FuelsPageContent() {
       const formattedStartDate = formatDateForServer(startDate);
       const formattedEndDate = formatDateForServer(endDate, true);
 
-      const response = await client.get(
-        `/vehicles/${selectedVehicleId}/fuels/range`,
-        {
-          params: {
-            startDate: formattedStartDate,
-            endDate: formattedEndDate,
-          },
-        }
-      );
-
-      if (response.data.success) {
-        setFuelData(response.data.data);
+      const response = await getFuelData(selectedVehicleId, {startDate: formattedStartDate, endDate: formattedEndDate});
+       
+      console.log("Fuel Data Response:", response.data ); // Debugging line
+      
+      if (response.success) {
+        setFuelData(response.data);
       } else {
         setError((prev: any) => ({
           ...prev,

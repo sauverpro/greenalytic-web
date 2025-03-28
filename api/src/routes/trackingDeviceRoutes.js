@@ -1,37 +1,35 @@
 import express from 'express'
 import {
-  addTrackingDevice,
   removeTrackingDevice,
   deleteVehicleAndTrackingDevice,
   getTrackingDeviceStatus,
   getAllTrackingDevices,
-  getTrackingDeviceById
+  getTrackingDeviceById,
+  getTrackingDevicesByVehicleId,
+  addTrackingDeviceToVehicle
 } from '../controllers/trackingDeviceController.js'
 
-const trackingRouter = express.Router()
+const deviceRouter = express.Router()
 
-// Route for adding a tracking device to a vehicle
-trackingRouter.post('/trackvehicle/:vehicleId', addTrackingDevice)
+deviceRouter.post('/add/:vehicleId', addTrackingDeviceToVehicle)
 
-// Route for removing a tracking device from a vehicle
-trackingRouter.delete(
-  '/trackvehicle/:vehicleId/:deviceId',
+deviceRouter.get(
+  '/vehicle/:vehicleId/devices',
+  getTrackingDevicesByVehicleId
+)
+
+deviceRouter.delete(
+  '/device/:vehicleId/:deviceId',
   removeTrackingDevice
 )
 
-// Route for deleting a vehicle and its tracking device
-trackingRouter.delete('/vehicle/:vehicleId', deleteVehicleAndTrackingDevice)
-
-// Route for getting the status of a tracking device
-trackingRouter.get(
-  '/tracking-device/:deviceId/status',
+deviceRouter.get(
+  '/device/:deviceId/status',
   getTrackingDeviceStatus
 )
 
-// Route for getting all tracking devices (with pagination support)
-trackingRouter.get('/tracking-devices', getAllTrackingDevices)
+deviceRouter.get('/all', getAllTrackingDevices)
 
-// Route for getting a tracking device by its ID
-trackingRouter.get('/tracking-device/:deviceId', getTrackingDeviceById)
+deviceRouter.get('/:deviceId', getTrackingDeviceById)
 
-export default trackingRouter
+export default deviceRouter

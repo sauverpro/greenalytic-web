@@ -9,21 +9,14 @@ import { useState, useEffect } from "react";
 export default function Layout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [role, setRole] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
-  function Loader() {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       const storedRole = localStorage.getItem("USER_ROLE");
       setRole(storedRole);
-      setIsLoading(false);
+
 
       if (storedRole === "admin") {
         router.push("/admin");
@@ -35,19 +28,22 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     }
   }, [router]);
 
-  if (isLoading) {
-    return <Loader />;
-  }
 
   return (
     <SidebarProvider>
-      <div className="flex w-full">
+      <div className="flex w-full h-screen overflow-hidden">
         <AppSidebar />
-        <div className="flex flex-col flex-1 w-full ">
-          <div className="sticky top-0 z-50 overflow-hidden">
+        <div className="flex flex-col flex-1 overflow-hidden">
+          <div className="sticky top-0 z-50">
             <Topbar />
           </div>
-          <main className="h-100vh overflow-y-auto w-full">{children}</main>
+          <div className="flex-1 overflow-hidden">
+            <main className="h-full overflow-y-auto overflow-x-auto max-w-full bg-gray-100 dark:bg-gray-900">
+              <div className="min-w-fit max-w-full pb-4">
+                { children}
+              </div>
+            </main>
+          </div>
         </div>
       </div>
     </SidebarProvider>

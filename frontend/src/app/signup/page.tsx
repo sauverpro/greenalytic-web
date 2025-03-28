@@ -10,7 +10,7 @@ import { LuNotebookPen } from "react-icons/lu";
 import Link from "next/link";
 import AuthLayout from "../../components/authLayout";
 import Button from "../login/Button";
-import { signup } from "../../api/services/userService";
+import { signup } from "../../services/userService";
 
 const Signup: React.FC = () => {
   const router = useRouter();
@@ -239,18 +239,11 @@ const Signup: React.FC = () => {
               </div>
               <div className="justify-center w-full">
                 {isLoading ? (
-                  <Button
-                    type="button"
-                    disabled
-                  >
+                  <Button type="button" disabled>
                     Loading...
                   </Button>
                 ) : (
-                  <Button
-                    type="submit"
-                  >
-                    Sign Up
-                  </Button>
+                  <Button type="submit">Sign Up</Button>
                 )}
               </div>
             </form>

@@ -1,24 +1,23 @@
 "use client";
 import React, { useState, useEffect, Suspense } from "react";
-import useAxiosClient from "../../../../hooks/axiosClient";
 import VehicleSelector from "../../../../components/vehicleData/vehicleSelector";
 import DateRangePicker, {
   formatDateForServer,
 } from "../../../../components/vehicleData/dateRangePicker";
 import { useSearchParams } from "next/navigation";
 import EmissionsChartSection from "@/components/vehicleData/EmissionChartSection";
+import { DAY } from "@/utils/constants";
+import { getEmissionsData} from "@/services/vehicleData";
+import { getUserVehicles } from "@/services/vehicleService";
 
- function  EmissionsPageContent() {
-  const client = useAxiosClient();
+function EmissionsPageContent() {
   const searchParams = useSearchParams();
 
   const [vehicles, setVehicles] = useState([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState<number | null>(
     null
   );
-  const [startDate, setStartDate] = useState(
-    new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-  );
+  const [startDate, setStartDate] = useState(new Date(Date.now() - DAY));
   const [endDate, setEndDate] = useState(new Date());
   const [emissionsData, setEmissionsData] = useState([]);
   const [error, setError] = useState({
@@ -39,20 +38,20 @@ import EmissionsChartSection from "@/components/vehicleData/EmissionChartSection
     const fetchVehicles = async () => {
       setIsLoading((prev) => ({ ...prev, vehicles: true }));
       try {
-        const response = await client.get("/vehicles");
-        if (response.data.success) {
-          setVehicles(response.data.data);
+        const response = await getUserVehicles();
+        if (response.success) {
+          setVehicles(response.data);
 
           const vehicleIdParam = searchParams.get("vehicleId");
           if (
             vehicleIdParam &&
-            response.data.data.some(
+            response.data.some(
               (v: any) => v.id === parseInt(vehicleIdParam)
             )
           ) {
             setSelectedVehicleId(parseInt(vehicleIdParam));
-          } else if (response.data.data.length > 0) {
-            setSelectedVehicleId(response.data.data[0].id);
+          } else if (response.data.length > 0) {
+            setSelectedVehicleId(response.data[0].id);
           }
 
           setInitialLoadComplete(true);
@@ -73,7 +72,7 @@ import EmissionsChartSection from "@/components/vehicleData/EmissionChartSection
     };
 
     fetchVehicles();
-  }, [ searchParams]);
+  }, [searchParams]);
 
   const fetchEmissionsData = async () => {
     if (selectedVehicleId === null) return;
@@ -85,18 +84,14 @@ import EmissionsChartSection from "@/components/vehicleData/EmissionChartSection
       const formattedStartDate = formatDateForServer(startDate);
       const formattedEndDate = formatDateForServer(endDate, true);
 
-      const response = await client.get(
-        `/vehicles/${selectedVehicleId}/emissions/range`,
-        {
-          params: {
-            startDate: formattedStartDate,
-            endDate: formattedEndDate,
-          },
-        }
-      );
+      const response = await getEmissionsData(selectedVehicleId, {
+        startDate: formattedStartDate,
+        endDate: formattedEndDate,
+      });
 
-      if (response.data.success) {
-        setEmissionsData(response.data.data);
+
+      if (response.success) {
+        setEmissionsData(response.data);
       } else {
         setError((prev: any) => ({
           ...prev,
