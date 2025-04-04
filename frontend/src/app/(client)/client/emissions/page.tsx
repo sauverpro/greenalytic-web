@@ -7,7 +7,7 @@ import DateRangePicker, {
 import { useSearchParams } from "next/navigation";
 import EmissionsChartSection from "@/components/vehicleData/EmissionChartSection";
 import { DAY } from "@/utils/constants";
-import { getEmissionsData} from "@/services/vehicleData";
+import { getEmissionsData } from "@/services/vehicleData";
 import { getUserVehicles } from "@/services/vehicleService";
 
 function EmissionsPageContent() {
@@ -45,9 +45,7 @@ function EmissionsPageContent() {
           const vehicleIdParam = searchParams.get("vehicleId");
           if (
             vehicleIdParam &&
-            response.data.some(
-              (v: any) => v.id === parseInt(vehicleIdParam)
-            )
+            response.data.some((v: any) => v.id === parseInt(vehicleIdParam))
           ) {
             setSelectedVehicleId(parseInt(vehicleIdParam));
           } else if (response.data.length > 0) {
@@ -64,7 +62,7 @@ function EmissionsPageContent() {
       } catch (err) {
         setError((prev: any) => ({
           ...prev,
-          vehicles: "Error connecting to the server",
+          vehicles: "Something went wrong while getting vehicles",
         }));
       } finally {
         setIsLoading((prev) => ({ ...prev, vehicles: false }));
@@ -89,7 +87,6 @@ function EmissionsPageContent() {
         endDate: formattedEndDate,
       });
 
-
       if (response.success) {
         setEmissionsData(response.data);
       } else {
@@ -101,7 +98,7 @@ function EmissionsPageContent() {
     } catch (error) {
       setError((prev: any) => ({
         ...prev,
-        emissions: "Error connecting to the server",
+        emissions: "Something went wrong while getting emissions data",
       }));
     } finally {
       setIsLoading((prev) => ({ ...prev, emissions: false }));
@@ -121,7 +118,7 @@ function EmissionsPageContent() {
         <h1 className="text-2xl font-bold text-primary mb-4">
           Emissions Monitoring
         </h1>
-        <div className="flex flex-col md:flex-row gap-4 mb-4">
+        <div className=" gap-4 mb-4">
           <VehicleSelector
             vehicles={vehicles}
             selectedVehicleId={selectedVehicleId || 0}
@@ -145,29 +142,28 @@ function EmissionsPageContent() {
           error={error}
         />
 
-        {/* Emissions Data Table */}
         {emissionsData.length > 0 && (
           <div className="bg-white rounded-lg shadow-sm p-6 mt-6">
-            <h2 className="text-xl font-bold mb-4 text-gray-800">
+            <h2 className="text-xl font-bold mb-4 text-sms">
               Emissions Data Table
             </h2>
             <div className="overflow-x-auto">
               <table className="min-w-full bg-white">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Time
+                    <th className="px-6 py-3 text-left text-xs font-medium text-sms uppercase tracking-wider">
+                      Time <span className="text-xs lowercase">(Local Time)</span>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-sms uppercase tracking-wider">
                       CO2 (%)
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-sms uppercase tracking-wider">
                       CO (%)
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-sms uppercase tracking-wider">
                       O2 (%)
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-sms uppercase tracking-wider">
                       HC (PPM)
                     </th>
                   </tr>
@@ -179,13 +175,13 @@ function EmissionsPageContent() {
                         {new Date(item.timestamp).toLocaleString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {item.co2Percentage || "N/A"}
+                        {item.co2Percentage.toFixed(2) || "N/A"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {item.coPercentage || "N/A"}
+                        {item.coPercentage.toFixed(2) || "N/A"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {item.o2Percentage || "N/A"}
+                        {item.o2Percentage.toFixed(2) || "N/A"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {item.hcPPM || "N/A"}

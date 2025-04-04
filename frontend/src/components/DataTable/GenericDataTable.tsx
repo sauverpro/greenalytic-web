@@ -24,8 +24,6 @@ import SearchAndFilter from "@/app/(admin)/admin/users/SearchAndFilter";
 import PaginationControls from "@/app/(admin)/admin/users/PaginationControls";
 import TableToolbar from "@/app/(admin)/admin/users/TableToolbar";
 
-
-
 // MUI theme for consistent styling
 const muiTheme = createTheme({
   palette: {
@@ -207,10 +205,10 @@ function DataTable<T extends { id: string | number }>({
           <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b">
             <div className="flex justify-between items-center">
               <div>
-                <CardTitle className="text-xl text-gray-800 flex items-center gap-2">
+                <CardTitle className="text-xl text-sms flex items-center gap-2">
                   {icon} {title}
                 </CardTitle>
-                <CardDescription className="text-gray-500">
+                <CardDescription className="text-sms">
                   {description}
                 </CardDescription>
               </div>

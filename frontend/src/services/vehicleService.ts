@@ -63,7 +63,7 @@ export const getVehicleById = async (vehicleId: string) => {
 //   }
 // };
 
-export const deleteVehicle = async (vehicleId: string) => {
+export const deleteVehicle = async (vehicleId: number) => {
   try {
     await client.delete(`/vehicles/${vehicleId}`);
     return { success: true };

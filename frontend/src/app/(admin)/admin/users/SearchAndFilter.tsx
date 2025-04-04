@@ -1,4 +1,3 @@
-
 "use cleint";
 // 5. SearchAndFilter component (SearchAndFilter.tsx)
 import React from "react";
@@ -13,12 +12,12 @@ interface SearchAndFilterProps {
 
 const SearchAndFilter = ({
   searchQuery,
-  setSearchQuery
+  setSearchQuery,
 }: SearchAndFilterProps) => {
   return (
     <div className="flex-1 w-full md:w-auto max-w-md relative">
       <Search
-        className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+        className="absolute left-3 top-1/2 transform -translate-y-1/2 text-sms"
         size={18}
       />
       <Input

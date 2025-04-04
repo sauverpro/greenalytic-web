@@ -3,29 +3,23 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
-  // Keep your original vehicle and device IDs
   let vehicleId = 5;
   let plateNumber = "RA002A";
   let gpsId = 10;
   let fuelId = 11;
-  let emId = 12;
+  let emId = 3;
 
-  // Generate data for the last 30 days
   const endDate = new Date();
   const startDate = new Date();
-  startDate.setDate(endDate.getDate() - 30); // 30 days ago
+  startDate.setDate(endDate.getDate() - 30); 
 
-  // Create arrays to hold our generated data
   const emissionsData = [];
   const gpsData = [];
   const fuelData = [];
 
-  // Generate 100+ records spread across the last 30 days
   for (let i = 0; i < 120; i++) {
-    // Create a random timestamp between start and end date
     const timestamp = faker.date.between({ from: startDate, to: endDate });
 
-    // Add random emission data with realistic variations
     emissionsData.push({
       vehicleId: vehicleId,
       timestamp: new Date(timestamp),
@@ -37,12 +31,9 @@ async function main() {
       trackingDeviceId: emId,
     });
 
-    // Create GPS data points showing movement around Kigali
-    // Central coordinate for Kigali: -1.9403, 30.0596
     const baseLat = -1.9403;
     const baseLong = 30.0596;
 
-    // Add some random variation to create a path
     const latVariance = faker.number.float({
       min: -0.03,
       max: 0.03,
@@ -64,7 +55,6 @@ async function main() {
       trackingDeviceId: gpsId,
     });
 
-    // Add fuel data with realistic decreasing fuel levels and varying consumption
     fuelData.push({
       vehicleId: vehicleId,
       timestamp: new Date(timestamp),
@@ -75,17 +65,13 @@ async function main() {
     });
   }
 
-  // Sort all data by timestamp to ensure chronological order
   emissionsData.sort((a, b) => a.timestamp - b.timestamp);
   gpsData.sort((a, b) => a.timestamp - b.timestamp);
   fuelData.sort((a, b) => a.timestamp - b.timestamp);
 
-  // Create more realistic fuel level pattern (gradually decreasing with refills)
   let currentFuelLevel = 80;
   fuelData.forEach((item, index) => {
-    // Simulate fuel consumption
     if (index > 0) {
-      // Random consumption between trips
       const consumption = faker.number.float({
         min: 0.5,
         max: 3,
@@ -93,7 +79,6 @@ async function main() {
       });
       currentFuelLevel -= consumption;
 
-      // Simulate refilling when fuel gets low
       if (currentFuelLevel < 15) {
         currentFuelLevel = faker.number.float({
           min: 75,
@@ -106,17 +91,14 @@ async function main() {
     item.fuelLevel = Math.max(0, currentFuelLevel);
   });
 
-  // Save emissions data
   await prisma.emissionData.createMany({
     data: emissionsData,
   });
 
-  // Save GPS data
   await prisma.gPSData.createMany({
     data: gpsData,
   });
 
-  // Save fuel data
   await prisma.fuelData.createMany({
     data: fuelData,
   });

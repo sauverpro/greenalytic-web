@@ -86,7 +86,7 @@ function DevicesPage() {
       width: 120,
       renderCell: (params) => {
         let bgColor = "bg-gray-100";
-        let textColor = "text-gray-700";
+        let textColor = "text-sms";
 
         if (params.value === "active") {
           bgColor = "bg-green-100";

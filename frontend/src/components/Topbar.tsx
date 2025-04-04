@@ -28,6 +28,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { handleLogout } from "@/services/userService";
+import { useRouter } from "next/navigation";
+import { on } from "events";
 
 type PanelType =
   | "notifications"
@@ -43,6 +46,7 @@ export const Topbar = () => {
   const [showSearch, setShowSearch] = useState(false);
   const { toggleSidebar, state: isCollapsed } = useSidebar();
   const [scrolled, setScrolled] = useState(false);
+  const router = useRouter();
 
   // Handle scroll effect
   useEffect(() => {
@@ -76,6 +80,14 @@ export const Topbar = () => {
   const togglePanel = (panel: PanelType) => {
     setActivePanel(activePanel === panel ? null : panel);
   };
+
+    const onLogout = (e: React.MouseEvent) => {
+      e.preventDefault();
+      const loggedOut = handleLogout();
+      if (loggedOut) {
+        router.push("/");
+      }
+    };
 
   return (
     <motion.div
@@ -236,7 +248,7 @@ export const Topbar = () => {
             <DropdownMenuItem>System Configuration</DropdownMenuItem>
             <DropdownMenuItem>User Management</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-red-500">Logout</DropdownMenuItem>
+            <DropdownMenuItem onClick={onLogout} className="text-red-500">Logout</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

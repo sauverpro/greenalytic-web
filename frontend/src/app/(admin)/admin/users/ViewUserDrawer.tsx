@@ -12,7 +12,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getUserVehicles, getVehiclesForUser } from "../../../../services/vehicleService";
+import {
+  getUserVehicles,
+  getVehiclesForUser,
+} from "../../../../services/vehicleService";
 import { User, Vehicle } from "@/types/types";
 import { Car, Phone, Mail, User as UserIcon, Fuel } from "lucide-react";
 
@@ -99,23 +102,23 @@ export default function ViewUserDrawer({
                   {user.username?.charAt(0).toUpperCase() || "U"}
                 </AvatarFallback>
               </Avatar>
-              <h3 className="text-xl font-semibold text-gray-800">
+              <h3 className="text-xl font-semibold text-sms">
                 {user.username}
               </h3>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <div className="flex items-center gap-2 text-gray-700">
+                <div className="flex items-center gap-2 text-sms">
                   <Mail size={16} />
                   <span className="text-sm truncate">{user.email}</span>
                 </div>
-                <div className="flex items-center gap-2 text-gray-700">
+                <div className="flex items-center gap-2 text-sms">
                   <Phone size={16} />
                   <span className="text-sm">
                     {user.phoneNumber || "No phone"}
                   </span>
                 </div>
-                <div className="flex items-center gap-2 text-gray-700">
+                <div className="flex items-center gap-2 text-sms">
                   <UserIcon size={16} />
                   <span className="text-sm">
                     {user.role || "Standard User"}
@@ -124,13 +127,13 @@ export default function ViewUserDrawer({
               </div>
               <div className="pt-2 border-t border-gray-200">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Registered</span>
+                  <span className="text-sms">Registered</span>
                   {user.createdAt
                     ? new Date(user.createdAt).toLocaleDateString() // Ensure it's a Date object
                     : "N/A"}
                 </div>
                 <div className="flex justify-between text-sm mt-1">
-                  <span className="text-gray-600">Status</span>
+                  <span className="text-sms">Status</span>
                   <Badge
                     // variant={user.isActive ? "success" : "destructive"}
                     className="text-xs px-2"
@@ -148,7 +151,7 @@ export default function ViewUserDrawer({
               <div className="bg-gray-50 p-4 border-b flex justify-between items-center">
                 <div className="flex items-center gap-2">
                   <Car size={18} />
-                  <h3 className="text-lg font-semibold text-gray-800">
+                  <h3 className="text-lg font-semibold text-sms">
                     Registered Vehicles
                   </h3>
                 </div>
@@ -169,8 +172,8 @@ export default function ViewUserDrawer({
                   </div>
                 ) : vehicles.length === 0 ? (
                   <div className="bg-gray-50 p-6 rounded-md border border-gray-200 text-center">
-                    <Car size={24} className="mx-auto text-gray-400 mb-2" />
-                    <p className="text-gray-500">
+                    <Car size={24} className="mx-auto text-sms mb-2" />
+                    <p className="text-sms">
                       No vehicles registered for this user.
                     </p>
                   </div>
@@ -179,22 +182,22 @@ export default function ViewUserDrawer({
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead className="bg-gray-50">
                         <tr>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-4 py-3 text-left text-xs font-medium text-sms uppercase tracking-wider">
                             Plate
                           </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-4 py-3 text-left text-xs font-medium text-sms uppercase tracking-wider">
                             Model
                           </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-4 py-3 text-left text-xs font-medium text-sms uppercase tracking-wider">
                             Type
                           </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-4 py-3 text-left text-xs font-medium text-sms uppercase tracking-wider">
                             <div className="flex items-center gap-1">
                               <Fuel size={14} />
                               <span>Fuel</span>
                             </div>
                           </th>
-                          <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-4 py-3 text-right text-xs font-medium text-sms uppercase tracking-wider">
                             Actions
                           </th>
                         </tr>
@@ -208,13 +211,13 @@ export default function ViewUserDrawer({
                                   <Car size={16} className="text-blue-600" />
                                 </div>
                                 <div className="ml-3">
-                                  <div className="text-sm font-medium text-gray-900">
+                                  <div className="text-sm font-medium text-sms">
                                     {vehicle.plateNumber}
                                   </div>
                                 </div>
                               </div>
                             </td>
-                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                            <td className="px-4 py-3 whitespace-nowrap text-sm text-sms">
                               {vehicle.vehicleModel}
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap">
@@ -241,7 +244,7 @@ export default function ViewUserDrawer({
                                   </span>
                                 </div>
                               ) : (
-                                <span className="text-xs text-gray-500">
+                                <span className="text-xs text-sms">
                                   No data
                                 </span>
                               )}

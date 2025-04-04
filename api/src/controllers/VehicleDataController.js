@@ -1,8 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { errorHandler } from "../utils/errorHandler.js";
 import { VehicleService } from "../services/vehiclesService/vehicleService.js";
-import { getAllVehiclesController } from "./vehicleControllers/gettingvehiclesControllers.js";
-import { TimeRangeService } from "../services/vehiclesService/timeRange.js";
+import { PaginationService } from "../services/paginationService.js";
 
 const prisma = new PrismaClient();
 
@@ -41,6 +40,9 @@ export class vehicleDataController {
       const { vehicleId } = req.params;
       const { startDate, endDate } = req.query;
       const userId = req.userId;
+      const { page, limit, skip } = PaginationService.parsePaginationParams(
+        req.query
+      );
 
       if (!vehicleId || !startDate || !endDate) {
         return res.status(400).json({
@@ -76,10 +78,20 @@ export class vehicleDataController {
         },
       };
 
+      // Get total count first
+      const totalItems = await prisma.emissionData.count({ where });
+
       const result = await prisma.emissionData.findMany({
         where,
         orderBy: { timestamp: "asc" },
+        ...PaginationService.applyPagination({}, skip, limit),
       });
+
+      const paginationDetails = PaginationService.getPaginationDetails(
+        totalItems,
+        page,
+        limit
+      );
 
       return res.status(200).json({
         success: true,
@@ -87,7 +99,7 @@ export class vehicleDataController {
           start: parsedStartDate,
           end: parsedEndDate,
         },
-        data: result,
+        ...PaginationService.paginatedResponse(result, paginationDetails),
       });
     } catch (error) {
       return errorHandler(res, error);
@@ -104,6 +116,9 @@ export class vehicleDataController {
       const { vehicleId } = req.params;
       const { startDate, endDate } = req.query;
       const userId = req.userId;
+      const { page, limit, skip } = PaginationService.parsePaginationParams(
+        req.query
+      );
 
       if (!vehicleId || !startDate || !endDate) {
         return res.status(400).json({
@@ -139,10 +154,19 @@ export class vehicleDataController {
         },
       };
 
+      const totalItems = await prisma.fuelData.count({ where });
+
       const result = await prisma.fuelData.findMany({
         where,
         orderBy: { timestamp: "asc" },
+        ...PaginationService.applyPagination({}, skip, limit),
       });
+
+      const paginationDetails = PaginationService.getPaginationDetails(
+        totalItems,
+        page,
+        limit
+      );
 
       return res.status(200).json({
         success: true,
@@ -150,7 +174,7 @@ export class vehicleDataController {
           start: parsedStartDate,
           end: parsedEndDate,
         },
-        data: result,
+        ...PaginationService.paginatedResponse(result, paginationDetails),
       });
     } catch (error) {
       return errorHandler(res, error);
@@ -167,6 +191,9 @@ export class vehicleDataController {
       const { vehicleId } = req.params;
       const { startDate, endDate } = req.query;
       const userId = req.userId;
+      const { page, limit, skip } = PaginationService.parsePaginationParams(
+        req.query
+      );
 
       if (!vehicleId || !startDate || !endDate) {
         return res.status(400).json({
@@ -202,10 +229,19 @@ export class vehicleDataController {
         },
       };
 
+      const totalItems = await prisma.gPSData.count({ where });
+
       const result = await prisma.gPSData.findMany({
         where,
         orderBy: { timestamp: "asc" },
+        ...PaginationService.applyPagination({}, skip, limit),
       });
+
+      const paginationDetails = PaginationService.getPaginationDetails(
+        totalItems,
+        page,
+        limit
+      );
 
       return res.status(200).json({
         success: true,
@@ -213,736 +249,672 @@ export class vehicleDataController {
           start: parsedStartDate,
           end: parsedEndDate,
         },
-        data: result,
+        ...PaginationService.paginatedResponse(result, paginationDetails),
       });
     } catch (error) {
       return errorHandler(res, error);
     }
   };
 
-
-
-  /**
-   * Get all emission data for all vehicles (admin only)
-   * @param {Object} req - Express request object
-   * @param {Object} res - Express response object
-   */
-  static getAllEmissionsData = async (req, res) => {
+  static getAllDataInSystem = async (req, res) => {
     try {
-      const { periodType, periodValue } = req.query;
-      // const userId = req.userId;
+      const { startDate, endDate, vehicleId, plateNumber } = req.query;
+      const { page, limit, skip } = PaginationService.parsePaginationParams(
+        req.query
+      );
 
-      // // Check if user has admin privileges
-      // const isAdmin = await VehicleService.isUserAdmin(userId);
-      // if (!isAdmin) {
-      //   return res.status(403).json({
-      //     success: false,
-      //     message: "Unauthorized: Admin privileges required",
-      //   });
-      // }
-
-      // Get time range
-      const { startDate, endDate } = TimeRangeService.getTimeRange(periodType, periodValue);
-
-      const where = {
-        timestamp: {
-          gte: startDate,
-          lte: endDate,
-        },
-      };
-
-      const result = await prisma.emissionData.findMany({
-        where,
-        include: {
-          vehicle: {
-            select: {
-              id: true,
-              vehicleModel: true,
-              yearOfManufacture: true,
-              user: {
-                select: {
-                  id: true,
-                  username: true,
-                  email: true,
-                },
-              },
-            },
-          },
-        },
-        orderBy: { timestamp: "asc" },
-      });
-
-      // Generate summary of data
-      const summary = await vehicleDataController.generateEmissionsSummary(result);
-
-      return res.status(200).json({
-        success: true,
-        timeRange: {
-          periodType,
-          periodValue,
-          start: startDate,
-          end: endDate,
-        },
-        summary,
-        data: result,
-      });
-    } catch (error) {
-      return errorHandler(res, error);
-    }
-  };
-
-  /**
-   * Get all fuel data for all vehicles (admin only)
-   * @param {Object} req - Express request object
-   * @param {Object} res - Express response object
-   */
-  static getAllFuelsData = async (req, res) => {
-    try {
-      const { periodType, periodValue } = req.query;
- 
-
-      // Get time range
-      const { startDate, endDate } = TimeRangeService.getTimeRange(periodType, periodValue);
-
-      const where = {
-        timestamp: {
-          gte: startDate,
-          lte: endDate,
-        },
-      };
-
-      const result = await prisma.fuelData.findMany({
-        where,
-        include: {
-          vehicle: {
-            select: {
-              id: true,
-              vehicleModel: true,
-              yearOfManufacture: true,
-              user: {
-                select: {
-                  id: true,
-                  username: true,
-                  email: true,
-                }
-              }
-            }
-          }
-        },
-        orderBy: { timestamp: "asc" },
-      });
-
-      // Generate summary of data
-      const summary = await vehicleDataController.generateFuelSummary(result);
-
-      return res.status(200).json({
-        success: true,
-        timeRange: {
-          periodType,
-          periodValue,
-          start: startDate,
-          end: endDate,
-        },
-        summary,
-        data: result,
-      });
-    } catch (error) {
-      return errorHandler(res, error);
-    }
-  };
-
-  /**
-   * Get all GPS data for all vehicles (admin only)
-   * @param {Object} req - Express request object
-   * @param {Object} res - Express response object
-   */
-  static getAllGPSData = async (req, res) => {
-    try {
-      const { periodType, periodValue } = req.query;
-
-      // Get time range
-      const { startDate, endDate } = TimeRangeService.getTimeRange(periodType, periodValue);
-
-      const where = {
-        timestamp: {
-          gte: startDate,
-          lte: endDate,
-        },
-      };
-
-      const result = await prisma.gPSData.findMany({
-        where,
-        include: {
-          vehicle: {
-            select: {
-              id: true,
-              vehicleModel: true,
-              yearOfManufacture: true,
-              user: {
-                select: {
-                  id: true,
-                  username: true,
-                  email: true,
-                }
-              }
-            }
-          }
-        },
-        orderBy: { timestamp: "asc" },
-      });
-
-      // Generate summary of data
-      const summary = await vehicleDataController.generateGPSSummary(result);
-
-      return res.status(200).json({
-        success: true,
-        timeRange: {
-          periodType,
-          periodValue,
-          start: startDate,
-          end: endDate,
-        },
-        summary,
-        data: result,
-      });
-    } catch (error) {
-      return errorHandler(res, error);
-    }
-  };
-
-  /**
-   * Get comprehensive vehicle data (emissions, fuel, GPS) for a specific user
-   * @param {Object} req - Express request object
-   * @param {Object} res - Express response object
-   */
-  static getUserVehicleData = async (req, res) => {
-    try {
-      const { userId } = req.params;
-      const { periodType, periodValue } = req.query;
-      const requestingUserId = req.userId;
-
-      // Check if user is requesting their own data or has admin privileges
-      const isAdmin = await VehicleService.isUserAdmin(requestingUserId);
-      if (parseInt(userId) !== requestingUserId && !isAdmin) {
-        return res.status(403).json({
-          success: false,
-          message: "Unauthorized: You can only access your own data",
-        });
+      // Build filter criteria
+      const dateFilter = {};
+      if (startDate && endDate) {
+        dateFilter.timestamp = {
+          gte: new Date(startDate),
+          lte: new Date(endDate),
+        };
       }
 
-      // Get time range
-      const { startDate, endDate } = TimeRangeService.getTimeRange(periodType, periodValue);
+      // Prepare vehicle filter
+      const vehicleFilter = {};
+      if (vehicleId) vehicleFilter.vehicleId = parseInt(vehicleId, 10);
+      if (plateNumber) vehicleFilter.plateNumber = plateNumber;
 
-      // Get vehicles for the user
-      const vehicles = await VehicleService.getVehiclesByUserId(parseInt(userId));
-      const vehicleIds = vehicles.map(vehicle => vehicle.id);
-
-      if (vehicleIds.length === 0) {
-        return res.status(200).json({
-          success: true,
-          message: "No vehicles found for this user",
-          data: {
-            emissions: [],
-            fuels: [],
-            gps: []
-          },
-          summary: {
-            emissions: {},
-            fuels: {},
-            gps: {}
-          }
-        });
-      }
-
-      // Get data for all vehicles belonging to the user
-      const [emissionsData, fuelsData, gpsData] = await Promise.all([
-        prisma.emissionData.findMany({
-          where: {
-            vehicleId: { in: vehicleIds },
-            timestamp: {
-              gte: startDate,
-              lte: endDate,
+      // Execute queries in parallel for better performance
+      const [emissionsCount, emissions, fuelsCount, fuels, gpsCount, gps] =
+        await Promise.all([
+          // Get emissions data count
+          prisma.emissionData.count({
+            where: {
+              ...dateFilter,
+              ...vehicleFilter,
             },
-          },
-          include: {
-            vehicle: {
-              select: {
-                id: true,
-                make: true,
-                model: true,
-                year: true,
-              }
-            }
-          },
-          orderBy: { timestamp: "asc" },
-        }),
-        prisma.fuelData.findMany({
-          where: {
-            vehicleId: { in: vehicleIds },
-            timestamp: {
-              gte: startDate,
-              lte: endDate,
-            },
-          },
-          include: {
-            vehicle: {
-              select: {
-                id: true,
-                make: true,
-                model: true,
-                year: true,
-              }
-            }
-          },
-          orderBy: { timestamp: "asc" },
-        }),
-        prisma.gPSData.findMany({
-          where: {
-            vehicleId: { in: vehicleIds },
-            timestamp: {
-              gte: startDate,
-              lte: endDate,
-            },
-          },
-          include: {
-            vehicle: {
-              select: {
-                id: true,
-                make: true,
-                model: true,
-                year: true,
-              }
-            }
-          },
-          orderBy: { timestamp: "asc" },
-        })
-      ]);
+          }),
 
-      // Generate summaries
-      const emissionsSummary = await vehicleDataController.generateEmissionsSummary(emissionsData);
-      const fuelSummary = await vehicleDataController.generateFuelSummary(fuelsData);
-      const gpsSummary = await vehicleDataController.generateGPSSummary(gpsData);
+          // Get emissions data with pagination
+          prisma.emissionData.findMany({
+            where: {
+              ...dateFilter,
+              ...vehicleFilter,
+            },
+            select: {
+              id: true,
+              timestamp: true,
+              co2Percentage: true,
+              coPercentage: true,
+              o2Percentage: true,
+              hcPPM: true,
+              plateNumber: true,
+              vehicleId: true,
+              trackingDeviceId: true,
+            },
+            ...PaginationService.applyPagination({}, skip, limit),
+            orderBy: {
+              timestamp: "desc",
+            },
+          }),
 
-      return res.status(200).json({
+          // Get fuel data count
+          prisma.fuelData.count({
+            where: {
+              ...dateFilter,
+              ...vehicleFilter,
+            },
+          }),
+
+          // Get fuel data with pagination
+          prisma.fuelData.findMany({
+            where: {
+              ...dateFilter,
+              ...vehicleFilter,
+            },
+            select: {
+              id: true,
+              timestamp: true,
+              fuelLevel: true,
+              fuelConsumption: true,
+              plateNumber: true,
+              vehicleId: true,
+              trackingDeviceId: true,
+            },
+            ...PaginationService.applyPagination({}, skip, limit),
+            orderBy: {
+              timestamp: "desc",
+            },
+          }),
+
+          // Get GPS data count
+          prisma.gPSData.count({
+            where: {
+              ...dateFilter,
+              ...vehicleFilter,
+            },
+          }),
+
+          // Get GPS data with pagination
+          prisma.gPSData.findMany({
+            where: {
+              ...dateFilter,
+              ...vehicleFilter,
+            },
+            select: {
+              id: true,
+              timestamp: true,
+              latitude: true,
+              longitude: true,
+              speed: true,
+              accuracy: true,
+              plateNumber: true,
+              vehicleId: true,
+              trackingDeviceId: true,
+              trackingStatus: true,
+            },
+            ...PaginationService.applyPagination({}, skip, limit),
+            orderBy: {
+              timestamp: "desc",
+            },
+          }),
+        ]);
+
+      // Calculate summary metrics
+      const averageCO2 =
+        emissions.length > 0
+          ? emissions.reduce((sum, item) => sum + item.co2Percentage, 0) /
+            emissions.length
+          : 0;
+
+      const averageFuelConsumption =
+        fuels.length > 0
+          ? fuels.reduce((sum, item) => sum + item.fuelConsumption, 0) /
+            fuels.length
+          : 0;
+
+      const averageSpeed =
+        gps.length > 0
+          ? gps.reduce((sum, item) => sum + item.speed, 0) / gps.length
+          : 0;
+
+      const counts = {
+        emission: emissionsCount,
+        fuel: fuelsCount,
+        gps: gpsCount,
+      };
+      const pagination = PaginationService.processMultipleDatasets(counts, {
+        page,
+        limit,
+      });
+
+      // Prepare response with pagination info
+      res.status(200).json({
         success: true,
-        timeRange: {
-          periodType,
-          periodValue,
-          start: startDate,
-          end: endDate,
+        pagination,
+        summary: {
+          averageCO2,
+          averageFuelConsumption,
+          averageSpeed,
         },
         data: {
-          emissions: emissionsData,
-          fuels: fuelsData,
-          gps: gpsData
+          emissions,
+          fuels,
+          gps,
         },
-        summary: {
-          emissions: emissionsSummary,
-          fuels: fuelSummary,
-          gps: gpsSummary
-        }
       });
     } catch (error) {
-      return errorHandler(res, error);
+      console.error("Error fetching emissions data:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch emissions data",
+        error: error.message,
+      });
     }
   };
 
   /**
-   * Get summarized data for all vehicles and all users (admin only)
+   * Analytics Hub - Central function for all analytical operations
    * @param {Object} req - Express request object
    * @param {Object} res - Express response object
    */
-  static getOverallSummary = async (req, res) => {
+  static analyticHub = async (req, res) => {
     try {
-      const { periodType, periodValue } = req.query;
+      const {
+        startDate,
+        endDate,
+        vehicleId,
+        plateNumber,
+        dataType, // 'emissions', 'fuel', 'gps', or 'all'
+        view = "summary", // 'summary', 'detail', or 'map'
+      } = req.query;
+
       const userId = req.userId;
 
-      // Check if user has admin privileges
-      const isAdmin = await VehicleService.isUserAdmin(userId);
-      if (!isAdmin) {
-        return res.status(403).json({
-          success: false,
-          message: "Unauthorized: Admin privileges required",
-        });
+      // Pagination parameters
+      const { page, limit, skip } = PaginationService.parsePaginationParams(
+        req.query
+      );
+
+      // Build date filter
+      const dateFilter = {};
+      if (startDate && endDate) {
+        const parsedStartDate = new Date(startDate);
+        const parsedEndDate = new Date(endDate);
+        parsedEndDate.setHours(23, 59, 59, 999);
+
+        dateFilter.timestamp = {
+          gte: parsedStartDate,
+          lte: parsedEndDate,
+        };
       }
 
-      // Get time range
-      const { startDate, endDate } = TimeRangeService.getTimeRange(periodType, periodValue);
+      // Prepare vehicle filter
+      const vehicleFilter = {};
+      if (vehicleId) vehicleFilter.vehicleId = parseInt(vehicleId, 10);
+      if (plateNumber) vehicleFilter.plateNumber = plateNumber;
 
-      // Get all vehicles
-      const vehicles = await getAllVehiclesController.getAllVehiclesService();
-      const vehicleIds = vehicles.map(vehicle => vehicle.id);
+      // User access validation if userId provided
+      if (userId && vehicleId) {
+        const vehicleExistsAndBelongs =
+          await VehicleService.vehicleExistsAndBelongsToUser(
+            parseInt(vehicleId, 10),
+            userId
+          );
 
-      if (vehicleIds.length === 0) {
-        return res.status(200).json({
-          success: true,
-          message: "No vehicles found in the system",
-          summary: {
-            emissions: {},
-            fuels: {},
-            gps: {}
-          }
-        });
-      }
-
-      // Get data for all vehicles
-      const [emissionsData, fuelsData, gpsData] = await Promise.all([
-        prisma.emissionData.findMany({
-          where: {
-            vehicleId: { in: vehicleIds },
-            timestamp: {
-              gte: startDate,
-              lte: endDate,
-            },
-          },
-          include: {
-            vehicle: {
-              select: {
-                id: true,
-                make: true,
-                model: true,
-                year: true,
-                user: {
-                  select: {
-                    id: true,
-                    username: true,
-                    email: true,
-                  }
-                }
-              }
-            }
-          },
-        }),
-        prisma.fuelData.findMany({
-          where: {
-            vehicleId: { in: vehicleIds },
-            timestamp: {
-              gte: startDate,
-              lte: endDate,
-            },
-          },
-          include: {
-            vehicle: {
-              select: {
-                id: true,
-                make: true,
-                model: true,
-                year: true,
-                user: {
-                  select: {
-                    id: true,
-                    username: true,
-                    email: true,
-                  }
-                }
-              }
-            }
-          },
-        }),
-        prisma.gPSData.findMany({
-          where: {
-            vehicleId: { in: vehicleIds },
-            timestamp: {
-              gte: startDate,
-              lte: endDate,
-            },
-          },
-          include: {
-            vehicle: {
-              select: {
-                id: true,
-                make: true,
-                model: true,
-                year: true,
-                user: {
-                  select: {
-                    id: true,
-                    username: true,
-                    email: true,
-                  }
-                }
-              }
-            }
-          },
-        })
-      ]);
-
-      // Generate detailed summaries
-      const emissionsSummary = await vehicleDataController.generateEmissionsSummary(emissionsData);
-      const fuelSummary = await vehicleDataController.generateFuelSummary(fuelsData);
-      const gpsSummary = await vehicleDataController.generateGPSSummary(gpsData);
-
-      // Generate user-based summaries
-      const userEmissionsSummary = await vehicleDataController.generateUserBasedSummary(emissionsData, 'emissions');
-      const userFuelSummary = await vehicleDataController.generateUserBasedSummary(fuelsData, 'fuel');
-      const userGPSSummary = await vehicleDataController.generateUserBasedSummary(gpsData, 'gps');
-
-      // Generate vehicle type summaries
-      const vehicleTypeEmissionsSummary = await vehicleDataController.generateVehicleTypeSummary(emissionsData, 'emissions');
-      const vehicleTypeFuelSummary = await vehicleDataController.generateVehicleTypeSummary(fuelsData, 'fuel');
-
-      return res.status(200).json({
-        success: true,
-        timeRange: {
-          periodType,
-          periodValue,
-          start: startDate,
-          end: endDate,
-        },
-        summary: {
-          emissions: emissionsSummary,
-          fuels: fuelSummary,
-          gps: gpsSummary,
-          userBased: {
-            emissions: userEmissionsSummary,
-            fuels: userFuelSummary,
-            gps: userGPSSummary
-          },
-          vehicleType: {
-            emissions: vehicleTypeEmissionsSummary,
-            fuels: vehicleTypeFuelSummary
-          }
+        if (!vehicleExistsAndBelongs) {
+          return res.status(404).json({
+            success: false,
+            message: "Vehicle not found or does not belong to the user",
+          });
         }
+      }
+
+      let emissionsData = [],
+        fuelsData = [],
+        gpsData = [];
+      let emissionsCount = 0,
+        fuelsCount = 0,
+        gpsCount = 0;
+
+      //determine Pagination and limit settings based on view
+      const getSummaryLimit = () => (view === "summary" ? 10 : limit);
+      const getMapLimit = () => (view === "map" ? 10000000 : limit);
+      const getSummarySkip = () => (view === "summary" ? 0 : skip);
+      const getMapSkip = () => (view === "map" ? 0 : skip);
+
+      if (!dataType || dataType === "all" || dataType === "emissions") {
+        [emissionsCount, emissionsData] = await Promise.all([
+          prisma.emissionData.count({
+            where: { ...dateFilter, ...vehicleFilter },
+          }),
+          prisma.emissionData.findMany({
+            where: { ...dateFilter, ...vehicleFilter },
+            select: {
+              id: true,
+              timestamp: true,
+              co2Percentage: true,
+              coPercentage: true,
+              o2Percentage: true,
+              hcPPM: true,
+              plateNumber: true,
+              vehicleId: true,
+              trackingDeviceId: true,
+            },
+            skip: getSummarySkip(),
+            take: getSummaryLimit(),
+            orderBy: { timestamp: "desc" },
+          }),
+        ]);
+      }
+
+      // Fetch fuel data if needed
+      if (!dataType || dataType === "all" || dataType === "fuel") {
+        [fuelsCount, fuelsData] = await Promise.all([
+          prisma.fuelData.count({ where: { ...dateFilter, ...vehicleFilter } }),
+          prisma.fuelData.findMany({
+            where: { ...dateFilter, ...vehicleFilter },
+            select: {
+              id: true,
+              timestamp: true,
+              fuelLevel: true,
+              fuelConsumption: true,
+              plateNumber: true,
+              vehicleId: true,
+              trackingDeviceId: true,
+            },
+            skip: getSummarySkip(),
+            take: getSummaryLimit(),
+            orderBy: { timestamp: "desc" },
+          }),
+        ]);
+      }
+
+      // Fetch GPS data if needed
+      if (!dataType || dataType === "all" || dataType === "gps") {
+        [gpsCount, gpsData] = await Promise.all([
+          prisma.gPSData.count({ where: { ...dateFilter, ...vehicleFilter } }),
+          prisma.gPSData.findMany({
+            where: { ...dateFilter, ...vehicleFilter },
+            select: {
+              id: true,
+              timestamp: true,
+              latitude: true,
+              longitude: true,
+              speed: true,
+              accuracy: true,
+              plateNumber: true,
+              vehicleId: true,
+              trackingDeviceId: true,
+              trackingStatus: true,
+            },
+            skip: getMapSkip(),
+            take: getMapLimit(),
+            orderBy: { timestamp: "desc" },
+          }),
+        ]);
+      }
+      // Generate pagination info using PaginationService
+      const counts = {
+        emissions: emissionsCount,
+        fuels: fuelsCount,
+        gps: gpsCount,
+      };
+      const pagination = PaginationService.processMultipleDatasets(counts, {
+        page,
+        limit,
       });
+      // Calculate analytics based on the view requested
+      let response = {
+        success: true,
+        timestamp: new Date(),
+        pagination,
+      };
+
+      // Add specific data based on the view requested
+      if (view === "summary") {
+        // Calculate summary analytics
+        const emissionsAnalytics =
+          this.calculateEmissionAnalytics(emissionsData);
+        const fuelAnalytics = this.calculateFuelAnalytics(fuelsData);
+        const gpsAnalytics = this.calculateGPSAnalytics(gpsData);
+
+        response.analytics = {
+          emissions: emissionsAnalytics,
+          fuel: fuelAnalytics,
+          gps: gpsAnalytics,
+        };
+
+        // Include some sample data
+        response.sampleData = {
+          emissions: emissionsData.slice(0, 3),
+          fuels: fuelsData.slice(0, 3),
+          gps: gpsData.slice(0, 3),
+        };
+      } else if (view === "map") {
+        // Process and return vehicle location data for mapping
+        const vehicleLocations = this.processVehicleLocations(gpsData);
+
+        response.mapData = {
+          vehicles: vehicleLocations.vehicles,
+          stats: {
+            totalVehicles: vehicleLocations.totalVehicles,
+            activeVehicles: vehicleLocations.activeVehicles,
+            inactiveVehicles: vehicleLocations.inactiveVehicles,
+          },
+        };
+      } else {
+        // Detail view - return actual data
+        response.data = {
+          emissions: emissionsData,
+          fuels: fuelsData,
+          gps: gpsData,
+        };
+      }
+
+      return res.status(200).json(response);
     } catch (error) {
+      console.error("Error in analyticHub:", error);
       return errorHandler(res, error);
     }
   };
 
-  /**
-   * Generate summary for emissions data
-   * @param {Array} data - Emissions data array
-   * @returns {Object} - Summary statistics
-   */
-  static generateEmissionsSummary = async (data) => {
-    if (!data || data.length === 0) {
-      return {
-        totalRecords: 0,
-        averageCO2: 0,
-        averageNOx: 0,
-        averagePM: 0,
-        totalCO2: 0,
-        totalNOx: 0,
-        totalPM: 0,
-        highestCO2: { value: 0, vehicle: null, timestamp: null },
-        highestNOx: { value: 0, vehicle: null, timestamp: null },
-        highestPM: { value: 0, vehicle: null, timestamp: null },
-      };
+  static getMapData = async (req, res) => {
+    try {
+      const { startDate, endDate } = req.query;
+
+      // First, get the total number of vehicles in the system
+      const totalVehicles = await prisma.vehicle.count({
+        where: {
+          deletedAt: null, // Only count active vehicles
+        },
+      });
+
+      // Define date filtering if provided
+      const whereClause = {};
+      if (startDate && endDate) {
+        whereClause.timestamp = {
+          gte: new Date(startDate),
+          lte: new Date(endDate),
+        };
+      }
+
+      // Get the latest GPS data for each vehicle using Prisma's $queryRawUnsafe
+      // This uses DISTINCT ON which is PostgreSQL specific
+      const latestGpsData = await prisma.$queryRawUnsafe(`
+      SELECT DISTINCT ON ("vehicleId") 
+        "id", 
+        "latitude", 
+        "longitude", 
+        "plateNumber", 
+        "speed", 
+        "accuracy", 
+        "timestamp", 
+        "vehicleId", 
+        "trackingStatus",
+        "trackingDeviceId"
+      FROM "GPSData"
+      ORDER BY "vehicleId", "timestamp" DESC
+    `);
+
+      // Return both the total vehicle count and the GPS data
+      return res.status(200).json({
+        success: true,
+        totalVehicles,
+        vehiclesWithGpsData: latestGpsData.length,
+        mapData: latestGpsData.map((data) => ({
+          id: data.id,
+          latitude: data.latitude,
+          longitude: data.longitude,
+          plateNumber: data.plateNumber,
+          speed: data.speed,
+          accuracy: data.accuracy,
+          timestamp: data.timestamp,
+          vehicleId: data.vehicleId,
+          trackingStatus: data.trackingStatus,
+          trackingDeviceId: data.trackingDeviceId,
+        })),
+      });
+    } catch (error) {
+      console.error("Error fetching vehicle map data:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to fetch vehicle map data",
+        error: error.message,
+      });
     }
-
-    // Initialize summary object
-    let totalCO2 = 0;
-    let totalNOx = 0;
-    let totalPM = 0;
-    let highestCO2 = { value: 0, vehicle: null, timestamp: null };
-    let highestNOx = { value: 0, vehicle: null, timestamp: null };
-    let highestPM = { value: 0, vehicle: null, timestamp: null };
-
-    // Calculate totals and find highest values
-    data.forEach(record => {
-      // Add to totals
-      totalCO2 += record.co2Level || 0;
-      totalNOx += record.noxLevel || 0;
-      totalPM += record.particulateMatter || 0;
-
-      // Check for highest CO2
-      if ((record.co2Level || 0) > highestCO2.value) {
-        highestCO2 = {
-          value: record.co2Level,
-          vehicle: record.vehicle ? `${record.vehicle.make} ${record.vehicle.model} (${record.vehicle.year})` : `Vehicle ID: ${record.vehicleId}`,
-          timestamp: record.timestamp
-        };
-      }
-
-      // Check for highest NOx
-      if ((record.noxLevel || 0) > highestNOx.value) {
-        highestNOx = {
-          value: record.noxLevel,
-          vehicle: record.vehicle ? `${record.vehicle.make} ${record.vehicle.model} (${record.vehicle.year})` : `Vehicle ID: ${record.vehicleId}`,
-          timestamp: record.timestamp
-        };
-      }
-
-      // Check for highest PM
-      if ((record.particulateMatter || 0) > highestPM.value) {
-        highestPM = {
-          value: record.particulateMatter,
-          vehicle: record.vehicle ? `${record.vehicle.make} ${record.vehicle.model} (${record.vehicle.year})` : `Vehicle ID: ${record.vehicleId}`,
-          timestamp: record.timestamp
-        };
-      }
-    });
-
-    // Calculate averages
-    const totalRecords = data.length;
-    const averageCO2 = totalRecords > 0 ? totalCO2 / totalRecords : 0;
-    const averageNOx = totalRecords > 0 ? totalNOx / totalRecords : 0;
-    const averagePM = totalRecords > 0 ? totalPM / totalRecords : 0;
-
-    return {
-      totalRecords,
-      averageCO2,
-      averageNOx,
-      averagePM,
-      totalCO2,
-      totalNOx,
-      totalPM,
-      highestCO2,
-      highestNOx,
-      highestPM,
-    };
   };
 
   /**
-   * Generate summary for fuel data
-   * @param {Array} data - Fuel data array
-   * @returns {Object} - Summary statistics
-   */
-  static generateFuelSummary = async (data) => {
-    if (!data || data.length === 0) {
-      return {
-        totalRecords: 0,
-        averageFuelLevel: 0,
-        averageFuelConsumption: 0,
-        totalFuelConsumed: 0,
-        vehiclesWithLowFuel: [],
-      };
-    }
+   * Process vehicle location data for mapping
+   * @param {Array} gpsData - Array of GPS data points
+   * @returns {Object} Object containing processed vehicle location data
+  //  */
+  static processVehicleLocations(gpsData) {
+    const vehicleMap = new Map();
+    let activeVehicles = 0;
+    let inactiveVehicles = 0;
 
-    // Initialize summary object
-    let totalFuelLevel = 0;
-    let totalFuelConsumption = 0;
-    let lowFuelVehicles = {};
+    gpsData.forEach((point) => {
+      if (!vehicleMap.has(point.plateNumber)) {
+        const isActive = point.trackingStatus;
+        isActive ? activeVehicles++ : inactiveVehicles++;
 
-    // Calculate totals and find vehicles with low fuel
-    data.forEach(record => {
-      // Add to totals
-      totalFuelLevel += record.fuelLevel || 0;
-      totalFuelConsumption += record.fuelConsumption || 0;
-
-      // Check for low fuel (below 20%)
-      if ((record.fuelLevel || 0) < 20) {
-        const vehicleId = record.vehicleId;
-        if (!lowFuelVehicles[vehicleId] || record.timestamp > lowFuelVehicles[vehicleId].timestamp) {
-          lowFuelVehicles[vehicleId] = {
-            fuelLevel: record.fuelLevel,
-            vehicle: record.vehicle ? `${record.vehicle.make} ${record.vehicle.model} (${record.vehicle.year})` : `Vehicle ID: ${vehicleId}`,
-            timestamp: record.timestamp,
-            user: record.vehicle?.user ? `${record.vehicle.user.username} (${record.vehicle.user.email})` : 'Unknown',
+        vehicleMap.set(point.plateNumber, {
+          plateNumber: point.plateNumber,
+          vehicleId: point.vehicleId,
+          lastSeen: point.timestamp,
+          position: {
+            lat: point.latitude,
+            lng: point.longitude,
+          },
+          speed: point.speed,
+          isActive: point.trackingStatus,
+          accuracy: point.accuracy || 0,
+        });
+      } else {
+        const vehicle = vehicleMap.get(point.plateNumber);
+        if (new Date(point.timestamp) > new Date(vehicle.lastSeen)) {
+          vehicle.lastSeen = point.timestamp;
+          vehicle.position = {
+            lat: point.latitude,
+            lng: point.longitude,
           };
+          vehicle.speed = point.speed;
+          vehicle.isActive = point.trackingStatus;
+          vehicle.accuracy = point.accuracy || 0;
         }
       }
     });
 
-    // Calculate averages
-    const totalRecords = data.length;
-    const averageFuelLevel = totalRecords > 0 ? totalFuelLevel / totalRecords : 0;
-    const averageFuelConsumption = totalRecords > 0 ? totalFuelConsumption / totalRecords : 0;
-
     return {
-      totalRecords,
-      averageFuelLevel,
-      averageFuelConsumption,
-      totalFuelConsumed: totalFuelConsumption,
-      vehiclesWithLowFuel: Object.values(lowFuelVehicles),
-    };
-  };
-
-  /**
-   * Generate summary for GPS data
-   * @param {Array} data - GPS data array
-   * @returns {Object} - Summary statistics
-   */
-  static generateGPSSummary = async (data) => {
-    if (!data || data.length === 0) {
-      return {
-        totalRecords: 0,
-        averageSpeed: 0,
-        maxSpeed: { value: 0, vehicle: null, timestamp: null },
-        distanceCovered: 0,
-        frequentLocations: [],
-      };
-    }
-
-    // Initialize summary object
-    let totalSpeed = 0;
-    let maxSpeed = { value: 0, vehicle: null, timestamp: null };
-    let distanceCovered = 0;
-    let locationCount = {};
-
-    // Group data by vehicle for distance calculation
-    const vehicleData = {};
-
-    data.forEach(record => {
-      const vehicleId = record.vehicleId;
-      if (!vehicleData[vehicleId]) {
-        vehicleData[vehicleId] = [];
-      }
-      vehicleData[vehicleId].push(record);
-
-      // Add to totals
-      totalSpeed += record.speed || 0;
-
-      // Check for max speed
-      if ((record.speed || 0) > maxSpeed.value) {
-        maxSpeed = {
-          value: record.speed,
-          vehicle: record.vehicle ? `${record.vehicle.make} ${record.vehicle.model} (${record.vehicle.year})` : `Vehicle ID: ${vehicleId}`,
-          timestamp: record.timestamp,
-          location: `${record.latitude}, ${record.longitude}`
-        };
-      }
-
-      // Count location occurrences (rounded to 3 decimal places for proximity)
-      const locationKey = `${parseFloat(record.latitude).toFixed(3)},${parseFloat(record.longitude).toFixed(3)}`;
-      if (!locationCount[locationKey]) {
-        locationCount[locationKey] = {
-          count: 0,
-          location: { latitude: record.latitude, longitude: record.longitude },
-          vehicles: new Set()
-        };
-      }
-      locationCount[locationKey].count += 1;
-      locationCount[locationKey].vehicles.add(vehicleId);
-    });
-
-    // Calculate total distance for each vehicle and sum up
-    Object.values(vehicleData).forEach(vehicleRecords => {
-      // Sort by timestamp
-      vehicleRecords.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-      
-      // Calculate distance between consecutive points
-      for (let i = 1; i < vehicleRecords.length; i++) {
-        const prev = vehicleRecords[i - 1];
-        const curr = vehicleRecords[i];
-        
-        // distanceCovered += vehicleDataController.calculateDistance(
-        //   prev.latitude, prev.longitude,
-        //   curr.latitude, curr.longitude
-        // );
-      }
-    });
-        // Find frequent locations (more than 5 occurrences)
-    const frequentLocations = Object.values(locationCount)
-      .filter(loc => loc.count > 5)
-      .map(loc => ({
-        location: loc.location,
-        visits: loc.count,
-        uniqueVehicles: loc.vehicles.size
-      }))
-      .sort((a, b) => b.visits - a.visits)
-      .slice(0, 10); // Get top 10 locations
-
-    // Calculate averages
-    const totalRecords = data.length;
-    const averageSpeed = totalRecords > 0 ? totalSpeed / totalRecords : 0;
-
-    return {
-      totalRecords,
-      averageSpeed,
-      maxSpeed,
-      // distanceCovered,
-      frequentLocations
+      vehicles: Array.from(vehicleMap.values()),
+      totalVehicles: vehicleMap.size,
+      activeVehicles,
+      inactiveVehicles,
     };
   }
+
+  static calculateEmissionAnalytics = (emissions) => {
+    if (!emissions.length) return null;
+
+    const analytics = {
+      co2: {
+        average: 0,
+        min: Infinity,
+        max: 0,
+      },
+      co: {
+        average: 0,
+        min: Infinity,
+        max: 0,
+      },
+      o2: {
+        average: 0,
+        min: Infinity,
+        max: 0,
+      },
+      hc: {
+        average: 0,
+        min: Infinity,
+        max: 0,
+      },
+      anomalies: 0,
+    };
+
+    // Calculate metrics
+    emissions.forEach((emission) => {
+      analytics.co2.average += emission.co2Percentage;
+      analytics.co2.min = Math.min(analytics.co2.min, emission.co2Percentage);
+      analytics.co2.max = Math.max(analytics.co2.max, emission.co2Percentage);
+
+      analytics.co.average += emission.coPercentage;
+      analytics.co.min = Math.min(analytics.co.min, emission.coPercentage);
+      analytics.co.max = Math.max(analytics.co.max, emission.coPercentage);
+
+      analytics.o2.average += emission.o2Percentage;
+      analytics.o2.min = Math.min(analytics.o2.min, emission.o2Percentage);
+      analytics.o2.max = Math.max(analytics.o2.max, emission.o2Percentage);
+
+      analytics.hc.average += emission.hcPPM;
+      analytics.hc.min = Math.min(analytics.hc.min, emission.hcPPM);
+      analytics.hc.max = Math.max(analytics.hc.max, emission.hcPPM);
+
+      // Check for anomalies (high CO2 or CO levels)
+      if (emission.co2Percentage > 12 || emission.coPercentage > 2) {
+        analytics.anomalies++;
+      }
+    });
+
+    // Calculate averages
+    analytics.co2.average /= emissions.length;
+    analytics.co.average /= emissions.length;
+    analytics.o2.average /= emissions.length;
+    analytics.hc.average /= emissions.length;
+
+    return analytics;
+  };
+
+  // Helper function to calculate fuel analytics
+  static calculateFuelAnalytics = (fuels) => {
+    if (!fuels.length) return null;
+
+    const analytics = {
+      consumption: {
+        average: 0,
+        min: Infinity,
+        max: 0,
+      },
+      level: {
+        average: 0,
+        min: Infinity,
+        max: 0,
+      },
+      lowFuelCount: 0,
+      highConsumptionCount: 0,
+    };
+
+    // Calculate metrics
+    fuels.forEach((fuel) => {
+      // Consumption metrics
+      analytics.consumption.average += fuel.fuelConsumption;
+      analytics.consumption.min = Math.min(
+        analytics.consumption.min,
+        fuel.fuelConsumption
+      );
+      analytics.consumption.max = Math.max(
+        analytics.consumption.max,
+        fuel.fuelConsumption
+      );
+
+      // Level metrics
+      analytics.level.average += fuel.fuelLevel;
+      analytics.level.min = Math.min(analytics.level.min, fuel.fuelLevel);
+      analytics.level.max = Math.max(analytics.level.max, fuel.fuelLevel);
+
+      // check if vehicle has low fuel (less than 20%)
+      if (fuel.fuelLevel < 20) {
+        analytics.lowFuelCount++;
+      }
+
+      // Count high consumption instances
+      if (fuel.fuelConsumption > 15) {
+        analytics.highConsumptionCount++;
+      }
+    });
+
+    // Calculate averages
+    analytics.consumption.average /= fuels.length;
+    analytics.level.average /= fuels.length;
+
+    return analytics;
+  };
+
+  // Helper function to calculate GPS analytics
+  static calculateGPSAnalytics = (gpsData) => {
+    if (!gpsData.length) return null;
+
+    const analytics = {
+      speed: {
+        average: 0,
+        min: Infinity,
+        max: 0,
+      },
+      activeVehicles: 0,
+      movingVehicles: 0,
+      stoppedVehicles: 0,
+      highSpeedCount: 0,
+    };
+
+    // Track unique vehicles
+    const uniqueVehicles = new Set();
+    const movingVehicles = new Set();
+    const stoppedVehicles = new Set();
+
+    // Calculate metrics
+    gpsData.forEach((gps) => {
+      // Speed metrics
+      analytics.speed.average += gps.speed;
+      analytics.speed.min = Math.min(analytics.speed.min, gps.speed);
+      analytics.speed.max = Math.max(analytics.speed.max, gps.speed);
+
+      // Track unique vehicles
+      uniqueVehicles.add(gps.plateNumber);
+
+      // Check if vehicle is moving or stopped
+      if (gps.speed > 3) {
+        // More than 3 km/h is considered moving
+        movingVehicles.add(gps.plateNumber);
+      } else {
+        stoppedVehicles.add(gps.plateNumber);
+      }
+
+      // Count high speed instances
+      if (gps.speed > 100) {
+        // Above 100 km/h
+        analytics.highSpeedCount++;
+      }
+    });
+
+    // Calculate averages and totals
+    analytics.speed.average /= gpsData.length;
+    analytics.activeVehicles = uniqueVehicles.size;
+    analytics.movingVehicles = movingVehicles.size;
+    analytics.stoppedVehicles = stoppedVehicles.size;
+
+    return analytics;
+  };
 }

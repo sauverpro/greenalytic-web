@@ -7,9 +7,9 @@ import DateRangePicker, {
 import MapSection from "../../../../components/vehicleData/mapSection";
 import { useLoadScript } from "@react-google-maps/api";
 import { useSearchParams } from "next/navigation";
-import  GPSChartSection from "@/components/vehicleData/GPSchartSection";
+import GPSChartSection from "@/components/vehicleData/GPSchartSection";
 import { DAY } from "@/utils/constants";
-import { getGPSData} from "@/services/vehicleData";
+import { getGPSData } from "@/services/vehicleData";
 import { getUserVehicles } from "@/services/vehicleService";
 
 function GPSPageContent() {
@@ -19,9 +19,7 @@ function GPSPageContent() {
   const [selectedVehicleId, setSelectedVehicleId] = useState<number | null>(
     null
   );
-  const [startDate, setStartDate] = useState(
-    new Date(Date.now() - DAY)
-  );
+  const [startDate, setStartDate] = useState(new Date(Date.now() - DAY));
   const [endDate, setEndDate] = useState(new Date());
   const [gpsData, setGpsData] = useState([]);
   const [error, setError] = useState({
@@ -52,9 +50,7 @@ function GPSPageContent() {
           const vehicleIdParam = searchParams.get("vehicleId");
           if (
             vehicleIdParam &&
-            response.data.some(
-              (v: any) => v.id === parseInt(vehicleIdParam)
-            )
+            response.data.some((v: any) => v.id === parseInt(vehicleIdParam))
           ) {
             setSelectedVehicleId(parseInt(vehicleIdParam));
           } else if (response.data.length > 0) {
@@ -71,7 +67,7 @@ function GPSPageContent() {
       } catch (err) {
         setError((prev: any) => ({
           ...prev,
-          vehicles: "Error connecting to the server",
+          vehicles: "Something went wrong while getting vehicles",
         }));
       } finally {
         setIsLoading((prev) => ({ ...prev, vehicles: false }));
@@ -79,7 +75,7 @@ function GPSPageContent() {
     };
 
     fetchVehicles();
-  }, [ searchParams]);
+  }, [searchParams]);
 
   const fetchGPSData = async () => {
     if (selectedVehicleId === null) return;
@@ -91,10 +87,10 @@ function GPSPageContent() {
       const formattedStartDate = formatDateForServer(startDate);
       const formattedEndDate = formatDateForServer(endDate, true);
 
-      const response = await getGPSData(
-        selectedVehicleId,
-        { startDate: formattedStartDate, endDate: formattedEndDate }
-      );
+      const response = await getGPSData(selectedVehicleId, {
+        startDate: formattedStartDate,
+        endDate: formattedEndDate,
+      });
 
       if (response.success) {
         setGpsData(response.data);
@@ -116,7 +112,7 @@ function GPSPageContent() {
     } catch (error) {
       setError((prev: any) => ({
         ...prev,
-        gps: "Error connecting to the server",
+        gps: "Something went wrong while getting GPS data",
       }));
     } finally {
       setIsLoading((prev) => ({ ...prev, gps: false }));
@@ -186,24 +182,23 @@ function GPSPageContent() {
           </div>
         ) : gpsData.length > 0 ? (
           <div className="bg-white rounded-lg shadow-sm p-6 mt-6">
-            <h2 className="text-xl font-bold mb-4 text-gray-800">
-              GPS Data Table
-            </h2>
+            <h2 className="text-xl font-bold mb-4 text-sms">GPS Data Table</h2>
             <div className="overflow-x-auto">
               <table className="min-w-full bg-white">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Time
+                    <th className="px-6 py-3 text-left text-xs font-medium text-sms uppercase tracking-wider">
+                      Time{" "}
+                      <span className="text-xs lowercase">(Local Time)</span>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-sms uppercase tracking-wider">
                       Latitude
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-sms uppercase tracking-wider">
                       Longitude
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Speed
+                    <th className="px-6 py-3 text-left text-xs font-medium text-sms uppercase tracking-wider">
+                      Speed <span className="text-xs lowercase">(km/h)</span>
                     </th>
                   </tr>
                 </thead>
@@ -214,13 +209,13 @@ function GPSPageContent() {
                         {new Date(point.timestamp).toLocaleString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {point.latitude}
+                        {point.latitude.toFixed(2) || "N/A"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {point.longitude}
+                        {point.longitude.toFixed(2) || "N/A"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {point.speed || "N/A"} km/h
+                        {point.speed.toFixed(2) || "N/A"}
                       </td>
                     </tr>
                   ))}
@@ -241,5 +236,5 @@ export default function GPSPage() {
     <Suspense>
       <GPSPageContent />
     </Suspense>
-  )
+  );
 }

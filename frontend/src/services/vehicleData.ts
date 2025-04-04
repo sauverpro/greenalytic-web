@@ -48,3 +48,31 @@ export const getGPSData = async (
     throw new Error(`Failed to fetch GPS data: ${error}`);
   }
 };
+
+// get data in system
+export const getAllDataInSystem = async () => {
+  try {
+    const response = await client.get("/vehicles/data/all");
+    return response.data;
+  } catch (error) {
+    throw new Error(`Failed to fetch all system data: ${error}`);
+  }
+};
+
+//Get analytic hub
+export const getAnalyticsData = async () => {
+  try {
+    const response = await client.get("/vehicles/analytics/data");
+    return response.data;
+  } catch (error) {
+    throw new Error(`Failed to fetch analytics data: ${error}`);
+  }
+};
+export const getMapData = async () => {
+  try {
+    const response = await client.get("/vehicles/map/data");
+    return response.data;
+  } catch (error) {
+    throw new Error(`Failed to fetch analytics data: ${error}`);
+  }
+};

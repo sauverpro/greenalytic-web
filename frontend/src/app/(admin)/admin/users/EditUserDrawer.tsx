@@ -4,12 +4,11 @@ import { Drawer, DrawerClose, DrawerContent } from "@/components/ui/drawer";
 import { User } from "@/types/types";
 import UserForm from "./userform";
 
-
 export default function EditUserDrawer({
   open,
   onOpenChange,
   user,
-  refetchUsers
+  refetchUsers,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -30,7 +29,7 @@ export default function EditUserDrawer({
             }}
           />
           <DrawerClose asChild>
-            <button className="mt-4 w-full text-center text-sm text-gray-500">
+            <button className="mt-4 w-full text-center text-sm text-sms">
               Close
             </button>
           </DrawerClose>

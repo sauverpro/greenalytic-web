@@ -148,6 +148,7 @@ export interface VehicleData {
   model: string;
   year: string;
   status: string;
+  plateNumber: string;
   devices: string[];
 }
 

@@ -1,32 +1,42 @@
 "use client";
-
 import { AppSidebar } from "@/components/app-sidebar";
 import { Topbar } from "@/components/Topbar";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { useRouter } from "next/navigation";
-import {useEffect, useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [role, setRole] = useState<string | null>(null);
-
-
+  const [isLoading, setIsLoading] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       const storedRole = localStorage.getItem("USER_ROLE");
+      const token = localStorage.getItem("AUTH_TOKEN");
+
       setRole(storedRole);
 
-      if (storedRole === "admin") {
-        router.push("/admin");
+      if (!token) {
+        if (pathname !== "/login") {
+          router.push("/login");
+        }
+      } else if (storedRole === "admin") {
+        if (!pathname.startsWith("/admin")) {
+          router.push("/admin");
+        }
       } else if (storedRole === "user") {
-        router.push("/client");
-      } else {
-        router.push("/login");
+        if (!pathname.startsWith("/client")) {
+          router.push("/client");
+        }
       }
-    }
-  }, [router]);
 
+      setAuthChecked(true);
+      setIsLoading(false);
+    }
+  }, [pathname, router]);
 
   return (
     <SidebarProvider>
@@ -37,10 +47,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <Topbar />
           </div>
           <div className="flex-1 overflow-hidden">
-            <main className="h-full overflow-y-auto overflow-x-auto bg-gray-100 dark:bg-gray-900">
-              <div className="w-full pb-4">
-                { children}
-              </div>
+            <main className="h-full overflow-y-auto overflow-x-auto bg-gray-100 dark:bg-sms">
+              <div className="w-full pb-4">{children}</div>
             </main>
           </div>
         </div>

@@ -15,9 +15,30 @@ import { ClientData, DeviceData, VehicleData } from "@/types/types";
 import { getUserById } from "@/services/userService";
 import { CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
 import { Card, CardHeader, CardContent } from "@mui/material";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { ArrowLeft, Mail, Edit, Download, Phone, MapPin, Car, Fuel, Plus, Router, MoreHorizontal, Trash } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import {
+  ArrowLeft,
+  Mail,
+  Edit,
+  Download,
+  Phone,
+  MapPin,
+  Car,
+  Fuel,
+  Plus,
+  Router,
+  MoreHorizontal,
+  Trash,
+} from "lucide-react";
 import { toast } from "sonner";
+import { getVehiclesForUser } from "@/services/vehicleService";
+import { VehicleTable } from "./TableData";
 
 export default function ClientDetails() {
   const params = useParams();
@@ -29,7 +50,9 @@ export default function ClientDetails() {
   const [selectedTab, setSelectedTab] = useState("vehicles");
   const [isAddVehicleModalOpen, setIsAddVehicleModalOpen] = useState(false);
   const [isAddDeviceModalOpen, setIsAddDeviceModalOpen] = useState(false);
-  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(
+    null
+  );
   const [client, setClient] = useState<ClientData | null>(null);
   const [loading, setLoading] = useState(true);
   const [vehicles, setVehicles] = useState<VehicleData[]>([]);
@@ -49,74 +72,66 @@ export default function ClientDetails() {
       try {
         const clientData = await getUserById(userId);
 
-           setClient({
-             id: clientData.user.id.toString(),
-             name: clientData.user.username,
-             email: clientData.user.email,
-             phone: clientData.user.phoneNumber,
-             status: clientData.user.verified ? "active" : "pending",
-             image: clientData.user.image,
-             totalGPS: clientData.user.totalGpsData,
-             totalFuel: clientData.user.totalFuelData,
-             totalEmissions: clientData.user.totalEmissions,
-             joinDate: new Date(clientData.user.createdAt).toLocaleDateString(),
-             subscription: "Standard",
-             vehicles: clientData.user.vehicles.length,
-             GPSDevices: clientData.user.deviceCounts.gps,
-             fuelDevices: clientData.user.deviceCounts.fuel,
-             emissionsDevices: clientData.user.deviceCounts.emissions,
-             totalDevices: clientData.user.deviceCounts.total,
-             billingInfo: {
-               plan: "Standard Plan",
-               nextBilling: "N/A",
-               amount: "$0.00",
-               paymentMethod: "Credit Card",
-             },
-           });
-
-        console.log("Fetched client data .data : ========= ", clientData);
-
-   const extractedDevices: DeviceData[] = clientData.user.trackingDevices.map(
-     (device: any) => ({
-       id: device.id.toString(),
-       type: `${
-         device.type.charAt(0).toUpperCase() +
-         device.type.slice(1).toLowerCase()
-       } Tracker`,
-       vehicle: "Unassigned", 
-       date: new Date(device.createdAt || "2023-01-01").toLocaleDateString(),
-       status: device.isActive ? "online" : "offline",
-       lastPing: "N/A", 
-     })
-   );
-   setDevices(extractedDevices);
-
-
-        // const fetchedVehicles = await getVehiclesForUser(userId);
-        const mappedVehicles = clientData.user.vehicles.map((vehicle: any) => {
-          const deviceTypes = [];
-          if (vehicle._count.gpsDatas > 0) deviceTypes.push("GPS");
-          if (vehicle._count.fuelDatas > 0) deviceTypes.push("Fuel");
-          if (vehicle._count.emissionDatas > 0) deviceTypes.push("Emissions");
-
-          return {
-            id: vehicle.id.toString(),
-            plate: vehicle.plateNumber,
-            model: vehicle.vehicleModel,
-            year: "2020", 
-            status: vehicle.vehicleType === "SUV" ? "Personal" : "Fleet", 
-            devices: deviceTypes,
-          };
+        setClient({
+          id: clientData.user.id.toString(),
+          name: clientData.user.username,
+          email: clientData.user.email,
+          phone: clientData.user.phoneNumber,
+          status: clientData.user.verified ? "active" : "pending",
+          image: clientData.user.image,
+          totalGPS: clientData.user.totalGpsData,
+          totalFuel: clientData.user.totalFuelData,
+          totalEmissions: clientData.user.totalEmissions,
+          joinDate: new Date(clientData.user.createdAt).toLocaleDateString(),
+          subscription: "Standard",
+          vehicles: clientData.user.vehicles.length,
+          GPSDevices: clientData.user.deviceCounts.gps,
+          fuelDevices: clientData.user.deviceCounts.fuel,
+          emissionsDevices: clientData.user.deviceCounts.emissions,
+          totalDevices: clientData.user.deviceCounts.total,
+          billingInfo: {
+            plan: "Standard Plan",
+            nextBilling: "N/A",
+            amount: "$0.00",
+            paymentMethod: "Credit Card",
+          },
+          address: clientData.user.address || "N/A",
+          devices: clientData.user.devices || [],
+          contactPerson: clientData.user.contactPerson || "N/A",
+          contactRole: clientData.user.contactRole || "N/A",
+          contactEmail: clientData.user.contactEmail || "N/A",
+          contactPhone: clientData.user.contactPhone || "N/A",
         });
 
-        setVehicles(mappedVehicles);
+        const extractedDevices: DeviceData[] =
+          clientData.user.trackingDevices.map((device: any) => ({
+            id: device.id.toString(),
+            type: `${
+              device.type.charAt(0).toUpperCase() +
+              device.type.slice(1).toLowerCase()
+            } Tracker`,
+            vehicle: "Unassigned",
+            date: new Date(
+              device.createdAt || "2023-01-01"
+            ).toLocaleDateString(),
+            status: device.isActive ? "online" : "offline",
+            lastPing: "N/A",
+          }));
+        setDevices(extractedDevices);
 
-        console.log("Fetched vehicles data: =============== ", mappedVehicles);
+        const fetchedVehicles = await getVehiclesForUser(userId);
+        console.log(
+          "Fetched vehicles data:::::::::::::::: ",
+          fetchedVehicles.vehicles
+        );
+
+
+        setVehicles(Array.isArray(fetchedVehicles.vehicles) ? fetchedVehicles.vehicles : []);
 
       } catch (error) {
         console.error("Error fetching client data:", error);
         toast("Error fetching client data");
-
+        setVehicles([]);
       } finally {
         setLoading(false);
       }
@@ -223,7 +238,7 @@ export default function ClientDetails() {
                   className={
                     client?.status === "active"
                       ? "bg-green-100 text-green-700"
-                      : "bg-gray-100 text-gray-700"
+                      : "bg-gray-100 text-sms"
                   }
                 >
                   {client?.status.toUpperCase()}
@@ -426,147 +441,18 @@ export default function ClientDetails() {
           <TabsList className="bg-muted/50">
             <TabsTrigger value="vehicles">Vehicles</TabsTrigger>
             <TabsTrigger value="devices">Devices</TabsTrigger>
-            <TabsTrigger value="usage">Usage & Analytics</TabsTrigger>
-            <TabsTrigger value="billing">Billing History</TabsTrigger>
-            <TabsTrigger value="support">Support Tickets</TabsTrigger>
           </TabsList>
 
           {/* Vehicles Tab */}
           <TabsContent value="vehicles" className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-bold">Client Vehicles</h2>
-              <Button
-                className="bg-emerald-600 hover:bg-emerald-700"
-                onClick={() => setIsAddVehicleModalOpen(true)}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Add Vehicle
-              </Button>
-            </div>
-
-            <Card>
-              <CardContent className="p-0">
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr className="border-b bg-muted/50 text-left">
-                        <th className="p-4 font-medium">Vehicle ID</th>
-                        <th className="p-4 font-medium">Plate Number</th>
-                        <th className="p-4 font-medium">Model</th>
-                        <th className="p-4 font-medium">Year</th>
-                        <th className="p-4 font-medium">Usage</th>
-                        <th className="p-4 font-medium">Devices</th>
-                        <th className="p-4 font-medium text-right">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {vehicles.map((vehicle, i) => (
-                        <tr key={i} className="border-b">
-                          <td className="p-4">{vehicle.id}</td>
-                          <td className="p-4 font-medium">{vehicle.plate}</td>
-                          <td className="p-4">{vehicle.model}</td>
-                          <td className="p-4">{vehicle.year}</td>
-                          <td className="p-4">
-                            <Badge
-                              className={
-                                vehicle.status === "active"
-                                  ? "bg-green-100 text-green-700"
-                                  : vehicle.status === "maintenance"
-                                  ? "bg-amber-100 text-amber-700"
-                                  : "bg-gray-100 text-gray-700"
-                              }
-                            >
-                              {vehicle.status}
-                            </Badge>
-                          </td>
-                          <td className="p-4">
-                            <div className="flex gap-1">
-                              {vehicle.devices.includes("GPS") && (
-                                <Badge
-                                  variant="outline"
-                                  className="bg-blue-50 border-blue-200"
-                                >
-                                  <MapPin className="mr-1 h-3 w-3" />
-                                  GPS
-                                </Badge>
-                              )}
-                              {vehicle.devices.includes("Fuel") && (
-                                <Badge
-                                  variant="outline"
-                                  className="bg-amber-50 border-amber-200"
-                                >
-                                  <Fuel className="mr-1 h-3 w-3" />
-                                  Fuel
-                                </Badge>
-                              )}
-                              {vehicle.devices.includes("Emissions") && (
-                                <Badge
-                                  variant="outline"
-                                  className="bg-green-50 border-green-200"
-                                >
-                                  <Router className="mr-1 h-3 w-3" />
-                                  Emissions
-                                </Badge>
-                              )}
-                            </div>
-                          </td>
-                          <td className="p-4 text-right">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8"
-                                >
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-48">
-                                <DropdownMenuItem
-                                  onClick={() => {
-                                    setSelectedVehicleId(vehicle.id);
-                                    setIsAddDeviceModalOpen(true);
-                                  }}
-                                >
-                                  {/* <Plus /> */}
-                                  Add Device
-                                </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                  {/* <Edit /> */}
-                                  Edit Vehicle
-                                </DropdownMenuItem>
-                                {/* <DropdownMenuItem>
-                                  <Router />
-                                  Manage Devices
-                                </DropdownMenuItem> */}
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem className="text-red-500">
-                                  {/* <Trash /> */}
-                                  Delete Vehicle
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-              <CardFooter className="flex items-center justify-between border-t px-6 py-3">
-                <div className="text-sm text-muted-foreground">
-                  Showing {vehicles.length} of {client?.vehicles || 0} vehicles
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" disabled>
-                    Previous
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    Next
-                  </Button>
-                </div>
-              </CardFooter>
-            </Card>
+            <VehicleTable
+              userId={userId}
+              onAddVehicle={() => setIsAddVehicleModalOpen(true)}
+              onAddDevice={(vehicleId) => {
+                setSelectedVehicleId(vehicleId.toString());
+                setIsAddDeviceModalOpen(true);
+              }}
+            />
           </TabsContent>
 
           {/* Devices Tab */}
@@ -630,7 +516,7 @@ export default function ClientDetails() {
                               className={
                                 device.status === "online"
                                   ? "bg-green-100 text-green-700"
-                                  : "bg-gray-100 text-gray-700"
+                                  : "bg-gray-100 text-sms"
                               }
                             >
                               {device.status}
@@ -674,7 +560,7 @@ export default function ClientDetails() {
               </CardContent>
               <CardFooter className="flex items-center justify-between border-t px-6 py-3">
                 <div className="text-sm text-muted-foreground">
-                  Showing {devices.length} of {" "}
+                  Showing {devices.length} of{" "}
                   {parseInt(String(client?.GPSDevices ?? 0)) +
                     parseInt(String(client?.fuelDevices ?? 0)) +
                     parseInt(String(client?.emissionsDevices ?? 0))}
@@ -691,68 +577,15 @@ export default function ClientDetails() {
               </CardFooter>
             </Card>
           </TabsContent>
-
-          {/* Other tabs would be implemented similarly */}
-          <TabsContent value="usage" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Usage & Analytics</CardTitle>
-                <CardDescription>
-                  Client usage patterns and analytics data
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[400px] flex items-center justify-center bg-muted rounded-md">
-                  <p className="text-muted-foreground">
-                    Usage analytics charts and data would appear here
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="billing" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Billing History</CardTitle>
-                <CardDescription>
-                  Client payment and invoice history
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[400px] flex items-center justify-center bg-muted rounded-md">
-                  <p className="text-muted-foreground">
-                    Billing history and invoices would appear here
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="support" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Support Tickets</CardTitle>
-                <CardDescription>
-                  Client support requests and history
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[400px] flex items-center justify-center bg-muted rounded-md">
-                  <p className="text-muted-foreground">
-                    Support tickets and history would appear here
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
         </Tabs>
       </main>
 
       {/* Add Vehicle Modal */}
       <AddVehicleModal
         isOpen={isAddVehicleModalOpen}
-        onClose={() => setIsAddVehicleModalOpen(false)}
+        onClose={() => {
+          setIsAddVehicleModalOpen(false);
+        }}
         userId={client?.id || ""}
         onSuccess={handleVehicleAdded}
       />
@@ -762,8 +595,14 @@ export default function ClientDetails() {
         isOpen={isAddDeviceModalOpen}
         onClose={() => setIsAddDeviceModalOpen(false)}
         vehicleId={selectedVehicleId || ""}
-        availableVehicles={vehicles.map((v) => ({ id: v.id, plate: v.plate }))}
-        onSuccess={handleDeviceAdded}
+        availableVehicles={
+          Array.isArray(vehicles)
+            ? vehicles.map((v) => ({
+                id: v.id?.toString() || "",
+                plate: v.plateNumber || "",
+              }))
+            : []
+        }
       />
     </div>
   );

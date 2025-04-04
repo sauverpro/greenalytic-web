@@ -58,33 +58,21 @@ VehicleRouter.get(
   vehicleDataController.getGPSDataByTimeRange
 );
 
-
-
 VehicleRouter.get(
-  "/admin/emissions",
-  vehicleDataController.getAllEmissionsData
-);
-
-VehicleRouter.get(
-  "/admin/fuels",
-  vehicleDataController.getAllFuelsData
-);
-
-VehicleRouter.get("/admin/gps",vehicleDataController.getAllGPSData);
-
-VehicleRouter.get(
-  "/admin/summary",
-  vehicleDataController.getOverallSummary
-);
-
-// User data summary route (users can see their own data, admins can see any user's data)
-VehicleRouter.get(
-  "/users/:userId/data",
-  vehicleDataController.getUserVehicleData
+  "/data/all",
+  vehicleDataController.getAllDataInSystem
 );
 
 
+VehicleRouter.get(
+  "/analytics/data",
+  vehicleDataController.analyticHub
+);
 
+VehicleRouter.get(
+  "/map/data",
+  vehicleDataController.getMapData
+);
 
 
 export default VehicleRouter

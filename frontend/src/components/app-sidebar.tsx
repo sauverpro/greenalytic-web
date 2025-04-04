@@ -6,7 +6,7 @@ import Image from "next/image";
 import logo from "../../public/images/logo.png";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter} from "next/navigation";
 
 import {
   Tooltip,
@@ -34,7 +34,6 @@ import {
   Router,
   Settings,
   MessageSquare,
-  FileText,
   MapPin,
   Leaf,
   Sparkles,
@@ -43,12 +42,9 @@ import {
   Truck,
   Gauge,
   BarChart3,
-  Shield,
   ClipboardList,
   HelpCircle,
-  LifeBuoy,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { handleLogout } from "../services/userService";
 
 const adminItems = [
@@ -92,7 +88,7 @@ export function AppSidebar() {
     if (currentItem) {
       setActiveItem(currentItem.title);
     }
-  }, [pathname]);
+  }, []);
 
   useEffect(() => {
     const role = localStorage.getItem("USER_ROLE");
@@ -110,7 +106,7 @@ export function AppSidebar() {
     e.preventDefault();
     const loggedOut = handleLogout();
     if (loggedOut) {
-      router.push("/login");
+      router.push("/");
     }
   };
 
@@ -169,17 +165,20 @@ export function AppSidebar() {
         ${isCollapsed === "expanded" ? "w-64" : "w-20"}
         transition-all duration-300 ease-in-out`}
     >
-      <SidebarContent className="bg-gradient-to-b from-emerald-900 via-emerald-900 to-emerald-950 w-full h-full">
+      <SidebarContent className="bg-primary-darker from-emerald-900 via-emerald-900 to-emerald-950 w-full h-full">
         <LogoBranding />
 
-        <SidebarGroup className="h-[calc(100vh-16rem)] overflow-y-auto px-2">
+        <SidebarGroup className="h-[calc(100vh-16rem)]  overflow-y-auto px-2 pb-10">
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <TooltipProvider delayDuration={0}>
                     <Tooltip>
-                      <SidebarMenuButton asChild={true}>
+                      <SidebarMenuButton
+                        className="hover:bg-[#059669] "
+                        asChild={true}
+                      >
                         <Link
                           href={item.url}
                           onClick={() => setActiveItem(item.title)}
@@ -191,8 +190,12 @@ export function AppSidebar() {
                             }
                             ${
                               activeItem === item.title
-                                ? "bg-gradient-to-r from-emerald-600 to-emerald-700 text-white font-medium shadow-lg shadow-emerald-900/30"
-                                : "text-emerald-100 hover:bg-emerald-800/50"
+                                ? "bg-[#059669] text-white font-medium shadow-lg shadow-emerald-900/30"
+                                : `text-emerald-100 ${
+                                    items.indexOf(item) % 2 === 0
+                                      ? "hover:bg-[#059669]"
+                                      : "hover:bg-[#059669]"
+                                  }`
                             }`}
                         >
                           <TooltipTrigger>
@@ -210,14 +213,20 @@ export function AppSidebar() {
                                 <motion.div
                                   initial={{ scale: 0 }}
                                   animate={{ scale: 1 }}
-                                  className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-orange-400 shadow-lg shadow-orange-500/30"
+                                  className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-white shadow-lg shadow-orange-500/30"
                                 />
                               )}
                             </div>
                           </TooltipTrigger>
 
                           {isCollapsed === "expanded" && (
-                            <span className="transition-all duration-300 flex-1">
+                            <span
+                              className={`transition-all duration-300 flex-1 ${
+                                activeItem === item.title
+                                  ? "text-white hover:text-white"
+                                  : ""
+                              }`}
+                            >
                               {item.title}
                             </span>
                           )}
@@ -253,19 +262,19 @@ export function AppSidebar() {
                 <SidebarMenuButton asChild={true}>
                   <button
                     onClick={onLogout}
-                    className={`flex items-center transition-all duration-300 relative py-3 rounded-xl w-full
+                    className={`flex items-center justify-center relative py-3 rounded-xl w-full
                       ${
                         isCollapsed === "expanded"
                           ? "px-4 gap-3"
                           : "w-14 h-14 mx-auto justify-center"
                       }
-                      bg-red-500/10 hover:bg-red-500/15 text-red-200 hover:text-red-500 font-medium shadow-lg `}
+                      bg-gradient-to-b hover:from-emerald-600 hover:to-emerald-700 text-white hover:text-white font-medium shadow-lg `}
                   >
-                    <TooltipTrigger>
+                    {/* <TooltipTrigger>
                       <div className="flex items-center justify-center">
                         <LogOut className="w-6 h-6 transition-transform duration-300 text-red-300" />
                       </div>
-                    </TooltipTrigger>
+                    </TooltipTrigger> */}
 
                     {isCollapsed === "expanded" && (
                       <span className="transition-all duration-300 font-medium">

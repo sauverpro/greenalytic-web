@@ -48,7 +48,7 @@ export const EmptyDataMessage: React.FC<{ message?: string }> = ({
     <div className="grid grid-cols-1 gap-6">
       <div className="bg-white p-6 rounded-lg shadow-sm flex flex-col items-center justify-center h-64">
         <svg
-          className="w-16 h-16 text-gray-400 mb-4"
+          className="w-16 h-16 text-sms mb-4"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -61,8 +61,8 @@ export const EmptyDataMessage: React.FC<{ message?: string }> = ({
             d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
           />
         </svg>
-        <div className="text-gray-600 font-medium text-lg">{message}</div>
-        <p className="text-gray-500 text-sm mt-1">
+        <div className="text-sms font-medium text-lg">{message}</div>
+        <p className="text-sms  text-sm mt-1">
           No data could be found for the selected time range
         </p>
       </div>

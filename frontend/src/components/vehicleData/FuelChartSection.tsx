@@ -13,7 +13,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import { ChartSkeleton, EmptyDataMessage, ErrorMessage } from "./fuelSkeleton"; 
+import { ChartSkeleton, EmptyDataMessage, ErrorMessage } from "./fuelSkeleton";
 
 ChartJS.register(
   CategoryScale,
@@ -103,7 +103,7 @@ const FuelChartData = () => {
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Fuel Level Chart */}
       <div className="bg-white p-6 rounded-lg shadow-sm">
-        <h2 className="text-xl font-bold mb-4 text-gray-800">⛽ Fuel Level</h2>
+        <h2 className="text-xl font-bold mb-4 text-sms">⛽ Fuel Level</h2>
         <div className="min-h-[400px]">
           <Line data={fuelLevelChartData} options={chartOptions} />
         </div>
@@ -111,9 +111,7 @@ const FuelChartData = () => {
 
       {/* Fuel Consumption Chart */}
       <div className="bg-white p-6 rounded-lg shadow-sm">
-        <h2 className="text-xl font-bold mb-4 text-gray-800">
-          🔥 Fuel Consumption
-        </h2>
+        <h2 className="text-xl font-bold mb-4 text-sms">🔥 Fuel Consumption</h2>
         <div className="min-h-[400px]">
           <Bar data={fuelConsumptionChartData} options={chartOptions} />
         </div>
@@ -122,9 +120,7 @@ const FuelChartData = () => {
       {/* Summary Cards Section */}
       {stats && (
         <div className="bg-white p-6 rounded-lg shadow-sm lg:col-span-2">
-          <h2 className="text-xl font-bold mb-4 text-gray-800">
-            📊 Fuel Summary
-          </h2>
+          <h2 className="text-xl font-bold mb-4 text-sms">📊 Fuel Summary</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-blue-50 p-4 rounded-lg">
               <h3 className="text-sm font-medium text-blue-800">

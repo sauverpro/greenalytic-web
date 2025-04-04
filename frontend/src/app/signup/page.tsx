@@ -122,7 +122,7 @@ const Signup: React.FC = () => {
               data-testid="signupForm"
             >
               <div className="flex items-center w-full p-2 my-2 mb-2 bg-gray-100 border rounded-md border-gray dark:bg-dark-bg">
-                <FaUser className="mr-2 text-gray-400" />
+                <FaUser className="mr-2 text-sms" />
                 <input
                   type="text"
                   placeholder="Enter username"
@@ -140,7 +140,7 @@ const Signup: React.FC = () => {
               </div>
 
               <div className="flex items-center w-full p-2 my-2 mb-2 bg-gray-100 border rounded-md border-gray dark:bg-dark-bg">
-                <FaRegEnvelope className="mr-2 text-gray-400" />
+                <FaRegEnvelope className="mr-2 text-sms" />
                 <input
                   type="email"
                   placeholder="Enter email"
@@ -158,7 +158,7 @@ const Signup: React.FC = () => {
               </div>
 
               <div className="flex items-center w-full p-2 my-4 mb-2 bg-gray-100 border rounded-md md:w-full border-gray dark:border-white dark:bg-dark-bg">
-                <MdLockOutline className="mr-2 text-gray-400" />
+                <MdLockOutline className="mr-2 text-sms" />
                 <input
                   type={passwordShown ? "text" : "password"}
                   placeholder="Enter password"
@@ -168,7 +168,7 @@ const Signup: React.FC = () => {
                   }
                   className="flex-1 text-sm bg-gray-100 outline-none dark:border-white dark:bg-dark-bg dark:text-white"
                 />
-                <div className="text-gray-400 cursor-pointer">
+                <div className="text-sms cursor-pointer">
                   {passwordShown ? (
                     <FaRegEye onClick={togglePassword} />
                   ) : (
@@ -184,7 +184,7 @@ const Signup: React.FC = () => {
 
               <div className="flex items-center w-full">
                 <div className="flex items-center w-full p-2 my-2 mb-2 bg-gray-100 border rounded-md border-gray dark:bg-dark-bg">
-                  <FaPhoneAlt className="mr-2 text-gray-400" />
+                  <FaPhoneAlt className="mr-2 text-sms" />
                   <input
                     type="text"
                     placeholder="Enter phone number"
@@ -202,7 +202,7 @@ const Signup: React.FC = () => {
                 </div>
 
                 <div className="flex items-center w-full p-2 my-2 mb-2 bg-gray-100 border rounded-md border-gray dark:bg-dark-bg">
-                  <MdPersonOutline className="mr-2 text-gray-400" />
+                  <MdPersonOutline className="mr-2 text-sms" />
                   <select
                     value={formData.gender}
                     onChange={(e) =>

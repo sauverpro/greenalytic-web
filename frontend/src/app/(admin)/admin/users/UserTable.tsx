@@ -187,10 +187,10 @@ const UserTable = () => {
         <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b">
           <div className="flex justify-between items-center">
             <div>
-              <CardTitle className="text-xl text-gray-800 flex items-center gap-2">
+              <CardTitle className="text-xl text-sms flex items-center gap-2">
                 <Users size={20} /> User Management
               </CardTitle>
-              <CardDescription className="text-gray-500">
+              <CardDescription className="text-sms">
                 Manage all users and their details in one place
               </CardDescription>
             </div>
@@ -309,6 +309,37 @@ const UserTable = () => {
           </Box>
         </CardContent>
       </Card>
+
+      {/* Separate component drawers */}
+      <AddVehicleDrawer
+        open={openAddVehicleDrawer}
+        onOpenChange={setOpenAddVehicleDrawer}
+        userId={selectedUserId ?? ""}
+        refetchVehicles={() =>
+          fetchUsers(pagination.currentPage, pagination.limit)
+        }
+      />
+
+      <AddUserDrawer
+        open={openAddUserDrawer}
+        onOpenChange={setOpenAddUserDrawer}
+        addUserToState={handleUserAdded}
+      />
+      {/* View User Drawer */}
+      <ViewUserDrawer
+        open={openViewUserDialog}
+        // onOpenChange={setOpenViewUserDialog}
+        onOpenChange={setOpenViewUserDialog}
+        user={selectedUser}
+      />
+      <EditUserDrawer
+        open={openEditUserDrawer}
+        onOpenChange={setOpenEditUserDrawer}
+        user={selectedUser}
+        refetchUsers={() =>
+          fetchUsers(pagination.currentPage, pagination.limit)
+        }
+      />
     </div>
   );
 };

@@ -18,7 +18,7 @@ const PaginationControls = ({
 }: PaginationControlsProps) => {
   return (
     <div className="flex items-center gap-2">
-      <span className="text-sm text-gray-500">Show:</span>
+      <span className="text-sm text-sms">Show:</span>
       <Select
         value={limit.toString()}
         onValueChange={(value) => {

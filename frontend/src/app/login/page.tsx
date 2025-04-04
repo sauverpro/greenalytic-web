@@ -102,7 +102,7 @@ const Login: React.FC = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
-                icon={<FaRegEnvelope className="mr-2 text-gray-400" />}
+                icon={<FaRegEnvelope className="mr-2 text-sms" />}
                 error={errors.email}
               />
               <div className="pl-4 mb-1 text-left">
@@ -118,7 +118,7 @@ const Login: React.FC = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, password: e.target.value })
                 }
-                icon={<MdLockOutline className="mr-2 text-gray-400" />}
+                icon={<MdLockOutline className="mr-2 text-sms" />}
                 error={errors.password}
                 togglePassword={togglePassword}
               />

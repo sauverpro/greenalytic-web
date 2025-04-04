@@ -83,8 +83,9 @@ export const getVehiclesByUserIdService = async (userId, pagination) => {
     const { skip, take, page, limit } = pagination
 
    const user = await prisma.user.findUnique({
-      where: { id: parseInt(userId) }
-   })
+     where: { id: parseInt(userId) },
+    //  include: { trackingDevices: true },
+   });
     
     if (!user) {
       return {
@@ -96,21 +97,21 @@ export const getVehiclesByUserIdService = async (userId, pagination) => {
     // Fetch the vehicles for a given user with refined data
     const vehicles = await prisma.vehicle.findMany({
       where: {
-        userId: parseInt(userId) // Filter vehicles by userId
+        userId: parseInt(userId) 
       },
       skip,
       take,
-      // include: {
-        // trackingDevice: {
-        //   select: {
-        //     id: true,
-        //     serialNumber: true,
-        //     type: true,
-        //     isActive: true,
-        //     lastPing: true
-        //   }
-        // }
-      // }
+      include: {
+        trackingDevices: {
+          select: {
+            id: true,
+            serialNumber: true,
+            type: true,
+            isActive: true,
+            lastPing: true
+          }
+        }
+      }
     })
 
     // Get the total count of vehicles for this specific user
