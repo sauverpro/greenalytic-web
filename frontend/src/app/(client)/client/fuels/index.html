@@ -1,0 +1,1551 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Family Match - Reunification Questionnaire</title>
+    <style>
+        :root {
+            --primary: #3a6ea5;
+            --primary-light: #c7dbee;
+            --secondary: #ff6b35;
+            --dark: #004e89;
+            --light: #f0f8ff;
+            --success: #6b8f71;
+            --warning: #f9a03f;
+            --danger: #d7263d;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-icon {
+            width: 45px;
+            height: 45px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-icon svg {
+            width: 30px;
+            height: 30px;
+            fill: var(--primary);
+        }
+
+        .progress-container {
+            width: 100%;
+            max-width: 200px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 10%;
+            background: white;
+            border-radius: 4px;
+            transition: var(--transition);
+        }
+
+        main {
+            padding: 30px;
+        }
+
+        .section-intro {
+            margin-bottom: 25px;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: var(--dark);
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            font-size: 20px;
+            color: var(--dark);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        h2 svg {
+            width: 24px;
+            height: 24px;
+            fill: var(--secondary);
+        }
+
+        p {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .support-banner {
+            background: var(--primary-light);
+            padding: 15px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .support-banner svg {
+            width: 24px;
+            height: 24px;
+            fill: var(--primary);
+            flex-shrink: 0;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--dark);
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: var(--transition);
+            margin-bottom: 10px;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        .question-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+            border-left: 4px solid var(--primary);
+            transition: var(--transition);
+        }
+
+        .question-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .question-card h3 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: var(--dark);
+        }
+
+        .options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .radio-option:hover {
+            background: var(--primary-light);
+        }
+
+        .file-upload {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed #e1e8ed;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .file-upload:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .file-upload svg {
+            width: 40px;
+            height: 40px;
+            fill: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+
+        button {
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        button svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #555;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--dark);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 78, 137, 0.3);
+        }
+
+        .language-selector {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 8px;
+            padding: 8px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            gap: 5px;
+        }
+
+        .language-option {
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .language-option.active {
+            background: var(--primary-light);
+            color: var(--dark);
+        }
+
+        .tab-container {
+            display: flex;
+            overflow-x: auto;
+            margin-bottom: 20px;
+            padding-bottom: 5px;
+            scrollbar-width: thin;
+        }
+
+        .tab-container::-webkit-scrollbar {
+            height: 5px;
+        }
+
+        .tab-container::-webkit-scrollbar-thumb {
+            background: var(--primary-light);
+            border-radius: 10px;
+        }
+
+        .tab {
+            padding: 12px 20px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            margin-right: 10px;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab svg {
+            width: 18px;
+            height: 18px;
+            fill: #777;
+        }
+
+        .tab.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .tab.active svg {
+            fill: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .info-icon {
+            width: 18px;
+            height: 18px;
+            fill: var(--primary);
+            margin-left: 5px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: var(--dark);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            width: 200px;
+            z-index: 10;
+            opacity: 0;
+            transition: var(--transition);
+            pointer-events: none;
+        }
+
+        .info-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .info-container:hover .tooltip {
+            opacity: 1;
+        }
+
+        .category-header {
+            background: var(--primary-light);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .category-icon {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .category-icon svg {
+            width: 24px;
+            height: 24px;
+            fill: var(--primary);
+        }
+
+        .section-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .response-tag {
+            display: inline-block;
+            padding: 5px 10px;
+            background: var(--primary-light);
+            color: var(--dark);
+            border-radius: 20px;
+            font-size: 14px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .response-tag svg {
+            width: 14px;
+            height: 14px;
+            margin-left: 5px;
+        }
+
+        .consent-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .toggle {
+            position: relative;
+            width: 50px;
+            height: 28px;
+            border-radius: 14px;
+            background: #e0e0e0;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .toggle::after {
+            content: '';
+            position: absolute;
+            left: 3px;
+            top: 3px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: white;
+            transition: var(--transition);
+        }
+
+        .toggle.active {
+            background: var(--success);
+        }
+
+        .toggle.active::after {
+            left: 25px;
+        }
+
+        .highlight-box {
+            background: #fff8e6;
+            border-left: 4px solid var(--warning);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .highlight-box h4 {
+            color: var(--dark);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .highlight-box svg {
+            width: 20px;
+            height: 20px;
+            fill: var(--warning);
+        }
+
+        .match-stats {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            flex: 1;
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-card h3 {
+            font-size: 32px;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+
+        .stat-card p {
+            color: #777;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .photo-placeholder {
+            aspect-ratio: 1;
+            background: #f5f5f5;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 2px dashed #e1e8ed;
+            transition: var(--transition);
+        }
+
+        .photo-placeholder:hover {
+            background: var(--primary-light);
+            border-color: var(--primary);
+        }
+
+        .photo-placeholder svg {
+            width: 30px;
+            height: 30px;
+            fill: #999;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 0;
+                border-radius: 0;
+            }
+
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .progress-container {
+                max-width: 100%;
+            }
+
+            .actions {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            button {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .match-stats {
+                flex-direction: column;
+            }
+
+            .photo-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Added animation effects */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .question-card {
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        .question-card:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .question-card:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+
+        .question-card:nth-child(4) {
+            animation-delay: 0.3s;
+        }
+
+        .question-card:nth-child(5) {
+            animation-delay: 0.4s;
+        }
+
+        /* Enhanced hover effects */
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 78, 137, 0.4);
+        }
+
+        .tab:hover:not(.active) {
+            background: #e8eef5;
+            transform: translateY(-2px);
+        }
+
+        /* Completion indicator */
+        .completion-indicator {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            background: #e0e0e0;
+            border-radius: 50%;
+            margin-left: 8px;
+            position: relative;
+        }
+
+        .completion-indicator.completed {
+            background: var(--success);
+        }
+
+        .completion-indicator.completed::after {
+            content: '✓';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="language-selector">
+        <div class="language-option active">EN</div>
+        <div class="language-option">FR</div>
+        <div class="language-option">KIN</div>
+        <div class="language-option">SW</div>
+    </div>
+
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M12,2C6.48,2 2,6.48 2,12C2,17.52 6.48,22 12,22C17.52,22 22,17.52 22,12C22,6.48 17.52,2 12,2M12,7C14.76,7 17,9.24 17,12C17,14.76 14.76,17 12,17C9.24,17 7,14.76 7,12C7,9.24 9.24,7 12,7" />
+                        <path
+                            d="M6,8.5C6.15,8.5 6.27,8.62 6.27,8.77C6.27,8.92 6.15,9.04 6,9.04C5.85,9.04 5.73,8.92 5.73,8.77C5.73,8.62 5.85,8.5 6,8.5" />
+                        <path
+                            d="M18,8.5C18.15,8.5 18.27,8.62 18.27,8.77C18.27,8.92 18.15,9.04 18,9.04C17.85,9.04 17.73,8.92 17.73,8.77C17.73,8.62 17.85,8.5 18,8.5" />
+                        <path
+                            d="M12,14C13.66,14 15,13.21 15,12.25C15,11.29 13.66,10.5 12,10.5C10.34,10.5 9,11.29 9,12.25C9,13.21 10.34,14 12,14Z" />
+                    </svg>
+                </div>
+                <div>
+                    <h1>AI Family Match</h1>
+                    <p style="margin: 0; color: white; font-size: 14px;">Reuniting Families Through Technology</p>
+                </div>
+            </div>
+
+            <div class="progress-container">
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: white; font-size: 14px;">Progress</span>
+                    <span style="color: white; font-size: 14px;">Step 1 of 10</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <div class="match-stats">
+                <div class="stat-card">
+                    <h3>6,472</h3>
+                    <p>Families Reunited</p>
+                </div>
+                <div class="stat-card">
+                    <h3>12,804</h3>
+                    <p>Active Searches</p>
+                </div>
+                <div class="stat-card">
+                    <h3>85%</h3>
+                    <p>Success Rate</p>
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <h4>
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M13,9H18.5L13,3.5V9M6,2H14L20,8V20A2,2 0 0,1 18,22H6C4.89,22 4,21.1 4,20V4C4,2.89 4.89,2 6,2M11,15V12H9V15H6V17H9V20H11V17H14V15H11Z" />
+                    </svg>
+                    How It Works
+                </h4>
+                <p>Our AI technology analyzes your answers and cross-references them with our database of over 200,000
+                    records to find potential family matches. The more detailed your answers, the higher the chance of
+                    finding a match.</p>
+            </div>
+
+                                                                    <div class="tab-container">
+                                                                        <div class="tab active" data-tab="personal-info">
+                                                                            <svg viewBox="0 0 24 24">
+                                                                                <path
+                                                                                    d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z" />
+                                                                            </svg>
+                                                                            Personal Info
+                                                                            <span class="completion-indicator"></span>
+                                                                        </div>
+                                                                        <div class="tab" data-tab="family-background">
+                                                                            <svg viewBox="0 0 24 24">
+                                                                                <path d="M13,2V10H21V2H13M3,10H11V2H3V10M3,20H11V12H3V20M18,20H21V12H13V20H18Z" />
+                                                                            </svg>
+                                                                            Family Background
+                                                                            <span class="completion-indicator"></span>
+                                                                        </div>
+                                                                        <div class="tab" data-tab="siblings-extended">
+                                                                            <svg viewBox="0 0 24 24">
+                                                                                <path
+                                                                                    d="M12,5.5A3.5,3.5 0 0,1 15.5,9A3.5,3.5 0 0,1 12,12.5A3.5,3.5 0 0,1 8.5,9A3.5,3.5 0 0,1 12,5.5M5,8C5.56,8 6.08,8.15 6.53,8.42C6.38,9.85 6.8,11.27 7.66,12.38C7.16,13.34 6.16,14 5,14A3,3 0 0,1 2,11A3,3 0 0,1 5,8M19,8A3,3 0 0,1 22,11A3,3 0 0,1 19,14C17.84,14 16.84,13.34 16.34,12.38C17.2,11.27 17.62,9.85 17.47,8.42C17.92,8.15 18.44,8 19,8M5.5,18.25C5.5,16.18 8.41,14.5 12,14.5C15.59,14.5 18.5,16.18 18.5,18.25V20H5.5V18.25M0,20V18.5C0,17.11 1.89,15.94 4.45,15.6C3.86,16.28 3.5,17.22 3.5,18.25V20H0M24,20H20.5V18.25C20.5,17.22 20.14,16.28 19.55,15.6C22.11,15.94 24,17.11 24,18.5V20Z" />
+                                                                            </svg>
+                                                                            Siblings & Extended
+                                                                            <span class="completion-indicator"></span>
+                                                                        </div>
+                                                                        <div class="tab" data-tab="pre-genocide">
+                                                                            <svg viewBox="0 0 24 24">
+                                                                                <path d="M12,3L1,9L12,15L21,10.09V17H23V9M5,13.18V17.18L12,21L19,17.18V13.18L12,17L5,13.18Z" />
+                                                                            </svg>
+                                                                            Pre-Genocide
+                                                                            <span class="completion-indicator"></span>
+                                                                        </div>
+                                                                        <div class="tab" data-tab="separation-details">
+                                                                            <svg viewBox="0 0 24 24">
+                                                                                <path d="M3,4H21V8H3V4M3,10H21V14H3V10M3,16H21V20H3V16Z" />
+                                                                            </svg>
+                                                                            Separation Details
+                                                                            <span class="completion-indicator"></span>
+                                                                        </div>
+                                                                        <div class="tab" data-tab="post-genocide">
+                                                                            <svg viewBox="0 0 24 24">
+                                                                                <path
+                                                                                    d="M2,3H22C23.05,3 24,3.95 24,5V19C24,20.05 23.05,21 22,21H2C0.95,21 0,20.05 0,19V5C0,3.95 0.95,3 2,3M14,6V7H22V6H14M14,8V9H21.5V8H14M14,10V11H22V10H14M14,12V13H21V12H14M2,6V18H12V6H2Z" />
+                                                                            </svg>
+                                                                            Post-Genocide
+                                                                            <span class="completion-indicator"></span>
+                                                                        </div>
+                                                                        <div class="tab" data-tab="physical-clues">
+                                                                            <svg viewBox="0 0 24 24">
+                                                                                <path
+                                                                                    d="M10,17L5,12L6.41,10.58L10,14.17L17.59,6.58L19,8M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3Z" />
+                                                                            </svg>
+                                                                            Physical Clues
+                                                                            <span class="completion-indicator"></span>
+                                                                        </div>
+                                                                        <div class="tab" data-tab="cultural-knowledge">
+                                                                            <svg viewBox="0 0 24 24">
+                                                                                <path
+                                                                                    d="M11,7H13A2,2 0 0,1 15,9V15A2,2 0 0,1 13,17H11A2,2 0 0,1 9,15V9A2,2 0 0,1 11,7M12,1A11,11 0 0,1 23,12A11,11 0 0,1 12,23A11,11 0 0,1 1,12A11,11 0 0,1 12,1Z" />
+                                                                            </svg>
+                                                                            Cultural
+                                                                            <span class="completion-indicator"></span>
+                                                                        </div>
+                                                                        <div class="tab" data-tab="evidence-support">
+                                                                            <svg viewBox="0 0 24 24">
+                                                                                <path
+                                                                                    d="M13,9H18.5L13,3.5V9M6,2H14L20,8V20A2,2 0 0,1 18,22H6C4.89,22 4,21.1 4,20V4C4,2.89 4.89,2 6,2M15,18V16H6V18H15M18,14V12H6V14H18Z" />
+                                                                            </svg>
+                                                                            Evidence
+                                                                            <span class="completion-indicator"></span>
+                                                                        </div>
+                                                                        <div class="tab" data-tab="dna-technology">
+                                                                            <svg viewBox="0 0 24 24">
+                                                                                <path d="M10,20V14H14V20H19V12H22L12,3L2,12H5V20H10Z" />
+                                                                            </svg>
+                                                                            DNA & Technology
+                                                                            <span class="completion-indicator"></span>
+                                                                        </div>
+                                                                    </div>
+
+            <!-- Personal Information Tab -->
+            <div class="tab-content active" id="personal-info">
+                <div class="category-header">
+                    <div class="category-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 style="margin-bottom: 5px;">Personal Information</h2>
+                        <p style="margin: 0;">Let's start with some basic information about you. This will help us
+                            identify potential family connections.</p>
+                    </div>
+                </div>
+
+                <div class="support-banner">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,7C13.4,7 14.8,8.1 14.8,9.5V11C15.4,11 16,11.6 16,12.3V15.8C16,16.4 15.4,17 14.7,17H9.2C8.6,17 8,16.4 8,15.7V12.2C8,11.6 8.6,11 9.2,11V9.5C9.2,8.1 iwanto complete this  and  make  it   happen
+        </div>
+
+        <div class=" question-card">
+                            <h3>What is your full name?</h3>
+                            <p>Please enter your complete name as you remember it from childhood.</p>
+                            <input type="text" placeholder="Enter your full name">
+                </div>
+
+                <div class="question-card">
+                    <h3>Do you have any other names or nicknames you were called as a child?</h3>
+                    <p>Different names can help us match you with family members who might know you by different names.
+                    </p>
+                    <input type="text" placeholder="Enter nicknames or alternative names">
+                </div>
+
+                <div class="question-card">
+                    <h3>What is your date of birth or estimated year of birth?</h3>
+                    <p>If you don't know the exact date, an estimate is helpful.</p>
+                    <input type="date" placeholder="Select date">
+                    <div class="options" style="margin-top: 15px;">
+                        <div class="radio-option">
+                            <input type="radio" id="exact" name="birthdate-type">
+                            <label for="exact" style="margin: 0;">I know my exact date</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="estimated" name="birthdate-type">
+                            <label for="estimated" style="margin: 0;">This is an estimate</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-card">
+                    <h3>Where were you born?</h3>
+                    <p>Please be as specific as possible - village, district, and country.</p>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <input type="text" placeholder="City/Village">
+                        <input type="text" placeholder="District">
+                    </div>
+                    <input type="text" placeholder="Country" style="margin-top: 15px;">
+                </div>
+
+                <div class="question-card">
+                    <h3>Have you ever lived in another country or refugee camp?</h3>
+                    <div class="options">
+                        <div class="radio-option">
+                            <input type="radio" id="yes-refugee" name="refugee">
+                            <label for="yes-refugee" style="margin: 0;">Yes</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="no-refugee" name="refugee">
+                            <label for="no-refugee" style="margin: 0;">No</label>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <label>If yes, where and when?</label>
+                        <textarea placeholder="Please provide details of locations and dates if known"
+                            rows="3"></textarea>
+                    </div>
+                </div>
+
+                <div class="question-card">
+                    <h3>Do you have any photos or documents from your childhood?</h3>
+                    <p>Photos can be extremely helpful for identification. All uploads are secure and private.</p>
+                    <div class="file-upload">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M19.35,10.04C18.67,6.59 15.64,4 12,4C9.11,4 6.6,5.64 5.35,8.04C2.34,8.36 0,10.91 0,14A6,6 0 0,0 6,20H19A5,5 0 0,0 24,15C24,12.36 21.95,10.22 19.35,10.04M19,18H6A4,4 0 0,1 2,14C2,11.95 3.53,10.24 5.56,10.03L6.63,9.92L7.13,8.97C8.08,7.14 9.94,6 12,6C14.62,6 16.88,7.86 17.39,10.43L17.69,11.93L19.22,12.04C20.78,12.14 22,13.45 22,15A3,3 0 0,1 19,18M8,13H10.55V16H13.45V13H16L12,9L8,13Z" />
+                        </svg>
+                        <p><strong>Drag files here or click to upload</strong></p>
+                        <p style="margin-bottom: 0; font-size: 14px; color: #777;">Supports JPG, PNG, PDF (max 10MB)</p>
+                        <input type="file" style="display: none;">
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button class="btn-secondary">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" />
+                        </svg>
+                        Save and Exit
+                    </button>
+                    <button class="btn-primary" onclick="nextTab('family-background')">
+                        Continue to Family Background
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4,11V13H16L10.5,18.5L11.92,19.92L19.84,12L11.92,4.08L10.5,5.5L16,11H4Z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Family Background Tab -->
+            <div class="tab-content" id="family-background">
+                <div class="category-header">
+                    <div class="category-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M13,2V10H21V2H13M3,10H11V2H3V10M3,20H11V12H3V20M18,20H21V12H13V20H18Z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 style="margin-bottom: 5px;">Family Background</h2>
+                        <p style="margin: 0;">Information about your parents and grandparents can help us find potential
+                            matches.</p>
+                    </div>
+                </div>
+
+                <div class="question-card">
+                    <h3>What are the names of your known parents (father & mother)?</h3>
+                    <input type="text" placeholder="Father's Name">
+                    <input type="text" placeholder="Mother's Name" style="margin-top: 15px;">
+                </div>
+
+                <div class="question-card">
+                    <h3>Do you know if your parents had any other names or nicknames?</h3>
+                    <input type="text" placeholder="Other names or nicknames">
+                </div>
+
+                <div class="question-card">
+                    <h3>Where were your parents born?</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <input type="text" placeholder="Father's Birthplace">
+                        <input type="text" placeholder="Mother's Birthplace">
+                    </div>
+                </div>
+
+                <div class="question-card">
+                    <h3>Do you know the names of your grandparents? (Maternal & Paternal)</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <input type="text" placeholder="Paternal Grandparents">
+                        <input type="text" placeholder="Maternal Grandparents">
+                    </div>
+                </div>
+
+                <div class="question-card">
+                    <h3>Did your parents have siblings? If yes, what were their names?</h3>
+                    <textarea placeholder="Names of your parents' siblings" rows="3"></textarea>
+                </div>
+
+                <div class="actions">
+                    <button class="btn-secondary" onclick="nextTab('personal-info')">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" />
+                        </svg>
+                        Back
+                    </button>
+                    <button class="btn-primary" onclick="nextTab('siblings-extended')">
+                        Continue to Siblings & Extended
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4,11V13H16L10.5,18.5L11.92,19.92L19.84,12L11.92,4.08L10.5,5.5L16,11H4Z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Siblings & Extended Family Tab -->
+            <div class="tab-content" id="siblings-extended">
+                <div class="category-header">
+                    <div class="category-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M12,5.5A3.5,3.5 0 0,1 15.5,9A3.5,3.5 0 0,1 12,12.5A3.5,3.5 0 0,1 8.5,9A3.5,3.5 0 0,1 12,5.5M5,8C5.56,8 6.08,8.15 6.53,8.42C6.38,9.85 6.8,11.27 7.66,12.38C7.16,13.34 6.16,14 5,14A3,3 0 0,1 2,11A3,3 0 0,1 5,8M19,8A3,3 0 0,1 22,11A3,3 0 0,1 19,14C17.84,14 16.84,13.34 16.34,12.38C17.2,11.27 17.62,9.85 17.47,8.42C17.92,8.15 18.44,8 19,8M5.5,18.25C5.5,16.18 8.41,14.5 12,14.5C15.59,14.5 18.5,16.18 18.5,18.25V20H5.5V18.25M0,20V18.5C0,17.11 1.89,15.94 4.45,15.6C3.86,16.28 3.5,17.22 3.5,18.25V20H0M24,20H20.5V18.25C20.5,17.22 20.14,16.28 19.55,15.6C22.11,15.94 24,17.11 24,18.5V20Z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 style="margin-bottom: 5px;">Siblings & Extended Family</h2>
+                        <p style="margin: 0;">Information about your siblings and extended family can help us find
+                            potential matches.</p>
+                    </div>
+                </div>
+
+                <div class="question-card">
+                    <h3>Do you have any known brothers or sisters?</h3>
+                    <div class="options">
+                        <div class="radio-option">
+                            <input type="radio" id="yes-siblings" name="siblings">
+                            <label for="yes-siblings" style="margin: 0;">Yes</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="no-siblings" name="siblings">
+                            <label for="no-siblings" style="margin: 0;">No</label>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <label>If yes, please provide their names and approximate ages in 1994.</label>
+                        <textarea placeholder="Names and ages of your siblings" rows="3"></textarea>
+                    </div>
+                </div>
+
+                <div class="question-card">
+                    <h3>Did your family belong to any extended family clan or group?</h3>
+                    <input type="text" placeholder="Extended family clan or group">
+                </div>
+
+                <div class="question-card">
+                    <h3>Do you remember any cousins, aunts, or uncles?</h3>
+                    <textarea placeholder="Names of cousins, aunts, or uncles" rows="3"></textarea>
+                </div>
+
+                <div class="actions">
+                    <button class="btn-secondary" onclick="nextTab('family-background')">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" />
+                        </svg>
+                        Back
+                    </button>
+                    <button class="btn-primary" onclick="nextTab('pre-genocide')">
+                        Continue to Pre-Genocide
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4,11V13H16L10.5,18.5L11.92,19.92L19.84,12L11.92,4.08L10.5,5.5L16,11H4Z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Pre-Genocide Life Tab -->
+            <div class="tab-content" id="pre-genocide">
+                <div class="category-header">
+                    <div class="category-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M12,3L1,9L12,15L21,10.09V17H23V9M5,13.18V17.18L12,21L19,17.18V13.18L12,17L5,13.18Z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 style="margin-bottom: 5px;">Pre-Genocide Life</h2>
+                        <p style="margin: 0;">Details about your life before the Genocide can help us find potential
+                            matches.</p>
+                    </div>
+                </div>
+
+                <div class="question-card">
+                    <h3>Where was your family living before the Genocide?</h3>
+                    <input type="text" placeholder="Location before the Genocide">
+                </div>
+
+                <div class="question-card">
+                    <h3>What did your parents do for work?</h3>
+                    <input type="text" placeholder="Parents' occupations">
+                </div>
+
+                <div class="question-card">
+                    <h3>Did your family own any land, property, or livestock?</h3>
+                    <textarea placeholder="Details of land, property, or livestock" rows="3"></textarea>
+                </div>
+
+                <div class="question-card">
+                    <h3>Did you go to school before 1994? If yes, where?</h3>
+                    <input type="text" placeholder="School name and location">
+                </div>
+
+                <div class="question-card">
+                    <h3>Do you recall the name of a childhood friend or neighbor?</h3>
+                    <input type="text" placeholder="Names of childhood friends or neighbors">
+                </div>
+
+                <div class="actions">
+                    <button class="btn-secondary" onclick="nextTab('siblings-extended')">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" />
+                        </svg>
+                        Back
+                    </button>
+                    <button class="btn-primary" onclick="nextTab('separation-details')">
+                        Continue to Separation Details
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4,11V13H16L10.5,18.5L11.92,19.92L19.84,12L11.92,4.08L10.5,5.5L16,11H4Z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Separation Details Tab -->
+            <div class="tab-content" id="separation-details">
+                <div class="category-header">
+                    <div class="category-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M3,4H21V8H3V4M3,10H21V14H3V10M3,16H21V20H3V16Z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 style="margin-bottom: 5px;">Separation Details</h2>
+                        <p style="margin: 0;">Details about your separation from your family can help us find potential
+                            matches.</p>
+                    </div>
+                </div>
+
+                <div class="question-card">
+                    <h3>How did you get separated from your family?</h3>
+                    <textarea placeholder="Details of your separation" rows="3"></textarea>
+                </div>
+
+                <div class="question-card">
+                    <h3>Where were you during the Genocide (district, village, or camp)?</h3>
+                    <input type="text" placeholder="Location during the Genocide">
+                </div>
+
+                <div class="question-card">
+                    <h3>Were you with any known family members when you got separated?</h3>
+                    <div class="options">
+                        <div class="radio-option">
+                            <input type="radio" id="yes-family-members" name="family-members">
+                            <label for="yes-family-members" style="margin: 0;">Yes</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="no-family-members" name="family-members">
+                            <label for="no-family-members" style="margin: 0;">No</label>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <label>If yes, please provide their names.</label>
+                        <textarea placeholder="Names of family members" rows="3"></textarea>
+                    </div>
+                </div>
+
+                <div class="question-card">
+                    <h3>Were you taken to an orphanage or refugee camp? If yes, which one?</h3>
+                    <input type="text" placeholder="Name of orphanage or refugee camp">
+                </div>
+
+                <div class="question-card">
+                    <h3>Do you remember who helped or took care of you after the war?</h3>
+                    <textarea placeholder="Details of who helped or took care of you" rows="3"></textarea>
+                </div>
+
+                <div class="actions">
+                    <button class="btn-secondary" onclick="nextTab('pre-genocide')">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" />
+                        </svg>
+                        Back
+                    </button>
+                    <button class="btn-primary" onclick="nextTab('post-genocide')">
+                        Continue to Post-Genocide Life
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4,11V13H16L10.5,18.5L11.92,19.92L19.84,12L11.92,4.08L10.5,5.5L16,11H4Z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Post-Genocide Life Tab -->
+            <div class="tab-content" id="post-genocide">
+                <div class="category-header">
+                    <div class="category-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M2,3H22C23.05,3 24,3.95 24,5V19C24,20.05 23.05,21 22,21H2C0.95,21 0,20.05 0,19V5C0,3.95 0.95,3 2,3M14,6V7H22V6H14M14,8V9H21.5V8H14M14,10V11H22V10H14M14,12V13H21V12H14M2,6V18H12V6H2Z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 style="margin-bottom: 5px;">Post-Genocide Life</h2>
+                        <p style="margin: 0;">Details about your life after the Genocide can help us find potential
+                            matches.</p>
+                    </div>
+                </div>
+
+                <div class="question-card">
+                    <h3>Did you grow up in an orphanage, foster home, or with a guardian?</h3>
+                    <div class="options">
+                        <div class="radio-option">
+                            <input type="radio" id="orphanage" name="post-genocide-life">
+                            <label for="orphanage" style="margin: 0;">Orphanage</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="foster-home" name="post-genocide-life">
+                            <label for="foster-home" style="margin: 0;">Foster Home</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="guardian" name="post-genocide-life">
+                            <label for="guardian" style="margin: 0;">Guardian</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-card">
+                    <h3>Have you taken any steps before to trace your family?</h3>
+                    <div class="options">
+                        <div class="radio-option">
+                            <input type="radio" id="yes-trace-family" name="trace-family">
+                            <label for="yes-trace-family" style="margin: 0;">Yes</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="no-trace-family" name="trace-family">
+                            <label for="no-trace-family" style="margin: 0;">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-card">
+                    <h3>Have you undergone any DNA testing before?</h3>
+                    <div class="options">
+                        <div class="radio-option">
+                            <input type="radio" id="yes-dna" name="dna-testing">
+                            <label for="yes-dna" style="margin: 0;">Yes</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="no-dna" name="dna-testing">
+                            <label for="no-dna" style="margin: 0;">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-card">
+                    <h3>Do you have any official documents (birth certificates, old pictures, school records)?</h3>
+                    <div class="options">
+                        <div class="radio-option">
+                            <input type="radio" id="yes-documents" name="official-documents">
+                            <label for="yes-documents" style="margin: 0;">Yes</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="no-documents" name="official-documents">
+                            <label for="no-documents" style="margin: 0;">No</label>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <label>If yes, please provide details.</label>
+                        <textarea placeholder="Details of official documents" rows="3"></textarea>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button class="btn-secondary" onclick="nextTab('separation-details')">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" />
+                        </svg>
+                        Back
+                    </button>
+                    <button class="btn-primary" onclick="nextTab('physical-clues')">
+                        Continue to Physical Clues
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4,11V13H16L10.5,18.5L11.92,19.92L19.84,12L11.92,4.08L10.5,5.5L16,11H4Z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Physical Clues Tab -->
+            <div class="tab-content" id="physical-clues">
+                <div class="category-header">
+                    <div class="category-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M10,17L5,12L6.41,10.58L10,14.17L17.59,6.58L19,8M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3Z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 style="margin-bottom: 5px;">Physical Clues</h2>
+                        <p style="margin: 0;">Physical traits and genetic information can help us find potential
+                            matches.</p>
+                    </div>
+                </div>
+
+                <div class="question-card">
+                    <h3>Do you have any birthmarks, scars, or unique physical traits that your family might recognize?
+                    </h3>
+                    <textarea placeholder="Details of birthmarks, scars, or unique physical traits" rows="3"></textarea>
+                </div>
+
+                <div class="question-card">
+                    <h3>Were you told any unique genetic traits run in your family (e.g., eye color, height, skin tone)?
+                    </h3>
+                    <textarea placeholder="Details of unique genetic traits" rows="3"></textarea>
+                </div>
+
+                <div class="question-card">
+                    <h3>Does your family have any known hereditary health conditions?</h3>
+                    <textarea placeholder="Details of hereditary health conditions" rows="3"></textarea>
+                </div>
+
+                <div class="actions">
+                    <button class="btn-secondary" onclick="nextTab('post-genocide')">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" />
+                        </svg>
+                        Back
+                    </button>
+                    <button class="btn-primary" onclick="nextTab('cultural-knowledge')">
+                        Continue to Cultural Knowledge
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4,11V13H16L10.5,18.5L11.92,19.92L19.84,12L11.92,4.08L10.5,5.5L16,11H4Z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Cultural Knowledge Tab -->
+            <div class="tab-content" id="cultural-knowledge">
+                <div class="category-header">
+                    <div class="category-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M11,7H13A2,2 0 0,1 15,9V15A2,2 0 0,1 13,17H11A2,2 0 0,1 9,15V9A2,2 0 0,1 11,7M12,1A11,11 0 0,1 23,12A11,11 0 0,1 12,23A11,11 0 0,1 1,12A11,11 0 0,1 12,1Z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 style="margin-bottom: 5px;">Cultural Knowledge</h2>
+                        <p style="margin: 0;">Cultural information can help us find potential matches.</p>
+                    </div>
+                </div>
+
+                <div class="question-card">
+                    <h3>Do you know which Rwandan clan or lineage your family belonged to?</h3>
+                    <input type="text" placeholder="Clan or lineage">
+                </div>
+
+                <div class="question-card">
+                    <h3>Do you remember any cultural traditions or family stories passed down?</h3>
+                    <textarea placeholder="Details of cultural traditions or family stories" rows="3"></textarea>
+                </div>
+
+                <div class="question-card">
+                    <h3>Did your family practice any specific religious or traditional customs?</h3>
+                    <textarea placeholder="Details of religious or traditional customs" rows="3"></textarea>
+                </div>
+
+                <div class="actions">
+                    <button class="btn-secondary" onclick="nextTab('physical-clues')">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" />
+                        </svg>
+                        Back
+                    </button>
+                    <button class="btn-primary" onclick="nextTab('evidence-support')">
+                        Continue to Evidence & Support
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4,11V13H16L10.5,18.5L11.92,19.92L19.84,12L11.92,4.08L10.5,5.5L16,11H4Z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Evidence & Support Tab -->
+            <div class="tab-content" id="evidence-support">
+                <div class="category-header">
+                    <div class="category-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M13,9H18.5L13,3.5V9M6,2H14L20,8V20A2,2 0 0,1 18,22H6C4.89,22 4,21.1 4,20V4C4,2.89 4.89,2 6,2M15,18V16H6V18H15M18,14V12H6V14H18Z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 style="margin-bottom: 5px;">Evidence & Support</h2>
+                        <p style="margin: 0;">Any additional evidence or support can help us find potential matches.</p>
+                    </div>
+                </div>
+
+                <div class="question-card">
+                    <h3>Do you have any old photos, letters, or family artifacts?</h3>
+                    <div class="file-upload">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M19.35,10.04C18.67,6.59 15.64,4 12,4C9.11,4 6.6,5.64 5.35,8.04C2.34,8.36 0,10.91 0,14A6,6 0 0,0 6,20H19A5,5 0 0,0 24,15C24,12.36 21.95,10.22 19.35,10.04M19,18H6A4,4 0 0,1 2,14C2,11.95 3.53,10.24 5.56,10.03L6.63,9.92L7.13,8.97C8.08,7.14 9.94,6 12,6C14.62,6 16.88,7.86 17.39,10.43L17.69,11.93L19.22,12.04C20.78,12.14 22,13.45 22,15A3,3 0 0,1 19,18M8,13H10.55V16H13.45V13H16L12,9L8,13Z" />
+                        </svg>
+                        <p><strong>Drag files here or click to upload</strong></p>
+                        <p style="margin-bottom: 0; font-size: 14px; color: #777;">Supports JPG, PNG, PDF (max 10MB)</p>
+                        <input type="file" style="display: none;">
+                    </div>
+                </div>
+
+                <div class="question-card">
+                    <h3>Do you have contacts of any people who may remember your family?</h3>
+                    <textarea placeholder="Contacts of people who may remember your family" rows="3"></textarea>
+                </div>
+
+                <div class="question-card">
+                    <h3>Have you connected with any family tracing organizations before?</h3>
+                    <div class="options">
+                        <div class="radio-option">
+                            <input type="radio" id="yes-organizations" name="family-organizations">
+                            <label for="yes-organizations" style="margin: 0;">Yes</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="no-organizations" name="family-organizations">
+                            <label for="no-organizations" style="margin: 0;">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button class="btn-secondary" onclick="nextTab('cultural-knowledge')">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" />
+                        </svg>
+                        Back
+                    </button>
+                    <button class="btn-primary" onclick="nextTab('dna-technology')">
+                        Continue to DNA & Technology
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4,11V13H16L10.5,18.5L11.92,19.92L19.84,12L11.92,4.08L10.5,5.5L16,11H4Z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- DNA & Technology Tab -->
+            <div class="tab-content" id="dna-technology">
+                <div class="category-header">
+                    <div class="category-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M10,20V14H14V20H19V12H22L12,3L2,12H5V20H10Z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 style="margin-bottom: 5px;">DNA & Technology</h2>
+                        <p style="margin: 0;">Information about DNA testing and technology preferences can help us find
+                            potential matches.</p>
+                    </div>
+                </div>
+
+                <div class="question-card">
+                    <h3>Are you open to taking a DNA test for familial matching?</h3>
+                    <div class="options">
+                        <div class="radio-option">
+                            <input type="radio" id="yes-dna-test" name="dna-test">
+                            <label for="yes-dna-test" style="margin: 0;">Yes</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="no-dna-test" name="dna-test">
+                            <label for="no-dna-test" style="margin: 0;">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-card">
+                    <h3>Would you be comfortable with AI using your data to find potential family connections?</h3>
+                    <div class="options">
+                        <div class="radio-option">
+                            <input type="radio" id="yes-ai-consent" name="ai-consent">
+                            <label for="yes-ai-consent" style="margin: 0;">Yes</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="no-ai-consent" name="ai-consent">
+                            <label for="no-ai-consent" style="margin: 0;">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-card">
+                    <h3>Do you consent to your anonymized data being used to improve AI matching?</h3>
+                    <div class="options">
+                        <div class="radio-option">
+                            <input type="radio" id="yes-data-consent" name="data-consent">
+                            <label for="yes-data-consent" style="margin: 0;">Yes</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="no-data-consent" name="data-consent">
+                            <label for="no-data-consent" style="margin: 0;">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button class="btn-secondary" onclick="nextTab('evidence-support')">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" />
+                        </svg>
+                        Back
+                    </button>
+                    <button class="btn-primary">
+                        Submit
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4,11V13H16L10.5,18.5L11.92,19.92L19.84,12L11.92,4.08L10.5,5.5L16,11H4Z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal">
+        <div class="modal-content">
+            <button class="close-modal">
+                <svg viewBox="0 0 24 24">
+                    <path
+                        d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" />
+                </svg>
+            </button>
+            <h2>Emotional Support Available</h2>
+            <p>We understand that recalling these memories can be difficult. Would you like to:</p>
+            <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 20px;">
+                <button class="btn-secondary">Take a break and continue later</button>
+                <button class="btn-secondary">Connect with a support counselor</button>
+                <button class="btn-primary">Continue with the questions</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function nextTab(tabId) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            // Show the selected tab content
+            document.getElementById(tabId).classList.add('active');
+            // Update active tab
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+        }
+
+        // Initial tab setup
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelector('.tab.active').click();
+        });
+    </script>
+</body>
+
+</html>

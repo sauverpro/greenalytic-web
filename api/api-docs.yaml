@@ -5,7 +5,7 @@ info:
   description: API for managing users with authentication and pagination
 
 servers:
-  - url: http://localhost:2222/greenalytic
+  - url: http://localhost:5000/greenalytic
     description: Local Development Server
   - url: https://greenalytic-vehicle-monitoring-1.onrender.com/greenalytic
     description: Production Server
