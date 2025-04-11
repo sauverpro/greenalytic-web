@@ -10,7 +10,7 @@ import { useSearchParams } from "next/navigation";
 import GPSChartSection from "@/components/vehicleData/GPSchartSection";
 import { DAY } from "@/utils/constants";
 import { getGPSData } from "@/services/vehicleData";
-import { getUserVehicles } from "@/services/vehicleService";
+import { getVehiclesByLoggedUser } from "@/services/vehicleService";
 
 function GPSPageContent() {
   const searchParams = useSearchParams();
@@ -43,7 +43,7 @@ function GPSPageContent() {
     const fetchVehicles = async () => {
       setIsLoading((prev) => ({ ...prev, vehicles: true }));
       try {
-        const response = await getUserVehicles();
+        const response = await getVehiclesByLoggedUser();
         if (response.success) {
           setVehicles(response.data);
 

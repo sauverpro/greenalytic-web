@@ -3,10 +3,10 @@ import { Car } from "lucide-react";
 import type { GridColDef } from "@mui/x-data-grid";
 import DataTable from "@/components/DataTable/GenericDataTable";
 import { getAllVehicles } from "@/services/vehicleService";
+import { User } from "@/types/types";
 
-// Define your Vehicle type
-interface Vehicle {
-  id: string;
+interface Vehicle extends Omit<User, "id"> {
+  id: number;
   make: string;
   model: string;
   year: number;
@@ -14,8 +14,11 @@ interface Vehicle {
   color: string;
   owner: string;
   status: string;
+  email: string; // Ensure compatibility with User's email property
+  role: "ADMIN" | "USER" | "TECHNICIAN" | "MANAGER"; // Ensure compatibility with User's role property
   // Add other properties as needed
 }
+
 
 function VehiclesPage() {
   // Fetch vehicles with pagination
@@ -46,6 +49,7 @@ function VehiclesPage() {
           usage: vehicle.usage,
           owner: vehicle.user?.username || "Unknown",
           status: vehicle.deletedAt ? "inactive" : "active",
+          email: vehicle.user?.email ?? "unknown@example.com", // Ensure email is always a string
         })),
         pagination: {
           currentPage: page,

@@ -3,6 +3,7 @@ import "./globals.css";
 import Footer from "@/components/footer";
 import Header from "@/components/header";
 import { usePathname } from "next/navigation";
+import { Toaster } from "@/components/ui/sonner";
 
 export default function RootLayout({
   children,
@@ -57,9 +58,10 @@ export default function RootLayout({
       <body>
         <div className="flex flex-col min-h-screen">
           {shouldShowHeaderFooter && <Header />}
-            <main className="flex-grow bg-light h-[30rem]">{children}</main>
+          <main className="flex-grow bg-light h-[30rem]">{children}</main>
           {shouldShowHeaderFooter && <Footer />}
         </div>
+        <Toaster />
       </body>
     </html>
   );

@@ -17,7 +17,7 @@ import {
   getFuelData,
   getGPSData,
 } from "@/services/vehicleData";
-import { getUserVehicles } from "@/services/vehicleService";
+import { getVehiclesByLoggedUser } from "@/services/vehicleService";
 
 interface Vehicle {
   id: number;
@@ -173,7 +173,7 @@ function DashboardPageContent() {
     const fetchVehicles = async () => {
       setIsLoading((prev) => ({ ...prev, vehicles: true }));
       try {
-        const response = await getUserVehicles();
+        const response = await getVehiclesByLoggedUser();
         if (response.success) {
           setVehicles(response.data);
 

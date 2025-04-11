@@ -1,4 +1,18 @@
 import React from "react";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandInput,
+  CommandList,
+  CommandEmpty,
+  CommandItem,
+} from
+  "@/components/ui/command";
+import { Button } from "@/components/ui/button";
 
 interface Vehicle {
   id: number;
@@ -16,26 +30,49 @@ const VehicleSelector: React.FC<VehicleSelectProps> = ({
   selectedVehicleId,
   onSelect,
 }) => {
-  const handleVehicleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newId = Number(e.target.value);
-    onSelect(newId);
-  };
+  const [open, setOpen] = React.useState(false);
+
+  const selectedVehicle = vehicles.find((v) => v.id === selectedVehicleId);
 
   return (
     <div className="items-center mb-4">
-      <label className="font-bold text-lg text-sms">
-        Select Vehicle: </label>
-      <select
-        className="ml-2 p-2 border rounded-lg bg-white shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        value={selectedVehicleId || ""}
-        onChange={handleVehicleChange}
-      >
-        {vehicles.map((vehicle) => (
-          <option key={vehicle.id} value={vehicle.id} className="text-sms">
-            {vehicle.plateNumber}
-          </option>
-        ))}
-      </select>
+      <label className="font-bold text-lg text-sms mb-2 block">
+        Select Vehicle:
+      </label>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className="w-[250px] justify-between"
+          >
+            {selectedVehicle
+              ? selectedVehicle.plateNumber
+              : "Select vehicle..."}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[250px] p-0">
+          <Command>
+            <CommandInput placeholder="Search vehicle..." />
+            <CommandList>
+              <CommandEmpty>No vehicle found.</CommandEmpty>
+              {vehicles.map((vehicle) => (
+                <CommandItem
+                  key={vehicle.id}
+                  value={vehicle.plateNumber}
+                  onSelect={() => {
+                    onSelect(vehicle.id);
+                    setOpen(false);
+                  }}
+                >
+                  {vehicle.plateNumber}
+                </CommandItem>
+              ))}
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 };

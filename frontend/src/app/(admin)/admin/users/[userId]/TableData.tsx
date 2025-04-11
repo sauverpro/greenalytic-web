@@ -32,6 +32,8 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { deleteVehicle, getVehiclesForUser } from "@/services/vehicleService";
+import { AddVehicleModal } from "@/components/adminComponents/add-vehicle-modal";
+import { set } from "react-hook-form";
 
 // Define types for our component
 interface VehicleData {
@@ -73,53 +75,40 @@ export function VehicleTable({
   const [vehicleToDelete, setVehicleToDelete] = useState<VehicleData | null>(
     null
   );
+  const [isAddVehicleModalOpen, setIsAddVehicleModalOpen] = useState(false);
   const isComponentMounted = useRef(true);
 
-  // Ensure we don't update state after unmounting
   useEffect(() => {
-    isComponentMounted.current = true;
-    return () => {
-      isComponentMounted.current = false;
-    };
-  }, []);
+    if (userId) {
+      fetchVehicles(userId);
+    }
+  }, [userId]);
 
-  // Function to fetch vehicles data
-  const fetchVehicles = useCallback(async () => {
-    if (!userId) return;
-
+  const fetchVehicles = async (userId: string) => {
     setLoading(true);
     try {
       const response = await getVehiclesForUser(userId);
-      if (response && response.vehicles && isComponentMounted.current) {
+      if (response && response.vehicles) {
         setVehicles(Array.isArray(response.vehicles) ? response.vehicles : []);
       }
     } catch (error) {
       console.error("Error fetching vehicles:", error);
-      if (isComponentMounted.current) {
-        toast.error("Failed to load vehicles data");
-      }
+      toast.error("Failed to load vehicles data");
     } finally {
-      if (isComponentMounted.current) {
-        setLoading(false);
-      }
+      setLoading(false);
     }
-  }, [userId]);
-
-  // Fetch data on component mount
-  useEffect(() => {
-    fetchVehicles();
-  }, [fetchVehicles]);
+  };
 
   // Handle add vehicle with proper error handling
   const handleAddVehicle = () => {
     try {
-      onAddVehicle();
+      setIsAddVehicleModalOpen(true);
+
     } catch (error) {
       console.error("Error in add vehicle:", error);
       toast.error("Failed to open add vehicle form");
     }
   };
-
   // Handle add device with proper error handling and error boundary
   const handleAddDevice = (vehicleId: number) => {
     try {
@@ -136,7 +125,6 @@ export function VehicleTable({
       }
     }
   };
-
   // Handle edit vehicle
   const handleEditVehicle = (vehicle: VehicleData) => {
     try {
@@ -151,7 +139,6 @@ export function VehicleTable({
       }
     }
   };
-
   // Open delete confirmation
   const openDeleteConfirm = (vehicle: VehicleData) => {
     if (isComponentMounted.current) {
@@ -159,7 +146,6 @@ export function VehicleTable({
       setShowDeleteConfirm(true);
     }
   };
-
   // Close delete confirmation
   const closeDeleteConfirm = () => {
     if (isComponentMounted.current) {
@@ -172,11 +158,9 @@ export function VehicleTable({
       }, 300);
     }
   };
-
   // Confirm and execute delete
   const confirmDelete = async () => {
     if (!vehicleToDelete) return;
-
     try {
       await deleteVehicle(vehicleToDelete.id);
 
@@ -193,21 +177,18 @@ export function VehicleTable({
       closeDeleteConfirm();
     }
   };
-
   // Get device types for a vehicle
   const getDeviceTypes = (devices: TrackingDevice[]) => {
     if (!Array.isArray(devices)) return [];
     const deviceTypes = devices.map((device) => device.type);
     return [...new Set(deviceTypes)];
   };
-
   // Render device badges
   const renderDeviceBadges = (devices: TrackingDevice[]) => {
     if (!Array.isArray(devices) || devices.length === 0) {
       return <span className="text-muted-foreground text-sm">No devices</span>;
     }
     const deviceTypes = getDeviceTypes(devices);
-
     return (
       <div className="flex gap-1 flex-wrap">
         {deviceTypes.map((type, index) => {
@@ -253,7 +234,7 @@ export function VehicleTable({
           <Button
             size="sm"
             variant="outline"
-            onClick={fetchVehicles}
+            onClick={() => fetchVehicles(userId)}
             disabled={loading}
           >
             <RefreshCw
@@ -263,7 +244,7 @@ export function VehicleTable({
           </Button>
           <Button
             className="bg-emerald-600 hover:bg-emerald-700"
-            onClick={handleAddVehicle}
+            onClick={() => setIsAddVehicleModalOpen(true)}
           >
             <Plus className="mr-2 h-4 w-4" />
             Add Vehicle
@@ -403,6 +384,14 @@ export function VehicleTable({
           </div>
         </div>
       )}
+      <AddVehicleModal
+        isOpen={isAddVehicleModalOpen}
+        onClose={() => {
+          setIsAddVehicleModalOpen(false);
+        }}
+        userId={userId || ""}
+        onSuccess={() => fetchVehicles(userId)}
+      />
     </div>
   );
 }

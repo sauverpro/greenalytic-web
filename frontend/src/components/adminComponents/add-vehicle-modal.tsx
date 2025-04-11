@@ -81,21 +81,30 @@ export function AddVehicleModal({
     },
   });
 
-  async function onSubmit(data: VehicleFormValues) {
-    setIsSubmitting(true);
-    try {
-      await addVehicleToUser(userId, data);
-      toast("Vehicle added successfully");
-      form.reset();
-      onSuccess?.();
-      onClose();
-    } catch (error) {
-      console.error("Failed to add vehicle:", error);
-      toast("Failed to add vehicle");
-    } finally {
-      setIsSubmitting(false);
+async function onSubmit(data: VehicleFormValues) {
+  setIsSubmitting(true);
+  try {
+    const response = await addVehicleToUser(userId, data);
+    if (response?.success==true) {
+      toast.success(response.message);
+    } else {
+      toast.success("Vehicle added successfully");
     }
+    form.reset();
+    onSuccess?.();
+    onClose();
+  } catch (error: any) {
+    console.error("Failed to add vehicle:", error);
+    const errorMessage =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to add vehicle";
+    toast.error(errorMessage);
+  } finally {
+    setIsSubmitting(false);
   }
+}
+
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>

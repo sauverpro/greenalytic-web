@@ -24,7 +24,7 @@ export const getVehiclesForUser = async (userId: string) => {
   }
 };
 
-export const getUserVehicles = async () => {
+export const getVehiclesByLoggedUser = async () => {
   try {
     const response = await client.get("/vehicles");
     return response.data;

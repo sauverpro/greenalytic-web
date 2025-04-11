@@ -35,15 +35,11 @@ const UserActions = ({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem asChild>
-          <Link href={`/admin/users/${user.id}`}>View Details</Link>
+          <Link href={`/admin/users/${user.id}`}>Manage user</Link>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => onEditUser(user)}>
           Edit Client
         </DropdownMenuItem>
-        <DropdownMenuItem >
-          Manage Vehicles
-        </DropdownMenuItem>
-        <DropdownMenuItem>Manage Devices</DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem className="text-red-500">
           Delete User

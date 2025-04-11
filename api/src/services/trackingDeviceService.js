@@ -1,4 +1,4 @@
-import prisma from '../../prismaClient.js'
+import prisma from "../../prismaClient.js";
 
 class TrackingDeviceService {
   static async addTrackingDeviceToVehicle(data) {
@@ -8,7 +8,7 @@ class TrackingDeviceService {
       if (!serialNumber || !model || !type || !plateNumber) {
         throw new Error("Missing required tracking device information");
       }
-
+ 
       const vehicleData = await prisma.vehicle.findUnique({
         where: { id: vehicleId, plateNumber: plateNumber },
         select: { id: true, userId: true },
@@ -46,7 +46,6 @@ class TrackingDeviceService {
       throw new Error(error.message);
     }
   }
-
 
   static async getTrackingDevicesByVehicleId(vehicleId) {
     try {
@@ -149,7 +148,4 @@ class TrackingDeviceService {
   }
 }
 
-export default TrackingDeviceService
-
-
-
+export default TrackingDeviceService;
