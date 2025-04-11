@@ -22,17 +22,16 @@ const VehicleSelector: React.FC<VehicleSelectProps> = ({
   };
 
   return (
-    <div className="flex items-center mb-4 ">
-      <label className="font-bold text-lg text-gray-700">
-        🚗 Select Vehicle:
-      </label>
+    <div className="items-center mb-4">
+      <label className="font-bold text-lg text-sms">
+        Select Vehicle: </label>
       <select
         className="ml-2 p-2 border rounded-lg bg-white shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         value={selectedVehicleId || ""}
         onChange={handleVehicleChange}
       >
         {vehicles.map((vehicle) => (
-          <option key={vehicle.id} value={vehicle.id} className="text-gray-700">
+          <option key={vehicle.id} value={vehicle.id} className="text-sms">
             {vehicle.plateNumber}
           </option>
         ))}

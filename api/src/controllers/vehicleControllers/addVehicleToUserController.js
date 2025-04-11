@@ -1,20 +1,45 @@
-import { addVehicleToUser } from '../../services/vehiclesService/addVehicleToUserService .js'
+import {  addVehicleToUserService, deleteVehicleService } from "../../services/vehiclesService/vehicleService .js";
 
-export const addVehicleToUserController = async (req, res) => {
-  const { userId } = req.params
-  const vehicleData = req.body
+export const addVehicleToUser = async (req, res) => {
+  const { userId } = req.params;
+  const vehicleData = req.body;
 
   try {
-    const updatedUser = await addVehicleToUser(userId, vehicleData)
+    const updatedUser = await addVehicleToUserService(userId, vehicleData);
     return res.status(201).json({
       success: true,
-      message: 'Vehicle added successfully',
-      data: updatedUser // Returning updated user with vehicles
-    })
+      message: "Vehicle added successfully",
+      data: updatedUser,
+    });
   } catch (error) {
     return res.status(400).json({
       success: false,
-      message: error.message
-    })
+      message: error.message,
+    });
   }
-}
+};
+
+export const deleteVehicle = async (req, res) => {
+  try {
+    const { vehicleId } = req.params;
+
+    const parsedVehicleId = parseInt(vehicleId, 10);
+
+    if (isNaN(parsedVehicleId)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid vehicle ID" });
+    }
+
+    const result = await deleteVehicleService(
+      parsedVehicleId
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: result.message,
+    });
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+};

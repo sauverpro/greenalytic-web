@@ -269,7 +269,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         <CardContent>
           {isLoading.gps ? (
             <div className="h-[150px] flex items-center justify-center">
-              <p className="text-muted-foreground">Loading GPS data.dffsd..</p>
+              <p className="text-muted-foreground">Loading GPS data...</p>
             </div>
           ) : error.gps ? (
             <div className="h-[150px] flex items-center justify-center">
@@ -277,7 +277,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             </div>
           ) : !gpsStats ? (
             <div className="h-[150px] flex items-center justify-center">
-              <p className="text-muted-foreground">No GPS data available</p>
+              <p className="text-muted-foreground">No GPS data available or select other date range </p>
             </div>
           ) : (
             <>
@@ -330,14 +330,14 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             </div>
           ) : !fuelStats ? (
             <div className="h-[150px] flex items-center justify-center">
-              <p className="text-muted-foreground">No fuel data available</p>
+              <p className="text-muted-foreground">No fuel data available or select other date range</p>
             </div>
           ) : (
             <>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-2xl font-bold">
-                    {fuelStats.currentFuelLevel}%
+                    {fuelStats.currentFuelLevel.toFixed(3)}...%
                   </p>
                   <p className="text-xs text-muted-foreground">
                     Current Fuel Level
@@ -404,7 +404,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           ) : !emissionsStats ? (
             <div className="h-[150px] flex items-center justify-center">
               <p className="text-muted-foreground">
-                No emissions data available
+                No emissions data available or select other date range
               </p>
             </div>
           ) : (

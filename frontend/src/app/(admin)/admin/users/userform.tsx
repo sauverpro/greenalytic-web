@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { User } from "@/types/types";
 import { Button } from "@/components/ui/button";
-import { updateUser } from "@/api/services/userService";
+import { updateUser } from "../../../../services/userService";
 
 type UserFormProps = {
   user: User;
@@ -19,12 +19,12 @@ const UserForm = ({ user, onSubmit, isNewUser = false }: UserFormProps) => {
     gender: user.gender || "",
     role: user.role || "USER",
     phoneNumber: user.phoneNumber || "",
- 
+
     deletedAt: user.deletedAt || undefined,
     createdAt: user.createdAt || new Date(),
     updatedAt: new Date(),
     vehicles: user.vehicles || [],
-    trackingDevices: user.trackingDevices || []
+    trackingDevices: user.trackingDevices || [],
   });
 
   const handleInputChange = (
@@ -33,7 +33,7 @@ const UserForm = ({ user, onSubmit, isNewUser = false }: UserFormProps) => {
     const { name, value } = e.target;
     setUserData((prev) => ({
       ...prev,
-      [name]: value || undefined
+      [name]: value || undefined,
     }));
   };
 
@@ -60,7 +60,7 @@ const UserForm = ({ user, onSubmit, isNewUser = false }: UserFormProps) => {
       ? [{ name: "password", label: "Password", type: "password" }]
       : []),
     { name: "image", label: "Profile Image URL", type: "text" },
-    { name: "phoneNumber", label: "Phone Number", type: "text" }
+    { name: "phoneNumber", label: "Phone Number", type: "text" },
   ];
 
   return (
@@ -87,7 +87,8 @@ const UserForm = ({ user, onSubmit, isNewUser = false }: UserFormProps) => {
             name="gender"
             value={userData.gender || ""}
             onChange={handleInputChange}
-            className="w-full p-2 border rounded">
+            className="w-full p-2 border rounded"
+          >
             <option value="">Select Gender</option>
             <option value="Male">Male</option>
             <option value="Female">Female</option>
@@ -101,7 +102,8 @@ const UserForm = ({ user, onSubmit, isNewUser = false }: UserFormProps) => {
             name="role"
             value={userData.role}
             onChange={handleInputChange}
-            className="w-full p-2 border rounded">
+            className="w-full p-2 border rounded"
+          >
             <option value="ADMIN">Admin</option>
             <option value="USER">User</option>
             <option value="TECHNICIAN">Technician</option>

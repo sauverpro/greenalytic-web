@@ -1,20 +1,11 @@
 import axios, { AxiosInstance, AxiosError, AxiosResponse } from "axios";
 
-const useAxiosClient = (token?: string): AxiosInstance => {
+const useAxiosClient = (): AxiosInstance => {
   const baseURL = process.env.NEXT_PUBLIC_BACKEND_ULR;
 
-  const headers = token
-    ? {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      }
-    : {
-        "Content-Type": "application/json",
-      };
 
   const client = axios.create({
-    baseURL, 
-    headers,
+    baseURL,
     withCredentials: false,
   });
 
@@ -37,7 +28,6 @@ const useAxiosClient = (token?: string): AxiosInstance => {
         if (response?.status === 401) {
           localStorage.removeItem("AUTH_TOKEN");
         }
-
       } catch (e) {
         console.error(e);
       }

@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
-import { login } from "@/api/services/userService";
+import { login } from "../../services/userService";
 import { FaRegEnvelope } from "react-icons/fa";
 import { MdLockOutline } from "react-icons/md";
 import { FiEyeOff } from "react-icons/fi";
@@ -102,7 +102,7 @@ const Login: React.FC = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
-                icon={<FaRegEnvelope className="mr-2 text-gray-400" />}
+                icon={<FaRegEnvelope className="mr-2 text-sms" />}
                 error={errors.email}
               />
               <div className="pl-4 mb-1 text-left">
@@ -118,7 +118,7 @@ const Login: React.FC = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, password: e.target.value })
                 }
-                icon={<MdLockOutline className="mr-2 text-gray-400" />}
+                icon={<MdLockOutline className="mr-2 text-sms" />}
                 error={errors.password}
                 togglePassword={togglePassword}
               />

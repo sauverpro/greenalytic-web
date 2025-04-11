@@ -13,6 +13,12 @@ enum UserRole {
   TECHNICIAN 
   MANAGER
 }
+enum deviceStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+  DISCONNECTED
+}
 
 model User {
   id           Int       @id @default(autoincrement())
@@ -52,18 +58,14 @@ model Vehicle {
   emissionDatas EmissionData[]
   gpsDatas      GPSData[]
   fuelDatas     FuelData[]
+  trackingDevices    TrackingDevice[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
-trackingDevice    TrackingDevice? 
-  trackingDeviceId  Int?     
-  // Adding indexes for performance optimization
-  @@index([userId])  // To optimize queries by userId
-  @@index([deletedAt])  // To optimize queries with filtering out deleted records
-  @@index([vehicleType])  // If you frequently search by vehicle type, this can help
-  @@index([trackingDeviceId])  // If you often query by tracking device
-
+  @@index([userId]) 
+  @@index([deletedAt])  
+  @@index([vehicleType])  
 }
 
 model TrackingDevice {
@@ -73,18 +75,17 @@ model TrackingDevice {
   type         String
   plateNumber  String
   isActive     Boolean   @default(true)
-  
+  status      String    @default("active")
   lastPing     DateTime?
-
   gpsDatas      GPSData[]
   fuelDatas     FuelData[]
   emissionDatas EmissionData[]
 
   user   User? @relation(fields: [userId], references: [id])
-  userId Int? // Optional userId for relationship with User
+  userId Int?
 
-  vehicleId Int @unique
-  vehicle   Vehicle @relation(fields: [vehicleId], references: [id])
+  vehicleId Int? 
+  vehicle   Vehicle? @relation(fields: [vehicleId], references: [id])
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -119,7 +120,7 @@ model EmissionData {
   plateNumber   String
 
   trackingDevice   TrackingDevice @relation(fields: [trackingDeviceId], references: [id])
-  trackingDeviceId Int // Foreign key to TrackingDevice
+  trackingDeviceId Int
   createdAt        DateTime       @default(now())
 
   @@index([vehicleId])

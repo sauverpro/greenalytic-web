@@ -2,11 +2,7 @@ import React, { useState } from "react";
 
 import { Drawer } from "vaul";
 
-import {
-
-  MessageSquare,
-
-} from "lucide-react";
+import { MessageSquare } from "lucide-react";
 /* Dummy Messages */
 interface Message {
   id: number;
@@ -23,29 +19,29 @@ const messages: Message[] = [
     sender: "Alice",
     text: "Hey, how's work?",
     time: "10:05 AM",
-    isOwnMessage: false
+    isOwnMessage: false,
   },
   {
     id: 2,
     sender: "You",
     text: "Going well, thanks!",
     time: "10:07 AM",
-    isOwnMessage: true
+    isOwnMessage: true,
   },
   {
     id: 3,
     sender: "Alice",
     text: "Let’s catch up later.",
     time: "10:10 AM",
-    isOwnMessage: false
+    isOwnMessage: false,
   },
   {
     id: 4,
     sender: "You",
     text: "Sure! Let me know when.",
     time: "10:12 AM",
-    isOwnMessage: true
-  }
+    isOwnMessage: true,
+  },
 ];
 
 export default function MessagesPanel() {
@@ -81,7 +77,8 @@ export default function MessagesPanel() {
             <h2 className="text-lg font-semibold">Messages</h2>
             <button
               onClick={() => setSelectedChat(null)}
-              className="text-blue-500">
+              className="text-blue-500"
+            >
               Back
             </button>
           </div>
@@ -91,12 +88,14 @@ export default function MessagesPanel() {
             <div className="mt-3 space-y-2">
               <button
                 onClick={() => setSelectedChat("Alice")}
-                className="block w-full text-left p-2 bg-gray-100 rounded-md">
+                className="block w-full text-left p-2 bg-gray-100 rounded-md"
+              >
                 Chat with Alice
               </button>
               <button
                 onClick={() => setSelectedChat("Bob")}
-                className="block w-full text-left p-2 bg-gray-100 rounded-md">
+                className="block w-full text-left p-2 bg-gray-100 rounded-md"
+              >
                 Chat with Bob
               </button>
             </div>
@@ -111,10 +110,11 @@ export default function MessagesPanel() {
                       msg.isOwnMessage
                         ? "bg-blue-100 self-end text-right"
                         : "bg-gray-100"
-                    }`}>
+                    }`}
+                  >
                     <h4 className="text-sm font-semibold">{msg.sender}</h4>
                     <p className="text-sm">{msg.text}</p>
-                    <span className="text-xs text-gray-500">{msg.time}</span>
+                    <span className="text-xs text-sms">{msg.time}</span>
                   </div>
                 ))}
               </div>
@@ -130,7 +130,8 @@ export default function MessagesPanel() {
                 />
                 <button
                   onClick={handleSendMessage}
-                  className="bg-blue-500 text-white px-3 py-1 rounded-md">
+                  className="bg-blue-500 text-white px-3 py-1 rounded-md"
+                >
                   Send
                 </button>
               </div>

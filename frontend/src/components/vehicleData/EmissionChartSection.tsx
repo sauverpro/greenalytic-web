@@ -269,9 +269,7 @@ const EmissionsChartSection: React.FC<EmissionsChartSectionProps> = ({
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* CO2 Chart */}
       <div className="bg-white p-6 rounded-lg shadow-sm">
-        <h2 className="text-xl font-bold mb-4 text-gray-800">
-          🏭 CO2 Emissions
-        </h2>
+        <h2 className="text-xl font-bold mb-4 text-sms">🏭 CO2 Emissions</h2>
         <div className="min-h-[300px]">
           <Line data={chartData.co2} options={chartOptions} />
         </div>
@@ -279,9 +277,7 @@ const EmissionsChartSection: React.FC<EmissionsChartSectionProps> = ({
 
       {/* CO Chart */}
       <div className="bg-white p-6 rounded-lg shadow-sm">
-        <h2 className="text-xl font-bold mb-4 text-gray-800">
-          🏭 CO Emissions
-        </h2>
+        <h2 className="text-xl font-bold mb-4 text-sms">🏭 CO Emissions</h2>
         <div className="min-h-[300px]">
           <Line data={chartData.co} options={chartOptions} />
         </div>
@@ -289,7 +285,7 @@ const EmissionsChartSection: React.FC<EmissionsChartSectionProps> = ({
 
       {/* O2 Chart */}
       <div className="bg-white p-6 rounded-lg shadow-sm">
-        <h2 className="text-xl font-bold mb-4 text-gray-800">💨 O2 Levels</h2>
+        <h2 className="text-xl font-bold mb-4 text-sms">💨 O2 Levels</h2>
         <div className="min-h-[300px]">
           <Line data={chartData.o2} options={chartOptions} />
         </div>
@@ -297,9 +293,7 @@ const EmissionsChartSection: React.FC<EmissionsChartSectionProps> = ({
 
       {/* HC Chart */}
       <div className="bg-white p-6 rounded-lg shadow-sm">
-        <h2 className="text-xl font-bold mb-4 text-gray-800">
-          🔥 HC Emissions
-        </h2>
+        <h2 className="text-xl font-bold mb-4 text-sms">🔥 HC Emissions</h2>
         <div className="min-h-[300px]">
           <Line data={chartData.hc} options={chartOptions} />
         </div>
@@ -308,7 +302,7 @@ const EmissionsChartSection: React.FC<EmissionsChartSectionProps> = ({
       {/* Summary Cards Section */}
       {stats && (
         <div className="bg-white p-6 rounded-lg shadow-sm lg:col-span-2">
-          <h2 className="text-xl font-bold mb-4 text-gray-800">
+          <h2 className="text-xl font-bold mb-4 text-sms">
             📊 Emissions Summary
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

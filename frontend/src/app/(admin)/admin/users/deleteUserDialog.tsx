@@ -9,15 +9,15 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogCancel,
-  AlertDialogAction
+  AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { deleteUser } from "@/api/services/userService";
+import { deleteUser } from "../../../../services/userService";
 // Assuming this service is imported
 
 export function DeleteUserDialog({
   userId,
-  refetchUsers
+  refetchUsers,
 }: {
   userId: string;
   refetchUsers: () => void;

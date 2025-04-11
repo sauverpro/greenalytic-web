@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSidebar } from "@/components/ui/sidebar";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   X,
   Sun,
@@ -15,12 +17,20 @@ import {
   User,
   Leaf,
   ChevronDown,
+  Filter,
 } from "lucide-react";
 
-import MessagesPanel from "./TopBarPanels/MessagesPanel";
-import NotificationsPanel from "./TopBarPanels/NotificationsPanel";
-import ProfilePanel from "./TopBarPanels/ProfilePanel";
-import VisibleControlSidebar from "./TopBarPanels/VisibleControlSidebar";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { handleLogout } from "@/services/userService";
+import { useRouter } from "next/navigation";
+import { on } from "events";
 
 type PanelType =
   | "notifications"
@@ -36,6 +46,7 @@ export const Topbar = () => {
   const [showSearch, setShowSearch] = useState(false);
   const { toggleSidebar, state: isCollapsed } = useSidebar();
   const [scrolled, setScrolled] = useState(false);
+  const router = useRouter();
 
   // Handle scroll effect
   useEffect(() => {
@@ -70,16 +81,24 @@ export const Topbar = () => {
     setActivePanel(activePanel === panel ? null : panel);
   };
 
+    const onLogout = (e: React.MouseEvent) => {
+      e.preventDefault();
+      const loggedOut = handleLogout();
+      if (loggedOut) {
+        router.push("/");
+      }
+    };
+
   return (
     <motion.div
       initial={{ y: -50, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
-      className={`flex justify-between items-center px-4 md:px-6 py-3 sticky top-0 z-50 w-full
+      className={`flex justify-between items-center px-4 md:px-6 py-3 sticky top-0 z-50 bg-secondary-light sticky overflow-hidden w-full
         ${
           scrolled
-            ? "bg-white/90 dark:bg-emerald-950/90 backdrop-blur-md shadow-md"
-            : "bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-emerald-900 dark:to-emerald-800 shadow-lg"
+            ? "bg-secondary-light dark:bg-emerald-950/90 backdrop-blur-md shadow-md"
+            : "bg-secondary-light from-emerald-50 to-emerald-100 dark:from-emerald-900 dark:to-emerald-800 shadow-lg"
         } 
         border-b border-emerald-200 dark:border-emerald-700 transition-all duration-300`}
     >
@@ -128,14 +147,23 @@ export const Topbar = () => {
               transition={{ duration: 0.3 }}
               className="overflow-hidden"
             >
-              <input
-                type="text"
-                placeholder="Search..."
-                className="px-4 py-2 rounded-full bg-white dark:bg-emerald-800 border border-emerald-300 dark:border-emerald-600 
-                         focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:text-emerald-100 
-                         placeholder-emerald-400 dark:placeholder-emerald-500 w-36 md:w-64"
-                autoFocus
-              />
+              <div className="flex flex-1 items-center justify-center">
+                <div className="relative w-full max-w-md">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="search"
+                    placeholder="Search clients, vehicles, or devices..."
+                    className="w-full bg-background pl-8 pr-8 focus-visible:ring-emerald-500"
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-0 top-0 h-9 w-9"
+                  >
+                    <Filter className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                </div>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -195,82 +223,37 @@ export const Topbar = () => {
         </motion.button>
 
         {/* Profile */}
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => togglePanel("profile")}
-          className="flex items-center space-x-1 p-2 rounded-lg hover:bg-emerald-200 dark:hover:bg-emerald-700 transition-colors"
-          aria-label="Profile"
-        >
-          <div className="relative">
-            <div className="w-8 h-8 rounded-full bg-emerald-200 dark:bg-emerald-700 flex items-center justify-center overflow-hidden border-2 border-emerald-300 dark:border-emerald-600">
-              <User className="w-5 h-5 text-emerald-700 dark:text-emerald-200" />
-            </div>
-            <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white dark:border-emerald-800"></div>
-          </div>
-          <ChevronDown className="w-4 h-4 text-emerald-700 dark:text-emerald-200 hidden md:block" />
-        </motion.button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => togglePanel("profile")}
+              className="flex items-center space-x-1 p-2 rounded-lg hover:bg-emerald-200 dark:hover:bg-emerald-700 transition-colors"
+              aria-label="Profile"
+            >
+              <div className="relative">
+                <div className="w-8 h-8 rounded-full bg-emerald-200 dark:bg-emerald-700 flex items-center justify-center overflow-hidden border-2 border-emerald-300 dark:border-emerald-600">
+                  <User className="w-5 h-5 text-emerald-700 dark:text-emerald-200" />
+                </div>
+                <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white dark:border-emerald-800"></div>
+              </div>
+              <ChevronDown className="w-4 h-4 text-emerald-700 dark:text-emerald-200 hidden md:block" />
+            </motion.button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>Profile Settings</DropdownMenuItem>
+            <DropdownMenuItem>System Configuration</DropdownMenuItem>
+            <DropdownMenuItem>User Management</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={onLogout} className="text-red-500">Logout</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Panels */}
-      <AnimatePresence>
-        {activePanel && (
-          <>
-            {/* Backdrop for mobile */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.5 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black z-40 md:hidden"
-              onClick={() => setActivePanel(null)}
-            />
-
-            {/* Panel */}
-            <motion.div
-              initial={{ x: 300, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: 300, opacity: 0 }}
-              transition={{
-                duration: 0.3,
-                type: "spring",
-                stiffness: 200,
-                damping: 25,
-              }}
-              className="fixed top-16 right-0 w-80 h-[calc(100vh-4rem)] border-l border-emerald-200 dark:border-emerald-700 
-                       bg-white dark:bg-emerald-900 shadow-xl overflow-y-auto z-50"
-            >
-              <div className="sticky top-0 bg-emerald-50 dark:bg-emerald-800 p-4 border-b border-emerald-200 dark:border-emerald-700">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-lg font-bold text-emerald-800 dark:text-emerald-100">
-                    {activePanel === "SidebarPanel"
-                      ? "Sidebar Control"
-                      : activePanel === "notifications"
-                      ? "Notifications"
-                      : activePanel === "messages"
-                      ? "Messages"
-                      : "User Profile"}
-                  </h2>
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setActivePanel(null)}
-                    className="p-2 rounded-lg hover:bg-emerald-200 dark:hover:bg-emerald-700 transition-colors"
-                  >
-                    <X className="w-5 h-5 text-emerald-700 dark:text-emerald-200" />
-                  </motion.button>
-                </div>
-              </div>
-
-              <div className="p-4">
-                {activePanel === "SidebarPanel" && <VisibleControlSidebar />}
-                {activePanel === "notifications" && <NotificationsPanel />}
-                {activePanel === "messages" && <MessagesPanel />}
-                {activePanel === "profile" && <ProfilePanel />}
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
     </motion.div>
   );
 };

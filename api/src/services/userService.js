@@ -115,7 +115,6 @@ export const getAllUsersService = async (page, limit) => {
   }
 }
 
-// **3️⃣ Get User By ID** - Retrieve a user by ID
 export const getUserByIdService = async id => {
   try {
     const user = await prisma.user.findUnique({
@@ -135,16 +134,36 @@ export const getUserByIdService = async id => {
             id: true,
             plateNumber: true,
             vehicleModel: true,
-            vehicleType: true
+            vehicleType: true,
+            _count: {
+              select: {
+                emissionDatas: true,
+                fuelDatas: true,
+                gpsDatas: true
+              }
+            }
           }
         },
         trackingDevices: {
           select: {
             id: true,
-            serialNumber: true,
+            plateNumber: true,
             model: true,
             type: true,
-            isActive: true
+            isActive: true,
+            _count: {
+              select: {
+                emissionDatas: true,
+                fuelDatas: true,
+                gpsDatas: true
+              }
+            }
+          }
+        },
+        _count: {
+          select: {
+            vehicles: true,
+            trackingDevices: true
           }
         }
       }
@@ -157,9 +176,80 @@ export const getUserByIdService = async id => {
       }
     }
 
+    let totalEmissions = 0;
+    let totalFuelData = 0;
+    let totalGpsData = 0;
+
+      const deviceCounts = {
+        gps: 0,
+        fuel: 0,
+        emissions: 0,
+        total: user.trackingDevices.length,
+    };
+    
+       user.trackingDevices.forEach((device) => {
+         totalEmissions += device._count.emissionDatas;
+         totalFuelData += device._count.fuelDatas;
+         totalGpsData += device._count.gpsDatas;
+
+         const deviceType = device.type.toLowerCase();
+         if (deviceType === "gps") {
+           deviceCounts.gps++;
+         } else if (deviceType === "fuel") {
+           deviceCounts.fuel++;
+         } else if (deviceType === "emission") {
+           deviceCounts.emissions++;
+         }
+       });
+
+    user.vehicles.forEach(vehicle => {
+      totalEmissions += vehicle._count.emissionDatas;
+      totalFuelData += vehicle._count.fuelDatas;
+      totalGpsData += vehicle._count.gpsDatas;
+    });
+
+    const vehiclesWithDevices = user.vehicles.map((vehicle) => {
+      const connectedDevices = user.trackingDevices.filter(
+        (device) => device.vehicleId === vehicle.id
+      );
+      const vehicleDeviceTypes = {
+        gps: connectedDevices.filter((d) => d.type.toLowerCase() === "gps")
+          .length,
+        fuel: connectedDevices.filter((d) => d.type.toLowerCase() === "fuel")
+          .length,
+        emission: connectedDevices.filter(
+          (d) => d.type.toLowerCase() === "emission"
+        ).length,
+        total: connectedDevices.length,
+      };
+      return {
+        ...vehicle,
+        deviceTypes: vehicleDeviceTypes,
+        connectedDevices: connectedDevices.map((d) => ({
+          id: d.id,
+          serialNumber: d.serialNumber,
+          type: d.type,
+          model: d.model,
+          status: d.isActive ? "active" : "inactive",
+        })),
+      };
+    });
+
+
+    const userWithCounts = {
+      ...user,
+      totalEmissions,
+      totalFuelData,
+      totalGpsData,
+      deviceCounts,
+      vehiclesWithDevices
+    };
+
+
+
     return {
       success: true,
-      user
+      user: userWithCounts
     }
   } catch (error) {
     console.error('Error retrieving user:', error)
@@ -170,7 +260,6 @@ export const getUserByIdService = async id => {
   }
 }
 
-// **4️⃣ Update User** - Update user details
 export const updateUserService = async (id, updateData) => {
   const { vehicles, trackingDevices, ...userData } = updateData
 

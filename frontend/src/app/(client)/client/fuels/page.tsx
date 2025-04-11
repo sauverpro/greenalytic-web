@@ -1,24 +1,23 @@
 "use client";
 import React, { useState, useEffect, Suspense } from "react";
-import useAxiosClient from "../../../../hooks/axiosClient";
 import VehicleSelector from "../../../../components/vehicleData/vehicleSelector";
 import DateRangePicker, {
   formatDateForServer,
 } from "../../../../components/vehicleData/dateRangePicker";
 import { useSearchParams } from "next/navigation";
 import FuelChartSection from "@/components/vehicleData/FuelChartSection";
+import { DAY } from "@/utils/constants";
+import { getFuelData } from "@/services/vehicleData";
+import { getUserVehicles } from "@/services/vehicleService";
 
 function FuelsPageContent() {
-  const client = useAxiosClient();
   const searchParams = useSearchParams();
 
   const [vehicles, setVehicles] = useState([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState<number | null>(
     null
   );
-  const [startDate, setStartDate] = useState(
-    new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-  );
+  const [startDate, setStartDate] = useState(new Date(Date.now() - DAY));
   const [endDate, setEndDate] = useState(new Date());
   const [fuelData, setFuelData] = useState([]);
   const [error, setError] = useState({
@@ -38,21 +37,19 @@ function FuelsPageContent() {
     const fetchVehicles = async () => {
       setIsLoading((prev) => ({ ...prev, vehicles: true }));
       try {
-        const response = await client.get("/vehicles");
-        if (response.data.success) {
-          setVehicles(response.data.data);
+        const response = await getUserVehicles();
+        if (response.success) {
+          setVehicles(response.data);
 
           // Set selected vehicle from URL params or first vehicle
           const vehicleIdParam = searchParams.get("vehicleId");
           if (
             vehicleIdParam &&
-            response.data.data.some(
-              (v: any) => v.id === parseInt(vehicleIdParam)
-            )
+            response.some((v: any) => v.id === parseInt(vehicleIdParam))
           ) {
             setSelectedVehicleId(parseInt(vehicleIdParam));
-          } else if (response.data.data.length > 0) {
-            setSelectedVehicleId(response.data.data[0].id);
+          } else if (response.data.length > 0) {
+            setSelectedVehicleId(response.data[0].id);
           }
 
           setInitialLoadComplete(true);
@@ -65,7 +62,7 @@ function FuelsPageContent() {
       } catch (err) {
         setError((prev: any) => ({
           ...prev,
-          vehicles: "Error connecting to the server",
+          vehicles: "Something went wrong while getting vehicles",
         }));
       } finally {
         setIsLoading((prev) => ({ ...prev, vehicles: false }));
@@ -85,18 +82,15 @@ function FuelsPageContent() {
       const formattedStartDate = formatDateForServer(startDate);
       const formattedEndDate = formatDateForServer(endDate, true);
 
-      const response = await client.get(
-        `/vehicles/${selectedVehicleId}/fuels/range`,
-        {
-          params: {
-            startDate: formattedStartDate,
-            endDate: formattedEndDate,
-          },
-        }
-      );
+      const response = await getFuelData(selectedVehicleId, {
+        startDate: formattedStartDate,
+        endDate: formattedEndDate,
+      });
 
-      if (response.data.success) {
-        setFuelData(response.data.data);
+      console.log("Fuel Data Response:", response.data); // Debugging line
+
+      if (response.success) {
+        setFuelData(response.data);
       } else {
         setError((prev: any) => ({
           ...prev,
@@ -106,7 +100,7 @@ function FuelsPageContent() {
     } catch (error) {
       setError((prev: any) => ({
         ...prev,
-        fuel: "Error connecting to the server",
+        fuel: "Something went wrong while getting fuel data",
       }));
     } finally {
       setIsLoading((prev) => ({ ...prev, fuel: false }));
@@ -155,24 +149,32 @@ function FuelsPageContent() {
         {/* Fuel Data Table */}
         {fuelData.length > 0 && (
           <div className="bg-white rounded-lg shadow-sm p-6 mt-6">
-            <h2 className="text-xl font-bold mb-4 text-gray-800">
-              Fuel Data Table
-            </h2>
+            <h2 className="text-xl font-bold mb-4 text-sms">Fuel Data Table</h2>
             <div className="overflow-x-auto">
               <table className="min-w-full bg-white">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Time
+                    <th className="px-6 py-3 text-left text-xs font-medium text-sms uppercase tracking-wider">
+                      Time{" "}
+                      <span className="text-xs lowercase">(Local Time)</span>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Fuel Level
+                    <th className="px-6 py-3 text-left text-xs font-medium text-sms uppercase tracking-wider">
+                      <div>
+                        <p>Fuel Level</p>{" "}
+                        <span className="text-xs lowercase"> (%)</span>
+                      </div>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Fuel Consumption
+                    <th className=" px-6 py-3 text-left text-xs font-medium text-sms uppercase tracking-wider">
+                      <div className="flex flex-col">
+                        <p>Fuel Consumption </p>{" "}
+                        <span className="text-xs lowercase">(L/100km)</span>
+                      </div>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Distance
+                    <th className="px-6 py-3 text-left text-xs font-medium text-sms uppercase tracking-wider">
+                      <div className="flex flex-col">
+                        <p>Distance</p>{" "}
+                        <span className="text-xs lowercase">(km)</span>
+                      </div>
                     </th>
                   </tr>
                 </thead>
@@ -183,13 +185,13 @@ function FuelsPageContent() {
                         {new Date(item.timestamp).toLocaleString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {item.fuelLevel || "N/A"} %
+                        {item.fuelLevel.toFixed(2) || "N/A"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {item.fuelConsumption || "N/A"} L/100km
+                        {item.fuelConsumption.toFixed(2) || "N/A"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {item.distance || "N/A"} km
+                        {item.distance || "N/A"}
                       </td>
                     </tr>
                   ))}
@@ -208,5 +210,5 @@ export default function FuelsPage() {
     <Suspense>
       <FuelsPageContent />
     </Suspense>
-      )
+  );
 }
