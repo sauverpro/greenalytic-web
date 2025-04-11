@@ -59,15 +59,15 @@ VehicleRouter.get(
 );
 
 VehicleRouter.get(
-  "/data/all",
-  vehicleDataController.getAllDataInSystem
+  "/data/counts",
+  vehicleDataController.getDashboardCounts
 );
 
 
-VehicleRouter.get(
-  "/analytics/data",
-  vehicleDataController.analyticHub
-);
+// VehicleRouter.get(
+//   "/analytics/data",
+//   vehicleDataController.analyticHub
+// );
 
 VehicleRouter.get(
   "/map/data",

@@ -1,282 +1,283 @@
-// "use client";
-
-// import { useState } from "react";
-// import { Users } from "lucide-react";
-// import type { GridColDef } from "@mui/x-data-grid";
-// import type { User } from "@/types/types";
-// import { exportToExcel, exportToPDF } from "./ExportUtils";
-// import UserActions from "./UserActions";
-// import BulkActions from "./BulkActions";
-// import AddUserDrawer from "./AddUserDrawer";
-// import EditUserDrawer from "./EditUserDrawer";
-// import AddVehicleDrawer from "./AddVehicleDrawer";
-// import ViewUserDrawer from "./ViewUserDrawer";
-// import { getAllUsers } from "@/services/userService";
-// import DataTable from "@/components/DataTable/GenericDataTable";
-
-// function UsersPage() {
-//   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-//   const [openAddUserDrawer, setOpenAddUserDrawer] = useState(false);
-//   const [openEditUserDrawer, setOpenEditUserDrawer] = useState(false);
-//   const [openAddVehicleDrawer, setOpenAddVehicleDrawer] = useState(false);
-//   const [openViewUserDialog, setOpenViewUserDialog] = useState(false);
-//   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-//   const [currentPagination, setCurrentPagination] = useState({
-//     currentPage: 1,
-//     limit: 10,
-//   });
-
-//   // Edit user handler
-//   const handleEditUser = (user: User) => {
-//     setSelectedUser(user);
-//     setOpenEditUserDrawer(true);
-//   };
-
-//   // Handler for adding vehicles
-//   const handleOpenAddVehicleDrawer = (userId: string) => {
-//     setSelectedUserId(userId);
-//     setOpenAddVehicleDrawer(true);
-//   };
-
-//   // Handle opening the "View User" dialog
-//   const handleViewUser = (user: User) => {
-//     setSelectedUser(user);
-//     setOpenViewUserDialog(true);
-//   };
-
-//   // Fetch users with pagination
-//   const fetchUsers = async (page = 1, limit = 10) => {
-//     try {
-//       setCurrentPagination({ currentPage: page, limit });
-//       const response = await getAllUsers(page, limit);
-//       const sortedUsers = response.users.sort(
-//         (a: User, b: User) =>
-//           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-//       );
-
-//       return {
-//         data: sortedUsers,
-//         pagination: response.pagination,
-//       };
-//     } catch (error) {
-//       console.error("Error fetching users:", error);
-//       return {
-//         data: [],
-//         pagination: {
-//           currentPage: page,
-//           totalPages: 1,
-//           totalItems: 0,
-//           limit: limit,
-//         },
-//       };
-//     }
-//   };
-
-//   // User created callback
-//   const handleUserAdded = (newUser: User) => {
-//     // Refresh the data after adding a user
-//     fetchUsers(currentPagination.currentPage, currentPagination.limit);
-//     setOpenAddUserDrawer(false);
-//   };
-
-//   // Define columns for users
-//   const columns: GridColDef[] = [
-//     { field: "id", headerName: "ID", width: 70 },
-//     {
-//       field: "image",
-//       headerName: "Profile",
-//       width: 80,
-//       renderCell: (params) => (
-//         <div className="flex justify-center w-full">
-//           <img
-//             src={params.value || "/placeholder-avatar.png"}
-//             alt="User"
-//             className="h-10 w-10 rounded-full object-cover border-2 border-gray-200"
-//           />
-//         </div>
-//       ),
-//     },
-//     {
-//       field: "username",
-//       headerName: "Name",
-//       width: 180,
-//       renderCell: (params) => <div className="font-medium">{params.value}</div>,
-//     },
-//     {
-//       field: "email",
-//       headerName: "Email",
-//       width: 220,
-//       renderCell: (params) => (
-//         <div className="text-sms">{params.value}</div>
-//       ),
-//     },
-//     {
-//       field: "role",
-//       headerName: "Role",
-//       width: 120,
-//       renderCell: (params) => {
-//         let bgColor = "bg-gray-100";
-//         let textColor = "text-sms";
-
-//         if (params.value === "admin") {
-//           bgColor = "bg-blue-100";
-//           textColor = "text-blue-700";
-//         } else if (params.value === "manager") {
-//           bgColor = "bg-green-100";
-//           textColor = "text-green-700";
-//         } else if (params.value === "user") {
-//           bgColor = "bg-purple-100";
-//           textColor = "text-purple-700";
-//         }
-
-//         return (
-//           <div
-//             className={`px-2 py-1 rounded-full text-xs font-semibold ${bgColor} ${textColor}`}
-//           >
-//             {params.value}
-//           </div>
-//         );
-//       },
-//     },
-//     {
-//       field: "phoneNumber",
-//       headerName: "Phone",
-//       width: 150,
-//       renderCell: (params) => (
-//         <div className="text-sms">{params.value}</div>
-//       ),
-//     },
-//     {
-//       field: "vehicles",
-//       headerName: "Cars",
-//       width: 80,
-//       renderCell: (params) => (
-//         <div className="bg-gray-100 text-sms px-2 py-1 rounded text-xs font-medium">
-//           {params.value?.length || 0}
-//         </div>
-//       ),
-//     },
-//     {
-//       field: "trackingDevices",
-//       headerName: "Devices",
-//       width: 80,
-//       renderCell: (params) => (
-//         <div className="bg-gray-100 text-sms px-2 py-1 rounded text-xs font-medium">
-//           {params.value?.length || 0}
-//         </div>
-//       ),
-//     },
-//     {
-//       field: "actions",
-//       headerName: "Actions",
-//       width: 120,
-//       renderCell: (params) => (
-//         <UserActions
-//           user={params.row}
-//           onEditUser={handleEditUser}
-//           onAddVehicle={handleOpenAddVehicleDrawer}
-//           onViewUser={handleViewUser}
-//           refetchUsers={() =>
-//             fetchUsers(currentPagination.currentPage, currentPagination.limit)
-//           }
-//         />
-//       ),
-//     },
-//   ];
-
-//   // Create a bulk actions component with the current selection
-//   const renderBulkActions = (selectionModel: any[]) => {
-//     return (
-//       <BulkActions
-//         selectionModel={selectionModel}
-//         fetchUsers={() =>
-//           fetchUsers(currentPagination.currentPage, currentPagination.limit)
-//         }
-//         pagination={{
-//           currentPage: currentPagination.currentPage,
-//           totalPages: 1,
-//           totalItems: 0,
-//           limit: currentPagination.limit,
-//         }}
-//       />
-//     );
-//   };
-
-//   return (
-//     <div className="h-full flex flex-1 max-w-[100%]">
-//       <DataTable<User>
-//         title="User Management"
-//         description="Manage all users and their details in one place"
-//         icon={<Users size={20} />}
-//         columns={columns}
-//         fetchData={fetchUsers}
-//         addButtonLabel="Add User"
-//         onAddItem={() => setOpenAddUserDrawer(true)}
-//         searchPlaceholder="Search users by name, email, role..."
-//         searchFields={["username", "email", "role", "phoneNumber"]}
-//         handleExportPDF={exportToPDF}
-//         handleExportExcel={exportToExcel}
-//         bulkActionsComponent={renderBulkActions([])}
-//       />
-
-//       {/* Add User Drawer */}
-//       {openAddUserDrawer && (
-//         <AddUserDrawer
-//           open={openAddUserDrawer}
-//           onOpenChange={(open) => setOpenAddUserDrawer(open)}
-//           addUserToState={handleUserAdded}
-//         />
-//       )}
-
-//       {/* Edit User Drawer */}
-//       {openEditUserDrawer && selectedUser && (
-//         <EditUserDrawer
-//           open={openEditUserDrawer}
-//           onOpenChange={(open) => setOpenEditUserDrawer(open)}
-//           user={selectedUser}
-//           refetchUsers={() =>
-//             fetchUsers(currentPagination.currentPage, currentPagination.limit)
-//           }
-//         />
-//       )}
-
-//       {/* Add Vehicle Drawer */}
-//       {openAddVehicleDrawer && selectedUserId && (
-//         <AddVehicleDrawer
-//           open={openAddVehicleDrawer}
-//           onOpenChange={(open) => setOpenAddVehicleDrawer(open)}
-//           userId={selectedUserId}
-//           onVehicleAdded={() =>
-//             fetchUsers(currentPagination.currentPage, currentPagination.limit)
-//           }
-//         />
-//       )}
-
-//       {/* View User Drawer */}
-//       {openViewUserDialog && selectedUser && (
-//         <ViewUserDrawer
-//           open={openViewUserDialog}
-//           onOpenChange={(open) => setOpenViewUserDialog(open)}
-//           user={selectedUser}
-//         />
-//       )}
-//     </div>
-//   );
-// }
-
-// export default UsersPage;
-
 "use client";
 
-import React from "react";
-import UserTable from "./UserTable";
+import { Users, Edit, Eye, Trash, Car } from "lucide-react";
+import type { GridColDef } from "@mui/x-data-grid";
+import DataTable from "@/components/DataTable/GenericDataTable";
+import { getAllUsers } from "@/services/userService";
+import type { ActionItem } from "@/components/DataTable/TableActions";
+import { useState } from "react";
+import { exportToPDF, exportToExcel, printUsers } from "./ExportUtils";
+import type { User } from "@/types/types";
+import AddUserDrawer from "./AddUserDrawer";
+import EditUserDrawer from "./EditUserDrawer";
+// import AddVehicleDrawer from "./AddVehicleDrawer";
+import ViewUserDrawer from "./ViewUserDrawer";
 
-function page() {
+export default function UsersPage() {
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [openAddUserDrawer, setOpenAddUserDrawer] = useState(false);
+  const [openEditUserDrawer, setOpenEditUserDrawer] = useState(false);
+  const [openAddVehicleDrawer, setOpenAddVehicleDrawer] = useState(false);
+  const [openViewUserDialog, setOpenViewUserDialog] = useState(false);
+
+  const fetchUsers = async (page = 1, limit = 10) => {
+    try {
+      const response = await getAllUsers(page, limit);
+      console.log(
+        "response  structure of the  users  list++++{+++",
+        response.users
+      );
+      const users = Array.isArray(response.users) ? response.users : [];
+
+      const sortedUsers = users.sort(
+        (a: User, b: User) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+
+      const startIndex = (page - 1) * limit;
+      const usersWithNumbers = sortedUsers.map((user: User, index: number) => ({
+        ...user,
+        no: startIndex + index + 1,
+      }));
+
+      return {
+        data: usersWithNumbers,
+        pagination: response.pagination,
+      };
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      return {
+        data: [],
+        pagination: {
+          currentPage: 1,
+          totalPages: 1,
+          totalItems: 0,
+          limit: limit,
+        },
+      };
+    }
+  };
+
+  const handleEditUser = (user: User) => {
+    setSelectedUser(user);
+    setOpenEditUserDrawer(true);
+  };
+
+  const handleOpenAddVehicleDrawer = (userId: string) => {
+    setSelectedUserId(userId);
+    setOpenAddVehicleDrawer(true);
+  };
+
+  const handleViewUser = (user: User) => {
+    setSelectedUser(user);
+    setOpenViewUserDialog(true);
+  };
+
+  const handleUserAdded = (newUser: User) => {
+    setOpenAddUserDrawer(false);
+  };
+
+  const handleEditDrawerChange = (open: boolean) => {
+    setOpenEditUserDrawer(open);
+    if (!open) {
+      setTimeout(() => {
+        setSelectedUser(null);
+      }, 300);
+    }
+  };
+  const handleViewDrawerChange = (open: boolean) => {
+    setOpenViewUserDialog(open);
+    if (!open) {
+      setTimeout(() => {
+        setSelectedUser(null);
+      }, 300);
+    }
+  };
+
+  const handleAddVehicleDrawerChange = (open: boolean) => {
+    setOpenAddVehicleDrawer(open);
+    if (!open) {
+      setTimeout(() => {
+        setSelectedUserId(null);
+      }, 300);
+    }
+  };
+
+  const getUserActions = (user: User): ActionItem[] => {
+    return [
+      {
+        label: "Manage Account",
+        href: `/admin/users/${user.id}`,
+        icon: <Eye size={16} />,
+      },
+      {
+        label: "Edit User",
+        onClick: () => handleEditUser(user),
+        icon: <Edit size={16} />,
+      },
+
+      {
+        label: "Delete User",
+        onClick: () => console.log("Delete user:", user),
+        variant: "destructive",
+        icon: <Trash size={16} />,
+      },
+    ];
+  };
+
+  const columns: GridColDef[] = [
+    {
+      field: "no",
+      headerName: "No",
+      width: 70,
+      sortable: false,
+    },
+    {
+      field: "username",
+      headerName: "Username",
+      width: 150,
+      renderCell: (params) => <div className="font-medium">{params.value}</div>,
+    },
+    {
+      field: "email",
+      headerName: "Email",
+      width: 200,
+    },
+    {
+      field: "vehicles",
+      headerName: "Vehicles",
+      width: 120,
+      renderCell: (params) => (
+        <span className="text-sm text-center font-medium">
+          {params.value?.length ?? 0}
+        </span>
+      ),
+    },
+    {
+      field: "trackingDevices",
+      headerName: "Tracking Devices",
+      width: 160,
+      renderCell: (params) => (
+        <span className="text-sm text-center font-medium">
+          {params.value?.length ?? 0}
+        </span>
+      ),
+    },
+
+    {
+      field: "role",
+      headerName: "Role",
+      width: 120,
+      renderCell: (params) => {
+        let bgColor = "bg-gray-100";
+        let textColor = "text-gray-700";
+
+        if (params.value === "admin") {
+          bgColor = "bg-purple-100";
+          textColor = "text-purple-700";
+        } else if (params.value === "user") {
+          bgColor = "bg-blue-100";
+          textColor = "text-blue-700";
+        } else if (params.value === "client") {
+          bgColor = "bg-green-100";
+          textColor = "text-green-700";
+        }
+
+        return (
+          <div
+            className={`px-2 py-1 rounded-full text-xs font-semibold ${bgColor} ${textColor}`}
+          >
+            {params.value}
+          </div>
+        );
+      },
+    },
+    {
+      field: "createdAt",
+      headerName: "Joined since",
+      width: 180,
+      renderCell: (params) => {
+        if (!params.value) return <span>-</span>;
+        try {
+          const date = new Date(params.value);
+          return <span>{date.toLocaleString()}</span>;
+        } catch (e) {
+          console.error("Error formatting date:", e);
+          return <span>{params.value}</span>;
+        }
+      },
+    },
+  ];
+
+  const handleExportPDF = (selectedUsers: User[]) => {
+    try {
+      console.log("Export to PDF", selectedUsers);
+      exportToPDF(selectedUsers);
+    } catch (error) {
+      console.error("Error exporting to PDF:", error);
+      alert("Failed to export to PDF. Please try again.");
+    }
+  };
+
+  const handleExportExcel = (selectedUsers: User[]) => {
+    try {
+      console.log("Export to Excel", selectedUsers);
+      exportToExcel(selectedUsers);
+    } catch (error) {
+      console.error("Error exporting to Excel:", error);
+      alert("Failed to export to Excel. Please try again.");
+    }
+  };
+
+  const handlePrint = (selectedUsers: User[]) => {
+    try {
+      console.log("Print users", selectedUsers);
+      printUsers(selectedUsers);
+    } catch (error) {
+      console.error("Error printing users:", error);
+      alert("Failed to print. Please try again.");
+    }
+  };
+
   return (
-    <div className=" h-full flex flex-1 max-w-[100%]">
-      <UserTable />
+    <div className="h-full flex flex-1 max-w-[100%]">
+      <DataTable
+        title="User Management"
+        description="Manage all users and their details in one place"
+        icon={<Users size={20} />}
+        columns={columns}
+        fetchData={fetchUsers}
+        addButtonLabel="Add User"
+        onAddItem={() => setOpenAddUserDrawer(true)}
+        searchPlaceholder="Search users by name, email, role..."
+        searchFields={["username", "email", "role", "phoneNumber"]}
+        handleExportPDF={handleExportPDF}
+        handleExportExcel={handleExportExcel}
+        handlePrint={handlePrint}
+        getRowActions={getUserActions}
+      />
+
+      <AddUserDrawer
+        open={openAddUserDrawer}
+        onOpenChange={setOpenAddUserDrawer}
+        addUserToState={handleUserAdded}
+      />
+
+      <ViewUserDrawer
+        open={openViewUserDialog}
+        onOpenChange={setOpenViewUserDialog}
+        user={selectedUser}
+      />
+
+      <EditUserDrawer
+        open={openEditUserDrawer}
+        onOpenChange={handleEditDrawerChange}
+        user={selectedUser}
+        refetchUsers={() => {
+          fetchUsers();
+        }}
+      />
     </div>
   );
 }
-
-export default page;

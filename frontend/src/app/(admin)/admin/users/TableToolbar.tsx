@@ -1,26 +1,25 @@
 "use client";
 
-import React from "react";
+import type React from "react";
 import {
   GridToolbarContainer,
   GridToolbarColumnsButton,
   GridToolbarFilterButton,
   GridToolbarDensitySelector,
   GridToolbarExport,
-  GridRowSelectionModel,
+  type GridRowSelectionModel,
 } from "@mui/x-data-grid";
 import { Button } from "@/components/ui/button";
 import { Download, FileType, Printer } from "lucide-react";
-import { User } from "@/types/types";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 
 const muiTheme = createTheme({
   palette: {
     primary: {
-      main: "#06513D", 
+      main: "#06513D",
     },
     text: {
-      primary: "#06513D", 
+      primary: "#06513D",
       secondary: "#059669",
     },
   },
@@ -48,40 +47,34 @@ const muiTheme = createTheme({
 
 interface TableToolbarProps {
   selectedRows: GridRowSelectionModel;
-  data: User[];
+  data: any[]; // Using any[] since this could be users, devices, etc.
   handleExportPDF: () => void;
   handleExportExcel: () => void;
+  handlePrint?: () => void; // Optional print handler
 }
 
-const TableToolbar = ({
+const TableToolbar: React.FC<TableToolbarProps> = ({
   selectedRows,
   data,
   handleExportPDF,
   handleExportExcel,
+  handlePrint,
   ...props
-}: TableToolbarProps) => {
+}) => {
   return (
     <ThemeProvider theme={muiTheme}>
       <GridToolbarContainer className="flex justify-between p-3 border-b bg-gray-50 rounded-t-md">
         <div className="flex gap-2">
-          <div
-            className="flex items-center gap-1 bg-white hover:bg-gray-100 shadow-sm"
-          >
+          <div className="flex items-center gap-1 bg-white hover:bg-gray-100 shadow-sm">
             <GridToolbarColumnsButton />
           </div>
-          <div
-            className="flex items-center gap-1 bg-white hover:bg-gray-100 shadow-sm"
-          >
+          <div className="flex items-center gap-1 bg-white hover:bg-gray-100 shadow-sm">
             <GridToolbarFilterButton />
           </div>
-          <div
-            className="flex items-center gap-1 bg-white hover:bg-gray-100 shadow-sm"
-          >
+          <div className="flex items-center gap-1 bg-white hover:bg-gray-100 shadow-sm">
             <GridToolbarDensitySelector />
           </div>
-          <div
-            className="flex items-center gap-1 bg-white hover:bg-gray-100 shadow-sm"
-          >
+          <div className="flex items-center gap-1 bg-white hover:bg-gray-100 shadow-sm">
             <GridToolbarExport />
           </div>
         </div>
@@ -109,7 +102,8 @@ const TableToolbar = ({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => {}}
+            onClick={handlePrint}
+            disabled={selectedRows.length === 0 || !handlePrint}
             className="flex items-center gap-1 bg-white hover:bg-gray-100 text-primary border-primary hover:text-primary-dark"
           >
             <Printer size={16} />

@@ -10,17 +10,17 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import { signup, getUserById } from "../../../../services/userService"; // Ensure you import getUserById
-import { User } from "@/types/types"; // Import User type
+import { signup, getUserById } from "../../../../services/userService";  
+import { User } from "@/types/types";  
 
 export default function AddUserDrawer({
   open,
   onOpenChange,
-  addUserToState, // This will be passed down from UserTable
+  addUserToState,  
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  addUserToState: (newUser: User) => void; // Function to add the new user to the existing list
+  addUserToState: (newUser: User) => void;  
 }) {
   const [userData, setUserData] = useState({
     username: "",
@@ -44,7 +44,7 @@ export default function AddUserDrawer({
     setLoading(true);
     setError(null);
     try {
-      // Signup the new user
+       
       const response: {
         success: boolean;
         message: string;
@@ -52,14 +52,14 @@ export default function AddUserDrawer({
       } = await signup(userData);
 
       if (response.success && response.userInformation) {
-        // Fetch the user by ID after creation
-        const newUserResponse = await getUserById(response.userInformation.id); // Assuming `response.userInformation` contains the user ID
-        addUserToState(newUserResponse.user); // Add user to the existing state in UserTable
+         
+        const newUserResponse = await getUserById(response.userInformation.id);  
+        addUserToState(newUserResponse.user);  
         console.log(newUserResponse.user);
       } else {
         setError(`Failed to add user. ${response.message}`);
       }
-      // Close the drawer
+       
       onOpenChange(false);
     } catch (error) {
       setError(`Failed to add user. Try again. ${error}`);
@@ -71,7 +71,7 @@ export default function AddUserDrawer({
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange} direction="right">
-      <DrawerContent className="right-0 left-auto h-full w-full sm:w-96 flex flex-col">
+      <DrawerContent className="right-0 top-[-3rem] left-auto h-fit w-full sm:w-96 flex flex-col rounded-md">
         <div className="mx-auto w-full max-w-sm">
           <DrawerHeader>
             <DrawerTitle>Add New User</DrawerTitle>

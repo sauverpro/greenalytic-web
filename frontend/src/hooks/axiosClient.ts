@@ -1,3 +1,4 @@
+'use client';
 import axios, { AxiosInstance, AxiosError, AxiosResponse } from "axios";
 
 const useAxiosClient = (): AxiosInstance => {
@@ -25,8 +26,11 @@ const useAxiosClient = (): AxiosInstance => {
     (error: AxiosError) => {
       try {
         const { response } = error;
+        console.log("response dsfasdfs", response);
+        
         if (response?.status === 401) {
           localStorage.removeItem("AUTH_TOKEN");
+          window.location.href = "/";
         }
       } catch (e) {
         console.error(e);

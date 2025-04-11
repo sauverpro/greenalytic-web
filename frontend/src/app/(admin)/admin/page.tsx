@@ -21,17 +21,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  RecentActivityCard,
-  SystemAlertsCard,
-} from "@/components/adminComponents/activityCards";
 import ClientGrowthChart from "@/components/adminComponents/client-growth-chart";
 import { format } from "date-fns";
 import EmissionsChart from "@/components/adminComponents/emissionsChart";
 import MapWrapper from "@/components/adminComponents/mapWrapper";
 import { GPSMetricCard, FuelMetricCard, EmissionsMetricCard } from "@/components/adminComponents/metricCards";
 import { getAllDataInSystem, getAnalyticsData, getMapData } from "@/services/vehicleData";
-import UserTable from "./users/UserTable";
+// import UserTable from "./users/UserTable";
 
 interface MetricCardProps {
   title: string;
@@ -52,7 +48,6 @@ export default function AdminDashboard() {
   const [mapData, setMapData] = useState<any>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  // Calculate date range based on selected timeframe
   const getDateRange = () => {
     const endDate = new Date();
     const startDate = new Date();
@@ -97,7 +92,6 @@ export default function AdminDashboard() {
       try {
         const dateRange = getDateRange();
 
-        // Fetch all data in parallel for better performance
         const [systemResponse, analyticsResponse, mapResponse] =
           await Promise.all([
             getAllDataInSystem(),
@@ -162,7 +156,7 @@ export default function AdminDashboard() {
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-emerald-50 to-white">
       {/* Header */}
-      <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-white px-6 shadow-sm">
+      <header className=" top-0 z-30 flex h-16 items-center gap-4 border-b bg-white px-6 shadow-sm">
         <div className="flex flex-1 items-center gap-2">
           <Badge
             variant="outline"
@@ -197,17 +191,7 @@ export default function AdminDashboard() {
               />
               {isLoading ? "Loading..." : "Refresh Data"}
             </Button>
-            <Button variant="outline" size="sm" className="h-9">
-              <Download className="mr-2 h-4 w-4" />
-              Export
-            </Button>
-            {/* <Button
-              size="sm"
-              className="h-9 bg-emerald-600 hover:bg-emerald-700"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Add New Client
-            </Button> */}
+ 
           </div>
         </div>
 
@@ -219,7 +203,7 @@ export default function AdminDashboard() {
           <div className="flex justify-between">
             <TabsList className="bg-muted/50">
               <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="clients">Clients</TabsTrigger>
+              {/* <TabsTrigger value="clients">Clients</TabsTrigger> */}
             </TabsList>
 
             <div className="flex items-center gap-2">
@@ -246,9 +230,7 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Overview Tab Content */}
           <TabsContent value="overview" className="space-y-6">
-            {/* Key Metrics */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               <MetricCard
                 title="Total Vehicles"
@@ -315,13 +297,6 @@ export default function AdminDashboard() {
               />
             </div>
 
-            {/* Recent Activity & Alerts */}
-            <ActivityAndAlertsSection
-              isLoading={isLoading}
-              emissions={systemData?.data?.emissions || []}
-              fuels={systemData?.data?.fuels || []}
-              gps={systemData?.data?.gps || []}
-            />
 
             {/* Client Map */}
             <Card className="mt-6">
@@ -348,6 +323,7 @@ export default function AdminDashboard() {
                         (mapData?.vehiclesWithGpsData || 0)}
                     </Badge>
                   </div>
+                  <div></div>
                 </div>
               </CardHeader>
               <CardContent className="p-0">
@@ -379,7 +355,7 @@ export default function AdminDashboard() {
           </TabsContent>
 
           {/* Other Tabs Content */}
-          <TabsContent value="clients" className="space-y-6">
+          {/* <TabsContent value="clients" className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Clients Management</CardTitle>
@@ -389,14 +365,13 @@ export default function AdminDashboard() {
               </CardHeader>
               <UserTable />
             </Card>
-          </TabsContent>
+          </TabsContent> */}
         </Tabs>
       </main>
     </div>
   );
 }
 
-// Metric Card Component with proper TypeScript typing
 function MetricCard({
   title,
   value,
@@ -431,30 +406,5 @@ function MetricCard({
         </div>
       </CardContent>
     </Card>
-  );
-}
-
-// Activity and Alerts Section
-function ActivityAndAlertsSection({
-  isLoading,
-  emissions,
-  fuels,
-  gps,
-}: {
-  isLoading: boolean;
-  emissions: any[];
-  fuels: any[];
-  gps: any[];
-}) {
-  return (
-    <div className="grid gap-6 md:grid-cols-2">
-      <RecentActivityCard isLoading={isLoading} data={gps} />
-      <SystemAlertsCard
-        isLoading={isLoading}
-        emissions={emissions}
-        fuels={fuels}
-        gps={gps}
-      />
-    </div>
   );
 }

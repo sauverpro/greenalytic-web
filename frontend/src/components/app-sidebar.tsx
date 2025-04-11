@@ -49,15 +49,11 @@ import { handleLogout } from "../services/userService";
 
 const adminItems = [
   { title: "Dashboard", url: "/admin", icon: Home },
-  { title: "Device Inventory", url: "#", icon: Gauge },
   { title: "Users", url: "/admin/users", icon: Users },
   { title: "Messages", url: "#", icon: MessageSquare },
   { title: "Vehicles", url: "/admin/vehicles", icon: Truck },
   { title: "Devices", url: "/admin/devices", icon: Gauge },
-  { title: "Tracking Map", url: "#", icon: MapPin },
-  { title: "Analytics Hub", url: "#", icon: BarChart3 },
   { title: "System Settings", url: "#", icon: Settings },
-  { title: "Audit Logs", url: "#", icon: ClipboardList },
   { title: "Help Center", url: "#", icon: HelpCircle },
 ];
 
