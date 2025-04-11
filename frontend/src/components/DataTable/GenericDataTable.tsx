@@ -23,6 +23,7 @@ import { createTheme, ThemeProvider } from "@mui/material/styles";
 import SearchAndFilter from "@/app/(admin)/admin/users/SearchAndFilter";
 import PaginationControls from "@/app/(admin)/admin/users/PaginationControls";
 import TableToolbar from "@/app/(admin)/admin/users/TableToolbar";
+import TableActions, { type ActionItem } from "./TableActions";
 
 // MUI theme for consistent styling
 const muiTheme = createTheme({
@@ -79,26 +80,26 @@ interface DataTableProps<T> {
   searchFields?: string[];
   handleExportPDF?: (selectedItems: T[]) => void;
   handleExportExcel?: (selectedItems: T[]) => void;
+  handlePrint?: (selectedItems: T[]) => void; 
   bulkActionsComponent?: React.ReactNode;
+  getRowActions?: (item: T) => ActionItem[];
 }
 
-// Import the User type from the types file
-import type { User } from "@/types/types";
-
-function DataTable<T extends User>({
+function DataTable<T extends { id: string | number }>({
   title,
   description,
   icon,
   columns,
   fetchData,
-  addButtonLabel = "Add Item",
+  addButtonLabel = "",
   onAddItem,
   searchPlaceholder = "Search...",
   searchFields = [],
   handleExportPDF,
   handleExportExcel,
+  handlePrint,
   bulkActionsComponent,
-  
+  getRowActions,
 }: DataTableProps<T>) {
   const [items, setItems] = useState<T[]>([]);
   const [filteredItems, setFilteredItems] = useState<T[]>([]);
@@ -113,6 +114,25 @@ function DataTable<T extends User>({
     totalItems: 0,
     limit: 10,
   });
+
+  // Add actions column if getRowActions is provided
+  const columnsWithActions = getRowActions
+    ? [
+        ...columns,
+        {
+          field: "actions",
+          headerName: "Actions",
+          width: 100,
+          sortable: false,
+          filterable: false,
+          renderCell: (params:any) => {
+            const item = params.row as T;
+            const actions = getRowActions(item);
+            return <TableActions actions={actions} />;
+          },
+        },
+      ]
+    : columns;
 
   // Fetch data with pagination
   const loadData = async (page = 1, limit = 10) => {
@@ -187,19 +207,40 @@ function DataTable<T extends User>({
   // Handle PDF export
   const handleExportPDFWrapper = () => {
     if (selectionModel.length === 0 || !handleExportPDF) return;
-    const selectedItems = items.filter((item) =>
-      selectionModel.includes(item.id)
-    );
-    handleExportPDF(selectedItems as T[]);
+    try {
+      const selectedItems = items.filter((item) =>
+        selectionModel.includes(item.id as never)
+      );
+      handleExportPDF(selectedItems as T[]);
+    } catch (error) {
+      console.error("Error in PDF export wrapper:", error);
+    }
   };
 
   // Handle Excel export
   const handleExportExcelWrapper = () => {
     if (selectionModel.length === 0 || !handleExportExcel) return;
-    const selectedItems = items.filter((item) =>
-      selectionModel.includes(item.id)
-    );
-    handleExportExcel(selectedItems as T[]);
+    try {
+      const selectedItems = items.filter((item) =>
+        selectionModel.includes(item.id as never)
+      );
+      handleExportExcel(selectedItems as T[]);
+    } catch (error) {
+      console.error("Error in Excel export wrapper:", error);
+    }
+  };
+
+  // Handle Print
+  const handlePrintWrapper = () => {
+    if (selectionModel.length === 0 || !handlePrint) return;
+    try {
+      const selectedItems = items.filter((item) =>
+        selectionModel.includes(item.id as never)
+      );
+      handlePrint(selectedItems as T[]);
+    } catch (error) {
+      console.error("Error in print wrapper:", error);
+    }
   };
 
   return (
@@ -222,7 +263,7 @@ function DataTable<T extends User>({
                   variant="default"
                   className="bg-primary hover:bg-primary-dark text-white rounded-md shadow-sm"
                 >
-                  <Plus size={16} className="mr-1" /> {addButtonLabel}
+                  <Plus size={16} className="mr-1" /> {addButtonLabel} 
                 </Button>
               )}
             </div>
@@ -230,7 +271,6 @@ function DataTable<T extends User>({
 
           <CardContent className="p-6">
             <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              {/* Search and filter component */}
               <SearchAndFilter
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
@@ -238,10 +278,8 @@ function DataTable<T extends User>({
               />
 
               <div className="flex flex-wrap items-center gap-3">
-                {/* Bulk actions component */}
                 {selectionModel.length > 0 && bulkActionsComponent}
 
-                {/* Pagination controls component */}
                 <PaginationControls
                   limit={pagination.limit}
                   onLimitChange={handlePaginationLimitChange}
@@ -264,7 +302,7 @@ function DataTable<T extends User>({
               )}
               <DataGrid
                 rows={filteredItems}
-                columns={columns}
+                columns={columnsWithActions}
                 pageSizeOptions={[pagination.limit]}
                 paginationMode="server"
                 rowCount={pagination.totalItems}
@@ -289,9 +327,10 @@ function DataTable<T extends User>({
                   toolbar: (props) => (
                     <TableToolbar
                       selectedRows={selectionModel}
-                      data={items as User[]}
+                      data={items as any[]}
                       handleExportPDF={handleExportPDFWrapper}
                       handleExportExcel={handleExportExcelWrapper}
+                      handlePrint={handlePrint ? handlePrintWrapper : undefined}
                     />
                   ),
                 }}
@@ -306,7 +345,7 @@ function DataTable<T extends User>({
                     backgroundColor: "#f3f4f6",
                   },
                   "& .MuiDataGrid-cell": {
-                    padding: "12px 16px",
+                    padding: "12px 16px ",
                   },
                   "& .MuiDataGrid-footerContainer": {
                     backgroundColor: "#f9fafb",

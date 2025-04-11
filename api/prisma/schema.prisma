@@ -98,7 +98,7 @@ model FuelData {
   fuelLevel        Float
   fuelConsumption  Float
   plateNumber      String
-  trackingDevice   TrackingDevice @relation(fields: [trackingDeviceId], references: [id])
+  trackingDevice   TrackingDevice @relation(fields: [trackingDeviceId], references: [id], onDelete: Cascade)
   trackingDeviceId Int // Foreign key to TrackingDevice
 
   // Reverse relation to Vehicle
@@ -119,7 +119,7 @@ model EmissionData {
   vehicleId     Int
   plateNumber   String
 
-  trackingDevice   TrackingDevice @relation(fields: [trackingDeviceId], references: [id])
+  trackingDevice   TrackingDevice @relation(fields: [trackingDeviceId], references: [id], onDelete: Cascade)
   trackingDeviceId Int
   createdAt        DateTime       @default(now())
 
@@ -139,7 +139,7 @@ model GPSData {
   accuracy  Float?
   timestamp DateTime @default(now())
   vehicleId Int
-  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id])
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade )
   trackingStatus Boolean @default(false) 
   trackingDeviceId Int? // Foreign key to TrackingDevice (optional)
   trackingDevice   TrackingDevice? @relation(fields: [trackingDeviceId], references: [id])

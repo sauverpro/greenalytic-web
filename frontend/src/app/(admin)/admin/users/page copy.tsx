@@ -3,7 +3,7 @@
 import { Users, Edit, Eye, Trash, Car } from "lucide-react";
 import type { GridColDef } from "@mui/x-data-grid";
 import DataTable from "@/components/DataTable/GenericDataTable";
-import { getAllUsers, deleteUser } from "@/services/userService";
+import { getAllUsers } from "@/services/userService";
 import type { ActionItem } from "@/components/DataTable/TableActions";
 import { useState } from "react";
 import { exportToPDF, exportToExcel, printUsers } from "./ExportUtils";
@@ -11,7 +11,7 @@ import type { User } from "@/types/types";
 import AddUserDrawer from "./AddUserDrawer";
 import EditUserDrawer from "./EditUserDrawer";
 
-import { toast } from "sonner";
+import { toast } from "sonner"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,20 +22,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
+} from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
+// import AddVehicleDrawer from "./AddVehicleDrawer";
 import ViewUserDrawer from "./ViewUserDrawer";
 
-export function ConfirmAndToastDialog({
-  onConfirm,
-}: {
-  onConfirm: () => void;
-}) {
+export function ConfirmAndToastDialog() {
   const [open, setOpen] = useState(false);
 
   const handleConfirm = () => {
     setOpen(false);
-    onConfirm();
     toast("Action Confirmed", {
       description: "Your settings have been saved successfully.",
       action: {
@@ -76,7 +72,6 @@ export default function UsersPage() {
   const [openEditUserDrawer, setOpenEditUserDrawer] = useState(false);
   const [openAddVehicleDrawer, setOpenAddVehicleDrawer] = useState(false);
   const [openViewUserDialog, setOpenViewUserDialog] = useState(false);
-  const [users, setUsers] = useState<User[]>([]);
 
   const fetchUsers = async (page = 1, limit = 10) => {
     try {
@@ -98,7 +93,6 @@ export default function UsersPage() {
         no: startIndex + index + 1,
       }));
 
-      setUsers(usersWithNumbers);
       return {
         data: usersWithNumbers,
         pagination: response.pagination,
@@ -134,7 +128,6 @@ export default function UsersPage() {
 
   const handleUserAdded = (newUser: User) => {
     setOpenAddUserDrawer(false);
-    setUsers((prevUsers) => [...prevUsers, newUser]);
   };
 
   const handleEditDrawerChange = (open: boolean) => {
@@ -163,17 +156,6 @@ export default function UsersPage() {
     }
   };
 
-  const handleDeleteUser = async (user: User) => {
-    try {
-      await deleteUser(String(user.id));
-      setUsers((prevUsers) => prevUsers.filter((u) => u.id !== user.id));
-      toast.success("User deleted successfully");
-    } catch (error) {
-      console.error("Error deleting user:", error);
-      toast.error("Failed to delete user. Please try again.");
-    }
-  };
-
   const getUserActions = (user: User): ActionItem[] => {
     return [
       {
@@ -186,9 +168,10 @@ export default function UsersPage() {
         onClick: () => handleEditUser(user),
         icon: <Edit size={16} />,
       },
+
       {
         label: "Delete User",
-        onClick: () => handleDeleteUser(user),
+        onClick: () => console.log("Delete user::::::::", user),
         variant: "destructive",
         icon: <Trash size={16} />,
       },
@@ -233,6 +216,7 @@ export default function UsersPage() {
         </span>
       ),
     },
+
     {
       field: "role",
       headerName: "Role",
@@ -349,3 +333,5 @@ export default function UsersPage() {
     </div>
   );
 }
+
+

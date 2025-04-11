@@ -1,44 +1,38 @@
 "use client";
-import { HardDrive } from "lucide-react";
+import { HardDrive, Edit, Eye, Trash, PlusCircle } from "lucide-react";
 import type { GridColDef } from "@mui/x-data-grid";
 import DataTable from "@/components/DataTable/GenericDataTable";
 import { getAllDevices } from "@/services/deviceServices";
-
-
-interface Device {
-  id: string;
-  name: string;
-  serialNumber: string;
-  status: string;
-  batteryLevel: number;
-  lastActive: string;
-  assignedTo: string;
-
-}
+import type { ActionItem } from "@/components/DataTable/TableActions";
+import { useState } from "react";
+import {
+  exportToPDF,
+  exportToExcel,
+  printDevices,
+  type Device,
+} from "./ExportUtils";
 
 function DevicesPage() {
-  
+  const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
+
   const fetchDevices = async (page = 1, limit = 10) => {
     try {
       const response = await getAllDevices();
       console.log("Fetched devices: ", response);
 
-      
       const devices = response.data || [];
 
-      
-      
       const startIndex = (page - 1) * limit;
       const endIndex = startIndex + limit;
       const paginatedDevices = devices.slice(startIndex, endIndex);
 
       return {
-        data: paginatedDevices.map((device:any)=> ({
+        data: paginatedDevices.map((device: any) => ({
           id: device.id,
           name: device.model || "Unknown Device",
           serialNumber: device.serialNumber,
           status: device.status,
-          batteryLevel: Math.floor(Math.random() * 100), 
+          batteryLevel: Math.floor(Math.random() * 100),
           lastActive: device.lastPing || device.updatedAt,
           assignedTo: device.user?.username || "Unassigned",
           plateNumber: device.plateNumber,
@@ -66,7 +60,48 @@ function DevicesPage() {
     }
   };
 
-  
+  const handleEditDevice = (device: Device) => {
+    setSelectedDevice(device);
+    console.log("Edit device:", device);
+    // Here you would typically open a modal or navigate to edit page
+  };
+
+  const handleViewDevice = (device: Device) => {
+    console.log("View device details:", device);
+    // Navigate to device details page or open a modal
+  };
+
+  const handleDeleteDevice = (device: Device) => {
+    console.log("Delete device:", device);
+    // Show confirmation dialog and delete if confirmed
+  };
+
+  const handleAddDevice = () => {
+    console.log("Add new device");
+    // Open add device modal or navigate to add device page
+  };
+
+  const getDeviceActions = (device: Device): ActionItem[] => {
+    return [
+      {
+        label: "View Details",
+        onClick: () => handleViewDevice(device),
+        icon: <Eye size={16} />,
+      },
+      {
+        label: "Edit Device",
+        onClick: () => handleEditDevice(device),
+        icon: <Edit size={16} />,
+      },
+      {
+        label: "Delete Device",
+        onClick: () => handleDeleteDevice(device),
+        variant: "destructive",
+        icon: <Trash size={16} />,
+      },
+    ];
+  };
+
   const columns: GridColDef[] = [
     { field: "id", headerName: "ID", width: 70 },
     {
@@ -141,15 +176,35 @@ function DevicesPage() {
     },
   ];
 
-  
+  // Export handlers with proper error handling
   const handleExportPDF = (selectedDevices: Device[]) => {
-    console.log("Export to PDF", selectedDevices);
-    
+    try {
+      console.log("Export to PDF", selectedDevices);
+      exportToPDF(selectedDevices);
+    } catch (error) {
+      console.error("Error exporting to PDF:", error);
+      alert("Failed to export to PDF. Please try again.");
+    }
   };
 
   const handleExportExcel = (selectedDevices: Device[]) => {
-    console.log("Export to Excel", selectedDevices);
-    
+    try {
+      console.log("Export to Excel", selectedDevices);
+      exportToExcel(selectedDevices);
+    } catch (error) {
+      console.error("Error exporting to Excel:", error);
+      alert("Failed to export to Excel. Please try again.");
+    }
+  };
+
+  const handlePrint = (selectedDevices: Device[]) => {
+    try {
+      console.log("Print devices", selectedDevices);
+      printDevices(selectedDevices);
+    } catch (error) {
+      console.error("Error printing devices:", error);
+      alert("Failed to print. Please try again.");
+    }
   };
 
   return (
@@ -160,12 +215,14 @@ function DevicesPage() {
         icon={<HardDrive size={20} />}
         columns={columns}
         fetchData={fetchDevices}
-        
-        
+        addButtonLabel="Add Device"
+        onAddItem={handleAddDevice}
         searchPlaceholder="Search devices by name, serial number..."
         searchFields={["name", "serialNumber", "status", "assignedTo"]}
-          
-        
+        handleExportPDF={handleExportPDF}
+        handleExportExcel={handleExportExcel}
+        handlePrint={handlePrint}
+        getRowActions={getDeviceActions}
       />
     </div>
   );

@@ -98,26 +98,26 @@ const MapSection: React.FC<MapSectionProps> = ({
     );
   }
 
-  const StatusOverlay = () => (
-    <div className="absolute bottom-4 left-4 bg-white p-3 rounded-md shadow-md z-10">
-      <p className="font-medium text-sm">Vehicle Status</p>
-      <div className="mt-1 space-y-1">
-        <p className="text-xs">Total Vehicles: {totalVehicles}</p>
-        <p className="text-xs">With GPS Data: {vehiclesWithGps}</p>
-      </div>
-    </div>
-  );
+  // const StatusOverlay = () => (
+  //   <div className="absolute bottom-4 left-4 bg-white p-3 rounded-md shadow-md z-10">
+  //     <p className="font-medium text-sm">Vehicle Status</p>
+  //     <div className="mt-1 space-y-1">
+  //       <p className="text-xs">Total Vehicles: {totalVehicles}</p>
+  //       <p className="text-xs">With GPS Data: {vehiclesWithGps}</p>
+  //     </div>
+  //   </div>
+  // );
 
   const ControlPanel = () => (
-    <div className="absolute top-4 right-4 bg-white p-3 rounded-md shadow-md z-10">
+    <div className="absolute top-[-3rem] right-[.5rem] bg-white p-2 rounded-md shadow-md z-10">
       <label className="flex items-center space-x-2 text-sm cursor-pointer">
         <input
           type="checkbox"
           checked={showLabels}
           onChange={() => setShowLabels(!showLabels)}
-          className="h-4 w-4"
+          className="h-4 w-4 "
         />
-        <span>Show Labels</span>
+        <span>Show Plate number</span>
       </label>
     </div>
   );
@@ -139,7 +139,6 @@ const MapSection: React.FC<MapSectionProps> = ({
         }}
         onLoad={onMapLoad}
       >
-        {/* Show all vehicles on the map */}
         {vehicles.map((vehicle, index) => (
           <React.Fragment key={`vehicle-${vehicle.vehicleId}-${index}`}>
             <Marker
@@ -155,17 +154,16 @@ const MapSection: React.FC<MapSectionProps> = ({
               onClick={() => setSelectedVehicle(vehicle)}
             />
 
-            {/* Custom label overlay */}
             {showLabels && (
               <OverlayView
                 position={vehicle.position}
                 mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
                 getPixelPositionOffset={(width, height) => ({
                   x: -width / 2,
-                  y: -height - 35, // Position above the marker
+                  y: -height - 35, 
                 })}
               >
-                <div className="px-2 w-[5rem] py-1 bg-slate-800 bg-opacity-75 text-white text-xs font-medium rounded shadow-md whitespace-nowrap">
+                <div className="px-2 w-[3.5rem] bg-slate-800 bg-opacity-75 text-white text-xs font-medium rounded shadow-md whitespace-nowrap">
                   {vehicle.plateNumber}
                 </div>
               </OverlayView>
@@ -173,7 +171,6 @@ const MapSection: React.FC<MapSectionProps> = ({
           </React.Fragment>
         ))}
 
-        {/* Show info window for selected vehicle */}
         {selectedVehicle && (
           <InfoWindow
             position={selectedVehicle.position}
@@ -222,10 +219,8 @@ const MapSection: React.FC<MapSectionProps> = ({
           </InfoWindow>
         )}
 
-        {/* Show current location marker if no vehicles */}
         {vehicles.length === 0 && <Marker position={currentLocation} />}
 
-        {/* Show path history */}
         {pathHistory.length > 0 && (
           <Polyline
             path={pathHistory}
@@ -237,7 +232,7 @@ const MapSection: React.FC<MapSectionProps> = ({
           />
         )}
       </GoogleMap>
-      <StatusOverlay />
+      {/* <StatusOverlay /> */}
       <ControlPanel />
     </div>
   );

@@ -8,9 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { AddVehicleModal } from "@/components/adminComponents/add-vehicle-modal";
 import { AddDeviceModal } from "@/components/adminComponents/add-device-modal";
-import { ClientData, DeviceData, VehicleData } from "@/types/types";
+import { ClientData, DeviceData, User, VehicleData } from "@/types/types";
 import { getUserById } from "@/services/userService";
 import { CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
 import { Card, CardHeader, CardContent } from "@mui/material";
@@ -38,6 +37,7 @@ import {
 import { toast } from "sonner";
 import { getVehiclesForUser } from "@/services/vehicleService";
 import { VehicleTable } from "./TableData";
+import EditUserDrawer from "../EditUserDrawer";
 
 export default function ClientDetails() {
   const params = useParams();
@@ -49,6 +49,7 @@ export default function ClientDetails() {
   const [selectedTab, setSelectedTab] = useState("vehicles");
   const [isAddVehicleModalOpen, setIsAddVehicleModalOpen] = useState(false);
   const [isAddDeviceModalOpen, setIsAddDeviceModalOpen] = useState(false);
+  const [isEditUserDrawerOpen, setIsEditUserDrawerOpen] = useState(false);
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(
     null
   );
@@ -56,99 +57,99 @@ export default function ClientDetails() {
   const [loading, setLoading] = useState(true);
   const [vehicles, setVehicles] = useState<VehicleData[]>([]);
   const [devices, setDevices] = useState<DeviceData[]>([]);
+  const [userData, setUserData] = useState<User | null>(null);
 
-  // Fetch client data based on userId
+    
+  const fetchClientData = async () => {
+    if (!userId) {
+      console.log("No userId found in params");
+      return;
+    }
+
+    setLoading(true);
+    console.log("Fetching client data for userId:", userId);
+
+    try {
+      const clientData = await getUserById(userId);
+
+        
+      setUserData(clientData.user);
+
+      setClient({
+        id: clientData.user.id.toString(),
+        name: clientData.user.username,
+        email: clientData.user.email,
+        phone: clientData.user.phoneNumber,
+        status: clientData.user.verified ? "active" : "pending",
+        image: clientData.user.image,
+        totalGPS: clientData.user.totalGpsData,
+        totalFuel: clientData.user.totalFuelData,
+        totalEmissions: clientData.user.totalEmissions,
+        joinDate: new Date(clientData.user.createdAt).toLocaleDateString(),
+        subscription: "Standard",
+        vehicles: clientData.user.vehicles.length,
+        GPSDevices: clientData.user.deviceCounts.gps,
+        fuelDevices: clientData.user.deviceCounts.fuel,
+        emissionsDevices: clientData.user.deviceCounts.emissions,
+        totalDevices: clientData.user.deviceCounts.total,
+        billingInfo: {
+          plan: "Standard Plan",
+          nextBilling: "N/A",
+          amount: "$0.00",
+          paymentMethod: "Credit Card",
+        },
+        address: clientData.user.address || "N/A",
+        devices: clientData.user.devices || [],
+        contactPerson: clientData.user.contactPerson || "N/A",
+        contactRole: clientData.user.contactRole || "N/A",
+        contactEmail: clientData.user.contactEmail || "N/A",
+        contactPhone: clientData.user.contactPhone || "N/A",
+      });
+
+      const extractedDevices: DeviceData[] =
+        clientData.user.trackingDevices.map((device: any) => ({
+          id: device.id.toString(),
+          type: `${
+            device.type.charAt(0).toUpperCase() +
+            device.type.slice(1).toLowerCase()
+          } Tracker`,
+          vehicle: "Unassigned",
+          date: new Date(device.createdAt || "2023-01-01").toLocaleDateString(),
+          status: device.isActive ? "online" : "offline",
+          lastPing: "N/A",
+        }));
+      setDevices(extractedDevices);
+
+      const fetchedVehicles = await getVehiclesForUser(userId);
+      console.log(
+        "Fetched vehicles data:::::::::::::::: ",
+        fetchedVehicles.vehicles
+      );
+
+      setVehicles(
+        Array.isArray(fetchedVehicles.vehicles) ? fetchedVehicles.vehicles : []
+      );
+    } catch (error) {
+      console.error("Error fetching client data:", error);
+      toast("Error fetching client data");
+      setVehicles([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchClientData = async () => {
-      if (!userId) {
-        console.log("No userId found in params");
-        return;
-      }
-
-      setLoading(true);
-      console.log("Fetching client data for userId:", userId);
-
-      try {
-        const clientData = await getUserById(userId);
-
-        setClient({
-          id: clientData.user.id.toString(),
-          name: clientData.user.username,
-          email: clientData.user.email,
-          phone: clientData.user.phoneNumber,
-          status: clientData.user.verified ? "active" : "pending",
-          image: clientData.user.image,
-          totalGPS: clientData.user.totalGpsData,
-          totalFuel: clientData.user.totalFuelData,
-          totalEmissions: clientData.user.totalEmissions,
-          joinDate: new Date(clientData.user.createdAt).toLocaleDateString(),
-          subscription: "Standard",
-          vehicles: clientData.user.vehicles.length,
-          GPSDevices: clientData.user.deviceCounts.gps,
-          fuelDevices: clientData.user.deviceCounts.fuel,
-          emissionsDevices: clientData.user.deviceCounts.emissions,
-          totalDevices: clientData.user.deviceCounts.total,
-          billingInfo: {
-            plan: "Standard Plan",
-            nextBilling: "N/A",
-            amount: "$0.00",
-            paymentMethod: "Credit Card",
-          },
-          address: clientData.user.address || "N/A",
-          devices: clientData.user.devices || [],
-          contactPerson: clientData.user.contactPerson || "N/A",
-          contactRole: clientData.user.contactRole || "N/A",
-          contactEmail: clientData.user.contactEmail || "N/A",
-          contactPhone: clientData.user.contactPhone || "N/A",
-        });
-
-        const extractedDevices: DeviceData[] =
-          clientData.user.trackingDevices.map((device: any) => ({
-            id: device.id.toString(),
-            type: `${
-              device.type.charAt(0).toUpperCase() +
-              device.type.slice(1).toLowerCase()
-            } Tracker`,
-            vehicle: "Unassigned",
-            date: new Date(
-              device.createdAt || "2023-01-01"
-            ).toLocaleDateString(),
-            status: device.isActive ? "online" : "offline",
-            lastPing: "N/A",
-          }));
-        setDevices(extractedDevices);
-
-        const fetchedVehicles = await getVehiclesForUser(userId);
-        console.log(
-          "Fetched vehicles data:::::::::::::::: ",
-          fetchedVehicles.vehicles
-        );
-
-        setVehicles(
-          Array.isArray(fetchedVehicles.vehicles)
-            ? fetchedVehicles.vehicles
-            : []
-        );
-      } catch (error) {
-        console.error("Error fetching client data:", error);
-        toast("Error fetching client data");
-        setVehicles([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchClientData();
   }, [userId]);
 
   const handleDeviceAdded = () => {
     toast("The device has been successfully added to the vehicle.");
-    // I want to refetch the devices data here
+    fetchClientData();   
   };
 
   const handleVehicleAdded = () => {
     toast("The vehicle has been successfully added to this client.");
-    // I want to refetch the vehicles data here
+    fetchClientData();   
   };
 
   if (loading) {
@@ -200,17 +201,13 @@ export default function ClientDetails() {
             <Mail className="mr-2 h-4 w-4" />
             Contact
           </Button>
-          <Button variant="outline" size="sm">
-            <Edit className="mr-2 h-4 w-4" />
-            Edit
-          </Button>
           <Button
-            variant="default"
+            variant="outline"
             size="sm"
-            className="bg-emerald-600 hover:bg-emerald-700"
+            onClick={() => setIsEditUserDrawerOpen(true)}
           >
-            <Download className="mr-2 h-4 w-4" />
-            Export Data
+            <Edit className="mr-2 h-4 w-4" />
+            Edit user
           </Button>
         </div>
       </header>
@@ -392,43 +389,6 @@ export default function ClientDetails() {
                 </div>
               </div>
 
-              <div className="mt-6">
-                <h4 className="text-sm font-medium mb-2">
-                  Billing Information
-                </h4>
-                <div className="rounded-lg border p-3 space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Plan:</span>
-                    <span className="text-sm font-medium">
-                      {client?.billingInfo.plan}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">
-                      Next Billing:
-                    </span>
-                    <span className="text-sm font-medium">
-                      {client?.billingInfo.nextBilling}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">
-                      Amount:
-                    </span>
-                    <span className="text-sm font-medium">
-                      {client?.billingInfo.amount}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">
-                      Payment Method:
-                    </span>
-                    <span className="text-sm font-medium">
-                      {client?.billingInfo.paymentMethod}
-                    </span>
-                  </div>
-                </div>
-              </div>
             </CardContent>
           </Card>
         </div>
@@ -463,12 +423,12 @@ export default function ClientDetails() {
               <Button
                 className="bg-emerald-600 hover:bg-emerald-700"
                 onClick={() => {
-                  // If no vehicle is selected, you might want to show a message or handle differently
+                    
                   if (vehicles.length === 0) {
                     toast("Please add a vehicle first before adding devices.");
                   }
-                  // Alternatively, you could pre-select the first vehicle
-                  // setSelectedVehicleId(vehicles[0]?.id || "");
+                    
+                    
                   setIsAddDeviceModalOpen(true);
                 }}
               >
@@ -581,16 +541,6 @@ export default function ClientDetails() {
         </Tabs>
       </main>
 
-      {/* Add Vehicle Modal */}
-      {/* <AddVehicleModal
-        isOpen={isAddVehicleModalOpen}
-        onClose={() => {
-          setIsAddVehicleModalOpen(false);
-        }}
-        userId={client?.id || ""}
-        onSuccess={handleVehicleAdded}
-      /> */}
-
       {/* Add Device Modal */}
       <AddDeviceModal
         isOpen={isAddDeviceModalOpen}
@@ -604,6 +554,12 @@ export default function ClientDetails() {
               }))
             : []
         }
+      />
+      <EditUserDrawer
+        open={isEditUserDrawerOpen}
+        onOpenChange={setIsEditUserDrawerOpen}
+        user={userData}
+        refetchUsers={fetchClientData}
       />
     </div>
   );
