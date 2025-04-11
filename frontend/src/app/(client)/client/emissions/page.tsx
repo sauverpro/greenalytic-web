@@ -8,7 +8,7 @@ import { useSearchParams } from "next/navigation";
 import EmissionsChartSection from "@/components/vehicleData/EmissionChartSection";
 import { DAY } from "@/utils/constants";
 import { getEmissionsData } from "@/services/vehicleData";
-import { getUserVehicles } from "@/services/vehicleService";
+import { getVehiclesByLoggedUser } from "@/services/vehicleService";
 
 function EmissionsPageContent() {
   const searchParams = useSearchParams();
@@ -38,7 +38,7 @@ function EmissionsPageContent() {
     const fetchVehicles = async () => {
       setIsLoading((prev) => ({ ...prev, vehicles: true }));
       try {
-        const response = await getUserVehicles();
+        const response = await getVehiclesByLoggedUser();
         if (response.success) {
           setVehicles(response.data);
 
@@ -152,7 +152,8 @@ function EmissionsPageContent() {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-sms uppercase tracking-wider">
-                      Time <span className="text-xs lowercase">(Local Time)</span>
+                      Time{" "}
+                      <span className="text-xs lowercase">(Local Time)</span>
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-sms uppercase tracking-wider">
                       CO2 (%)

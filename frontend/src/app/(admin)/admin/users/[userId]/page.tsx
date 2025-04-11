@@ -11,7 +11,6 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { AddVehicleModal } from "@/components/adminComponents/add-vehicle-modal";
 import { AddDeviceModal } from "@/components/adminComponents/add-device-modal";
 import { ClientData, DeviceData, VehicleData } from "@/types/types";
-// import { getVehiclesForUser } from "@/services/vehicleService";
 import { getUserById } from "@/services/userService";
 import { CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
 import { Card, CardHeader, CardContent } from "@mui/material";
@@ -125,9 +124,11 @@ export default function ClientDetails() {
           fetchedVehicles.vehicles
         );
 
-
-        setVehicles(Array.isArray(fetchedVehicles.vehicles) ? fetchedVehicles.vehicles : []);
-
+        setVehicles(
+          Array.isArray(fetchedVehicles.vehicles)
+            ? fetchedVehicles.vehicles
+            : []
+        );
       } catch (error) {
         console.error("Error fetching client data:", error);
         toast("Error fetching client data");
@@ -581,14 +582,14 @@ export default function ClientDetails() {
       </main>
 
       {/* Add Vehicle Modal */}
-      <AddVehicleModal
+      {/* <AddVehicleModal
         isOpen={isAddVehicleModalOpen}
         onClose={() => {
           setIsAddVehicleModalOpen(false);
         }}
         userId={client?.id || ""}
         onSuccess={handleVehicleAdded}
-      />
+      /> */}
 
       {/* Add Device Modal */}
       <AddDeviceModal

@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
-  getUserVehicles,
+  getVehiclesByLoggedUser,
   getVehiclesForUser,
 } from "../../../../services/vehicleService";
 import { User, Vehicle } from "@/types/types";

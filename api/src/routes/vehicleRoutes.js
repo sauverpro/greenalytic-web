@@ -36,11 +36,11 @@ VehicleRouter.get(
 
 
 // VEHICLE DATA for emission, fuel, and GPS data
-// VehicleRouter.use(verifyingtoken);
+VehicleRouter.use(verifyingtoken);
 
 VehicleRouter.get(
   "/",
-  vehicleDataController.getVehiclesByUserId
+  vehicleDataController.getVehiclesByLoggedUser
 );
 
 VehicleRouter.get(

@@ -38,17 +38,17 @@ export interface TrackingDevice {
   model: string;
   type: string;
   plateNumber: string;
-  isActive: boolean;
+  isActive?: boolean;
   lastPing?: Date;
-  gpsDatas: GPSData[];
-  fuelDatas: FuelData[];
-  emissionDatas: EmissionData[];
+  gpsDatas?: GPSData[];
+  fuelDatas?: FuelData[];
+  emissionDatas?: EmissionData[];
   userId?: number;
   email?: string;
   username?: string;
   vehicleId: number;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
   deletedAt?: Date;
 }
 

@@ -82,7 +82,10 @@ interface DataTableProps<T> {
   bulkActionsComponent?: React.ReactNode;
 }
 
-function DataTable<T extends { id: string | number }>({
+// Import the User type from the types file
+import type { User } from "@/types/types";
+
+function DataTable<T extends User>({
   title,
   description,
   icon,
@@ -95,6 +98,7 @@ function DataTable<T extends { id: string | number }>({
   handleExportPDF,
   handleExportExcel,
   bulkActionsComponent,
+  
 }: DataTableProps<T>) {
   const [items, setItems] = useState<T[]>([]);
   const [filteredItems, setFilteredItems] = useState<T[]>([]);
@@ -285,10 +289,9 @@ function DataTable<T extends { id: string | number }>({
                   toolbar: (props) => (
                     <TableToolbar
                       selectedRows={selectionModel}
-                      data={items}
+                      data={items as User[]}
                       handleExportPDF={handleExportPDFWrapper}
                       handleExportExcel={handleExportExcelWrapper}
-                      {...props}
                     />
                   ),
                 }}

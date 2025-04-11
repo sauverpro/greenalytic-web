@@ -4,7 +4,7 @@ import type { GridColDef } from "@mui/x-data-grid";
 import DataTable from "@/components/DataTable/GenericDataTable";
 import { getAllDevices } from "@/services/deviceServices";
 
-// Define your Device type
+
 interface Device {
   id: string;
   name: string;
@@ -13,32 +13,32 @@ interface Device {
   batteryLevel: number;
   lastActive: string;
   assignedTo: string;
-  // Add other properties as needed
+
 }
 
 function DevicesPage() {
-  // Fetch devices with pagination
+  
   const fetchDevices = async (page = 1, limit = 10) => {
     try {
       const response = await getAllDevices();
       console.log("Fetched devices: ", response);
 
-      // Extract the devices array from the response
+      
       const devices = response.data || [];
 
-      // Assuming the API doesn't support pagination yet
-      // You would need to implement pagination on the client side
+      
+      
       const startIndex = (page - 1) * limit;
       const endIndex = startIndex + limit;
       const paginatedDevices = devices.slice(startIndex, endIndex);
 
       return {
-        data: paginatedDevices.map((device) => ({
+        data: paginatedDevices.map((device:any)=> ({
           id: device.id,
           name: device.model || "Unknown Device",
           serialNumber: device.serialNumber,
           status: device.status,
-          batteryLevel: Math.floor(Math.random() * 100), // Replace with actual battery level if available
+          batteryLevel: Math.floor(Math.random() * 100), 
           lastActive: device.lastPing || device.updatedAt,
           assignedTo: device.user?.username || "Unassigned",
           plateNumber: device.plateNumber,
@@ -66,7 +66,7 @@ function DevicesPage() {
     }
   };
 
-  // Define columns for devices
+  
   const columns: GridColDef[] = [
     { field: "id", headerName: "ID", width: 70 },
     {
@@ -135,45 +135,37 @@ function DevicesPage() {
       ),
     },
     {
-      field: "lastActive",
-      headerName: "Last Active",
-      width: 180,
-      valueFormatter: (params) => {
-        return new Date(params.value).toLocaleString();
-      },
-    },
-    {
       field: "assignedTo",
       headerName: "Assigned To",
       width: 150,
     },
   ];
 
-  // Export functions
+  
   const handleExportPDF = (selectedDevices: Device[]) => {
     console.log("Export to PDF", selectedDevices);
-    // Implement your PDF export logic
+    
   };
 
   const handleExportExcel = (selectedDevices: Device[]) => {
     console.log("Export to Excel", selectedDevices);
-    // Implement your Excel export logic
+    
   };
 
   return (
     <div className="h-full flex flex-1 max-w-[100%]">
-      <DataTable<Device>
+      <DataTable
         title="Device Management"
         description="Manage all tracking devices in one place"
         icon={<HardDrive size={20} />}
         columns={columns}
         fetchData={fetchDevices}
-        // addButtonLabel="Add Device"
-        // onAddItem={() => console.log("Add device clicked")}
+        
+        
         searchPlaceholder="Search devices by name, serial number..."
         searchFields={["name", "serialNumber", "status", "assignedTo"]}
-        handleExportPDF={handleExportPDF}
-        handleExportExcel={handleExportExcel}
+          
+        
       />
     </div>
   );

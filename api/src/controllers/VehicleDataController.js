@@ -15,7 +15,7 @@ export class vehicleDataController {
    * @param {Object} req - Express request object
    * @param {Object} res - Express response object
    */
-  static getVehiclesByUserId = async (req, res) => {
+  static getVehiclesByLoggedUser = async (req, res) => {
     try {
       const userId = req.userId;
 

@@ -8,7 +8,7 @@ import { useSearchParams } from "next/navigation";
 import FuelChartSection from "@/components/vehicleData/FuelChartSection";
 import { DAY } from "@/utils/constants";
 import { getFuelData } from "@/services/vehicleData";
-import { getUserVehicles } from "@/services/vehicleService";
+import { getVehiclesByLoggedUser } from "@/services/vehicleService";
 
 function FuelsPageContent() {
   const searchParams = useSearchParams();
@@ -37,7 +37,7 @@ function FuelsPageContent() {
     const fetchVehicles = async () => {
       setIsLoading((prev) => ({ ...prev, vehicles: true }));
       try {
-        const response = await getUserVehicles();
+        const response = await getVehiclesByLoggedUser();
         if (response.success) {
           setVehicles(response.data);
 
