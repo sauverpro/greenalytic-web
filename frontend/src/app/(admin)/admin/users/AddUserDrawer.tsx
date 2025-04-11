@@ -8,15 +8,15 @@ import {
   DrawerDescription,
   DrawerFooter,
   DrawerHeader,
-  DrawerTitle
+  DrawerTitle,
 } from "@/components/ui/drawer";
-import { signup, getUserById } from "@/api/services/userService"; // Ensure you import getUserById
+import { signup, getUserById } from "../../../../services/userService"; // Ensure you import getUserById
 import { User } from "@/types/types"; // Import User type
 
 export default function AddUserDrawer({
   open,
   onOpenChange,
-  addUserToState // This will be passed down from UserTable
+  addUserToState, // This will be passed down from UserTable
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -27,13 +27,15 @@ export default function AddUserDrawer({
     email: "",
     password: "",
     phoneNumber: "",
-    gender: ""
+    gender: "",
   });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     setUserData((prev) => ({ ...prev, [name]: value }));
   };
@@ -43,16 +45,20 @@ export default function AddUserDrawer({
     setError(null);
     try {
       // Signup the new user
-const response: { success: boolean; message: string; userInformation?: { id: string } } = await signup(userData);
+      const response: {
+        success: boolean;
+        message: string;
+        userInformation?: { id: string };
+      } = await signup(userData);
 
-if (response.success && response.userInformation) {
-  // Fetch the user by ID after creation
-  const newUserResponse = await getUserById(response.userInformation.id); // Assuming `response.userInformation` contains the user ID
-  addUserToState(newUserResponse.user); // Add user to the existing state in UserTable
-  console.log(newUserResponse.user);
-} else {
-  setError(`Failed to add user. ${response.message}`);
-}
+      if (response.success && response.userInformation) {
+        // Fetch the user by ID after creation
+        const newUserResponse = await getUserById(response.userInformation.id); // Assuming `response.userInformation` contains the user ID
+        addUserToState(newUserResponse.user); // Add user to the existing state in UserTable
+        console.log(newUserResponse.user);
+      } else {
+        setError(`Failed to add user. ${response.message}`);
+      }
       // Close the drawer
       onOpenChange(false);
     } catch (error) {
@@ -102,7 +108,8 @@ if (response.success && response.userInformation) {
               name="gender"
               value={userData.gender}
               onChange={handleInputChange}
-              className="w-full p-2 border rounded">
+              className="w-full p-2 border rounded"
+            >
               <option value="">Select Gender</option>
               <option value="male">Male</option>
               <option value="female">Female</option>
@@ -122,7 +129,7 @@ if (response.success && response.userInformation) {
 
           {/* Drawer Footer */}
           <DrawerFooter>
-            <Button onClick={handleSubmit} disabled={loading}>
+            <Button onClick={handleSubmit} disabled={loading} className="text-white bg-primary">
               {loading ? "Adding..." : "Add User"}
             </Button>
             <DrawerClose asChild>

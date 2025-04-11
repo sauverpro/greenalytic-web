@@ -1,32 +1,33 @@
 import express from 'express'
 import { verifyingtoken } from "../utils/jwtfunctions.js";
-import { addVehicleToUserController } from '../controllers/vehicleControllers/addVehicleToUserController.js'
+import { addVehicleToUser, deleteVehicle } from '../controllers/vehicleControllers/addVehicleToUserController.js'
 import {
   getVehicleByIdController,
   getAllVehiclesController,
-  getVehiclesByUserIdController
-} from '../controllers/vehicleControllers/gettingvehiclesControllers.js'
+  getVehiclesByUserIdController,
+} from "../controllers/vehicleControllers/gettingvehiclesControllers.js";
 import { getVehicleHistoryController } from '../controllers/vehicleControllers/vehicleHistory.js'
 import { vehicleDataController } from '../controllers/VehicleDataController.js'
 
-// Middleware imports
 import paginationMiddleware from '../middlewares/paginationMiddleware.js'
 
 const VehicleRouter = express.Router()
 
-// Route to add a vehicle to a user
-VehicleRouter.post('/addvehicletouser/:userId', addVehicleToUserController)
+VehicleRouter.post('/add/:userId', addVehicleToUser)
+VehicleRouter.delete('/:vehicleId', deleteVehicle)
 VehicleRouter.get(
-  '/getallvehicles',
+  '/all',
   paginationMiddleware,
   getAllVehiclesController
 )
-VehicleRouter.get('/:id', paginationMiddleware, getVehicleByIdController)
+VehicleRouter.get('/:id',
+  // paginationMiddleware,
+  getVehicleByIdController)
 VehicleRouter.get(
-  '/user/:userId/vehicles',
+  "/user/:userId/vehicles",
   paginationMiddleware,
   getVehiclesByUserIdController
-)
+);
 VehicleRouter.get(
   '/:vehicleId/history',
   paginationMiddleware,
@@ -35,7 +36,7 @@ VehicleRouter.get(
 
 
 // VEHICLE DATA for emission, fuel, and GPS data
-VehicleRouter.use(verifyingtoken);
+// VehicleRouter.use(verifyingtoken);
 
 VehicleRouter.get(
   "/",
@@ -56,5 +57,22 @@ VehicleRouter.get(
   '/:vehicleId/gps/range',
   vehicleDataController.getGPSDataByTimeRange
 );
+
+VehicleRouter.get(
+  "/data/all",
+  vehicleDataController.getAllDataInSystem
+);
+
+
+VehicleRouter.get(
+  "/analytics/data",
+  vehicleDataController.analyticHub
+);
+
+VehicleRouter.get(
+  "/map/data",
+  vehicleDataController.getMapData
+);
+
 
 export default VehicleRouter

@@ -13,7 +13,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import { ChartSkeleton, EmptyDataMessage, ErrorMessage } from "./fuelSkeleton"; 
+import { ChartSkeleton, EmptyDataMessage, ErrorMessage } from "./fuelSkeleton";
 
 ChartJS.register(
   CategoryScale,
@@ -103,7 +103,7 @@ const FuelChartData = () => {
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Fuel Level Chart */}
       <div className="bg-white p-6 rounded-lg shadow-sm">
-        <h2 className="text-xl font-bold mb-4 text-gray-800">⛽ Fuel Level</h2>
+        <h2 className="text-xl font-bold mb-4 text-sms">⛽ Fuel Level</h2>
         <div className="min-h-[400px]">
           <Line data={fuelLevelChartData} options={chartOptions} />
         </div>
@@ -111,9 +111,7 @@ const FuelChartData = () => {
 
       {/* Fuel Consumption Chart */}
       <div className="bg-white p-6 rounded-lg shadow-sm">
-        <h2 className="text-xl font-bold mb-4 text-gray-800">
-          🔥 Fuel Consumption
-        </h2>
+        <h2 className="text-xl font-bold mb-4 text-sms">🔥 Fuel Consumption</h2>
         <div className="min-h-[400px]">
           <Bar data={fuelConsumptionChartData} options={chartOptions} />
         </div>
@@ -122,16 +120,14 @@ const FuelChartData = () => {
       {/* Summary Cards Section */}
       {stats && (
         <div className="bg-white p-6 rounded-lg shadow-sm lg:col-span-2">
-          <h2 className="text-xl font-bold mb-4 text-gray-800">
-            📊 Fuel Summary
-          </h2>
+          <h2 className="text-xl font-bold mb-4 text-sms">📊 Fuel Summary</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-blue-50 p-4 rounded-lg">
               <h3 className="text-sm font-medium text-blue-800">
                 Current Fuel Level
               </h3>
               <p className="text-2xl font-bold text-blue-600">
-                {stats.currentFuelLevel}%
+                {stats.currentFuelLevel.toFixed(3)}...%
               </p>
             </div>
             <div className="bg-red-50 p-4 rounded-lg">
@@ -155,7 +151,7 @@ const FuelChartData = () => {
                 Fuel Depletion
               </h3>
               <p className="text-2xl font-bold text-purple-600">
-                {stats.fuelDepletion}%
+                {stats.fuelDepletion.toFixed(3)}...%
               </p>
             </div>
           </div>
@@ -253,7 +249,7 @@ const FuelChartSection: React.FC<FuelChartSectionProps> = ({
         const totalConsumption = sorted.reduce(
           (sum, item) => sum + item.fuelConsumption,
           0
-        );
+        ); // Remove the last element
         const avgConsumption = totalConsumption / sorted.length;
         const fuelDepletion =
           sorted[0].fuelLevel - sorted[sorted.length - 1].fuelLevel;

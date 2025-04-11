@@ -11,6 +11,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MapPin, Droplet, Wind } from "lucide-react";
 import Link from "next/link";
+import { DAY } from "@/utils/constants";
+import {
+  getEmissionsData,
+  getFuelData,
+  getGPSData,
+} from "@/services/vehicleData";
+import { getUserVehicles } from "@/services/vehicleService";
 
 interface Vehicle {
   id: number;
@@ -28,7 +35,7 @@ function DashboardPageContent() {
     null
   );
   const [startDate, setStartDate] = useState<Date | null>(
-    new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    new Date(Date.now() - DAY)
   );
   const [endDate, setEndDate] = useState<Date | null>(new Date());
   const [isClient, setIsClient] = useState(false);
@@ -63,25 +70,20 @@ function DashboardPageContent() {
       const formattedStartDate = formatDateForServer(startDate);
       const formattedEndDate = formatDateForServer(endDate, true);
 
-      const response = await client.get(
-        `/vehicles/${selectedVehicleId}/gps/range`,
-        {
-          params: {
-            startDate: formattedStartDate,
-            endDate: formattedEndDate,
-          },
-        }
-      );
+      const response = await getGPSData(selectedVehicleId, {
+        startDate: formattedStartDate,
+        endDate: formattedEndDate,
+      });
 
-      if (response.data.success) {
-        setGpsData(response.data.data);
+      if (response.success) {
+        setGpsData(response.data);
       } else {
         setError((prev: any) => ({ ...prev, gps: "Failed to fetch GPS data" }));
       }
     } catch (error) {
       setError((prev: any) => ({
         ...prev,
-        gps: "Error connecting to the server",
+        gps: "Something went wrong while getting GPS data",
       }));
     } finally {
       setIsLoading((prev) => ({ ...prev, gps: false }));
@@ -98,18 +100,13 @@ function DashboardPageContent() {
       const formattedStartDate = formatDateForServer(startDate);
       const formattedEndDate = formatDateForServer(endDate, true);
 
-      const response = await client.get(
-        `/vehicles/${selectedVehicleId}/fuels/range`,
-        {
-          params: {
-            startDate: formattedStartDate,
-            endDate: formattedEndDate,
-          },
-        }
-      );
+      const response = await getFuelData(selectedVehicleId, {
+        startDate: formattedStartDate,
+        endDate: formattedEndDate,
+      });
 
-      if (response.data.success) {
-        setFuelData(response.data.data);
+      if (response.success) {
+        setFuelData(response.data);
       } else {
         setError((prev: any) => ({
           ...prev,
@@ -119,7 +116,7 @@ function DashboardPageContent() {
     } catch (error) {
       setError((prev: any) => ({
         ...prev,
-        fuel: "Error connecting to the server",
+        fuel: "Something went wrong while getting Fuel data",
       }));
     } finally {
       setIsLoading((prev) => ({ ...prev, fuel: false }));
@@ -136,18 +133,13 @@ function DashboardPageContent() {
       const formattedStartDate = formatDateForServer(startDate);
       const formattedEndDate = formatDateForServer(endDate, true);
 
-      const response = await client.get(
-        `/vehicles/${selectedVehicleId}/emissions/range`,
-        {
-          params: {
-            startDate: formattedStartDate,
-            endDate: formattedEndDate,
-          },
-        }
-      );
+      const response = await getEmissionsData(selectedVehicleId, {
+        startDate: formattedStartDate,
+        endDate: formattedEndDate,
+      });
 
-      if (response.data.success) {
-        setEmissionsData(response.data.data);
+      if (response.success) {
+        setEmissionsData(response.data);
       } else {
         setError((prev: any) => ({
           ...prev,
@@ -157,7 +149,7 @@ function DashboardPageContent() {
     } catch (error) {
       setError((prev: any) => ({
         ...prev,
-        emissions: "Error connecting to the server",
+        emissions: "Something went wrong while getting Emissions data",
       }));
     } finally {
       setIsLoading((prev) => ({ ...prev, emissions: false }));
@@ -170,7 +162,7 @@ function DashboardPageContent() {
 
   useEffect(() => {
     if (!startDate) {
-      setStartDate(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
+      setStartDate(new Date(Date.now() - DAY));
     }
     if (!endDate) {
       setEndDate(new Date());
@@ -181,20 +173,20 @@ function DashboardPageContent() {
     const fetchVehicles = async () => {
       setIsLoading((prev) => ({ ...prev, vehicles: true }));
       try {
-        const response = await client.get("/vehicles");
-        if (response.data.success) {
-          setVehicles(response.data.data);
+        const response = await getUserVehicles();
+        if (response.success) {
+          setVehicles(response.data);
 
           const vehicleIdParam = searchParams.get("vehicleId");
           if (
             vehicleIdParam &&
-            response.data.data.some(
+            response.data.some(
               (v: any) => v.id === Number.parseInt(vehicleIdParam)
             )
           ) {
             setSelectedVehicleId(Number.parseInt(vehicleIdParam));
-          } else if (response.data.data.length > 0) {
-            setSelectedVehicleId(response.data.data[0].id);
+          } else if (response.data.length > 0) {
+            setSelectedVehicleId(response.data[0].id);
           }
 
           setInitialLoadComplete(true);
@@ -207,7 +199,7 @@ function DashboardPageContent() {
       } catch (err) {
         setError((prev: any) => ({
           ...prev,
-          vehicles: "Error connecting to the server",
+          vehicles: "Something went wrong while getting vehicles",
         }));
       } finally {
         setIsLoading((prev) => ({ ...prev, vehicles: false, initial: false }));

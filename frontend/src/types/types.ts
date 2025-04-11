@@ -44,6 +44,8 @@ export interface TrackingDevice {
   fuelDatas: FuelData[];
   emissionDatas: EmissionData[];
   userId?: number;
+  email?: string;
+  username?: string;
   vehicleId: number;
   createdAt: Date;
   updatedAt: Date;
@@ -96,4 +98,65 @@ export interface ConnectionState {
   socketId: string;
   status: "CONNECTED" | "DISCONNECTED";
   lastUpdated: Date;
+}
+
+
+
+
+export interface ClientDevice {
+  gps: number;
+  fuel: number;
+  emissions: number;
+}
+
+export interface ClientBillingInfo {
+  plan: string;
+  nextBilling: string;
+  amount: string;
+  paymentMethod: string;
+}
+
+export interface ClientData {
+  id: string;
+  name: string;
+  email: string;
+  image?: string;
+  phone: string;
+  address: string;
+  status: string;
+  joinDate: string;
+  subscription: string;
+  vehicles: number;
+  devices: ClientDevice;
+  contactPerson: string;
+  contactRole: string;
+  contactEmail: string;
+  GPSDevices: string;
+  fuelDevices: string;
+  emissionsDevices: string;
+  totalDevices: string;
+  totalGPS: string;
+  totalFuel: string;
+  totalEmissions: string;
+  contactPhone: string;
+  billingInfo: ClientBillingInfo;
+}
+
+export interface VehicleData {
+  id: string;
+  plate: string;
+  model: string;
+  year: string;
+  status: string;
+  plateNumber: string;
+  devices: string[];
+}
+
+export interface DeviceData {
+  id: string;
+  type: string;
+  vehicle: string;
+  date: string;
+  status: string;
+  lastPing: string;
 }

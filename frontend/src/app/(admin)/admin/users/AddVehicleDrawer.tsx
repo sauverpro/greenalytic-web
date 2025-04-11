@@ -9,15 +9,15 @@ import {
   DrawerDescription,
   DrawerFooter,
   DrawerHeader,
-  DrawerTitle
+  DrawerTitle,
 } from "@/components/ui/drawer";
-import { addVehicleToUser } from "@/api/services/vehicleService";
+import { addVehicleToUser } from "../../../../services/vehicleService";
 
 export default function AddVehicleDrawer({
   open,
   onOpenChange,
   userId,
-  refetchVehicles
+  refetchVehicles,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -30,7 +30,7 @@ export default function AddVehicleDrawer({
     vehicleType: "",
     vehicleModel: "",
     yearOfManufacture: 0,
-    usage: ""
+    usage: "",
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -38,7 +38,7 @@ export default function AddVehicleDrawer({
 
     setVehicleData((prev) => ({
       ...prev,
-      [name]: name === "yearOfManufacture" ? parseInt(value, 10) || 0 : value // Convert to number
+      [name]: name === "yearOfManufacture" ? parseInt(value, 10) || 0 : value, // Convert to number
     }));
   };
 

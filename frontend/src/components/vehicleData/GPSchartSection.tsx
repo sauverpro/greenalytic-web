@@ -13,11 +13,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import {
-  ChartSkeleton,
-  EmptyDataMessage,
-  ErrorMessage,
-} from "./gpsSkeleton";
+import { ChartSkeleton, EmptyDataMessage, ErrorMessage } from "./gpsSkeleton";
 
 ChartJS.register(
   CategoryScale,
@@ -208,7 +204,7 @@ const GPSChartSection: React.FC<GPSChartSectionProps> = ({
     <div className="grid grid-cols-1 gap-6">
       {/* Speed Chart */}
       <div className="bg-white p-6 rounded-lg shadow-sm">
-        <h2 className="text-xl font-bold mb-4 text-gray-800">🚗 Speed</h2>
+        <h2 className="text-xl font-bold mb-4 text-sms">🚗 Speed</h2>
         <div className="min-h-[400px]">
           <Line data={speedChartData} options={chartOptions} />
         </div>
@@ -217,16 +213,14 @@ const GPSChartSection: React.FC<GPSChartSectionProps> = ({
       {/* Summary Cards Section */}
       {stats && (
         <div className="bg-white p-6 rounded-lg shadow-sm">
-          <h2 className="text-xl font-bold mb-4 text-gray-800">
-            📊 GPS Summary
-          </h2>
+          <h2 className="text-xl font-bold mb-4 text-sms">📊 GPS Summary</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-green-50 p-4 rounded-lg">
               <h3 className="text-sm font-medium text-green-800">
                 Current Speed
               </h3>
               <p className="text-2xl font-bold text-green-600">
-                {stats.currentSpeed} km/h
+                {stats.currentSpeed.toFixed(3)}... km/h
               </p>
             </div>
             <div className="bg-blue-50 p-4 rounded-lg">

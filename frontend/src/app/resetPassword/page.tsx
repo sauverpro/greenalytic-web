@@ -114,7 +114,7 @@ const ResetPassword: React.FC = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
-                icon={<FaRegEnvelope className="mr-2 text-gray-400" />}
+                icon={<FaRegEnvelope className="mr-2 text-sms" />}
                 error={errors.email}
               />
               <div className="pl-4 mb-1 text-left">
@@ -130,7 +130,7 @@ const ResetPassword: React.FC = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, otp: e.target.value })
                 }
-                icon={<FaLock className="mr-2 text-gray-400" />}
+                icon={<FaLock className="mr-2 text-sms" />}
                 error={errors.otp}
               />
               <div className="pl-4 mb-1 text-left">
@@ -146,7 +146,7 @@ const ResetPassword: React.FC = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, newpassword: e.target.value })
                 }
-                icon={<FaLock className="mr-2 text-gray-400" />}
+                icon={<FaLock className="mr-2 text-sms" />}
                 error={errors.newpassword}
               />
               <div className="pl-4 mb-1 text-left">
@@ -162,7 +162,7 @@ const ResetPassword: React.FC = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, confirmPassword: e.target.value })
                 }
-                icon={<FaLock className="mr-2 text-gray-400" />}
+                icon={<FaLock className="mr-2 text-sms" />}
                 error={errors.confirmPassword}
               />
               <div className="pl-4 mb-1 text-left">

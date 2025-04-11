@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "./ui/button";
-import { handleLogout } from "@/api/services/userService";
+import { handleLogout } from "../services/userService";
 import { useEffect, useState } from "react";
 
 export default function Header() {
@@ -15,7 +15,7 @@ export default function Header() {
 
   const onLogout = async (e: any) => {
     e.preventDefault();
-    const loggedOut =  handleLogout();
+    const loggedOut = handleLogout();
     if (loggedOut) {
       setIsAuthenticated(false);
     }
@@ -48,7 +48,7 @@ export default function Header() {
           </Link>
         )}
         <Link href="/signup">
-          <Button variant="destructive">Become a Member</Button>
+          <Button variant="secondary">Become a Member</Button>
         </Link>
       </div>
     </header>

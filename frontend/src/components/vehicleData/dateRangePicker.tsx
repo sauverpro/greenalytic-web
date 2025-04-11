@@ -21,14 +21,14 @@ export const formatDateForServer = (
   }
 
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0"); 
+  const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 };
 
 export const parseServerDate = (dateString: string): Date => {
   const [year, month, day] = dateString.split("-").map(Number);
-  return new Date(year, month - 1, day); 
+  return new Date(year, month - 1, day);
 };
 
 const DateRangePicker: React.FC<DateRangePickerProps> = ({
@@ -49,16 +49,13 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
   }, [startDate, endDate, setStartDate, setEndDate]);
 
   const handleFetchData = () => {
-    console.log("Formatted startDate:", formatDateForServer(startDate));
-    console.log("Formatted endDate:", formatDateForServer(endDate, true)); // Note the true flag for endDate
-
     fetchAllData();
   };
 
   return (
     <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4 mb-4">
       <div className="w-full md:w-auto flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2">
-        <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
+        <label className="text-sm font-medium text-sms whitespace-nowrap">
           From:
         </label>
         <DatePicker
@@ -72,7 +69,7 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
         />
       </div>
       <div className="w-full md:w-auto flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2">
-        <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
+        <label className="text-sm font-medium text-sms whitespace-nowrap">
           To:
         </label>
         <DatePicker
@@ -92,7 +89,7 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
           onClick={handleFetchData}
           disabled={!startDate || !endDate}
         >
-          Apply
+          Filter Data
         </button>
       </div>
     </div>

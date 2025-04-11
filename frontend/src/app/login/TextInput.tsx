@@ -32,7 +32,7 @@ export const TextInput: React.FC<InputProps> = ({
       className="flex-1 px-2 text-sm bg-gray-100 outline-none dark:border-white dark:bg-dark-bg dark:text-white"
     />
     {togglePassword && (
-      <div className="text-gray-400 cursor-pointer" onClick={togglePassword}>
+      <div className="text-sms cursor-pointer" onClick={togglePassword}>
         {type === "text" ? <FaRegEye /> : <FiEyeOff />}
       </div>
     )}
@@ -46,7 +46,7 @@ export const SelectInput: React.FC<{
   error: string;
 }> = ({ value, onChange, options, error }) => (
   <div className="flex items-center w-full p-2 my-2 mb-2 bg-gray-100 border rounded-md border-gray dark:bg-dark-bg">
-    <MdPersonOutline className="mr-2 text-gray-400" />
+    <MdPersonOutline className="mr-2 text-sms" />
     <select
       value={value}
       onChange={onChange}

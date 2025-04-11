@@ -1,4 +1,3 @@
-
 "use cleint";
 // 6. PaginationControls component (PaginationControls.tsx)
 import React from "react";
@@ -10,7 +9,7 @@ interface PaginationControlsProps {
 
 const PaginationControls = ({
   limit,
-  onLimitChange
+  onLimitChange,
 }: PaginationControlsProps) => {
   const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const value = event.target.value;
@@ -32,11 +31,12 @@ const PaginationControls = ({
 
   return (
     <div className="flex items-center">
-      <label className="mr-2 text-sm text-gray-600">Items per page:</label>
+      <label className="mr-2 text-sm text-sms">Items per page:</label>
       <select
         value={limit}
         onChange={handleChange}
-        className="p-2 border rounded h-9 bg-white text-sm">
+        className="p-2 border rounded h-9 bg-white text-sm"
+      >
         {[10, 25, 50, 100, 250, 500].map((option) => (
           <option key={option} value={option}>
             {option}

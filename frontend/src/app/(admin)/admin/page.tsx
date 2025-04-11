@@ -1,30 +1,19 @@
 "use client";
-import type React from "react";
-import { useState } from "react";
-import Link from "next/link";
-import {
-  Calendar,
-  Car,
-  Download,
-  Fuel,
-  LineChart,
-  MapPin,
-  MoreHorizontal,
-  Plus,
-  RefreshCw,
-  Users,
-} from "lucide-react";
 
+import type React from "react";
+
+import { useEffect, useState } from "react";
+import { Calendar, Car, Download, Fuel, Plus, RefreshCw, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -32,18 +21,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  RecentActivityCard,
+  SystemAlertsCard,
+} from "@/components/adminComponents/activityCards";
+import ClientGrowthChart from "@/components/adminComponents/client-growth-chart";
+import { format } from "date-fns";
+import EmissionsChart from "@/components/adminComponents/emissionsChart";
+import MapWrapper from "@/components/adminComponents/mapWrapper";
+import { GPSMetricCard, FuelMetricCard, EmissionsMetricCard } from "@/components/adminComponents/metricCards";
+import { getAllDataInSystem, getAnalyticsData, getMapData } from "@/services/vehicleData";
+import UserTable from "./users/UserTable";
 
 interface MetricCardProps {
   title: string;
@@ -56,6 +44,120 @@ interface MetricCardProps {
 
 export default function AdminDashboard() {
   const [selectedTab, setSelectedTab] = useState("overview");
+  const [timeframe, setTimeframe] = useState("today");
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [systemData, setSystemData] = useState<any>(null);
+  const [analyticsData, setAnalyticsData] = useState<any>(null);
+  const [mapData, setMapData] = useState<any>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Calculate date range based on selected timeframe
+  const getDateRange = () => {
+    const endDate = new Date();
+    const startDate = new Date();
+
+    switch (timeframe) {
+      case "today":
+        startDate.setHours(0, 0, 0, 0);
+        break;
+      case "yesterday":
+        startDate.setDate(startDate.getDate() - 1);
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setDate(endDate.getDate() - 1);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+      case "week":
+        startDate.setDate(startDate.getDate() - 7);
+        break;
+      case "month":
+        startDate.setMonth(startDate.getMonth() - 1);
+        break;
+      case "quarter":
+        startDate.setMonth(startDate.getMonth() - 3);
+        break;
+      case "year":
+        startDate.setFullYear(startDate.getFullYear() - 1);
+        break;
+      default:
+        startDate.setHours(0, 0, 0, 0);
+    }
+
+    return {
+      startDate: format(startDate, "yyyy-MM-dd"),
+      endDate: format(endDate, "yyyy-MM-dd"),
+    };
+  };
+
+  // Fetch data for the dashboard
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const dateRange = getDateRange();
+
+        // Fetch all data in parallel for better performance
+        const [systemResponse, analyticsResponse, mapResponse] =
+          await Promise.all([
+            getAllDataInSystem(),
+            getAnalyticsData(),
+            getMapData(),
+          ]);
+
+        setSystemData(systemResponse);
+        setAnalyticsData(analyticsResponse);
+
+        console.log("System Data:", systemResponse);
+        console.log("Analytics Data:", analyticsResponse);
+
+        setMapData(mapResponse);
+
+        console.log("map response Data fetched successfully", mapResponse);
+      } catch (err: any) {
+        console.error("Error fetching dashboard data:", err);
+        setError(err.message || "Failed to fetch dashboard data");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [timeframe, refreshTrigger]);
+
+  // Handle refresh button click
+  const handleRefresh = () => {
+    setRefreshTrigger((prev) => prev + 1);
+  };
+
+  // Extract summary metrics from data
+  const getSummaryMetrics = () => {
+    if (!systemData || !systemData.summary) {
+      return {
+        averageCO2: 0,
+        averageFuelConsumption: 0,
+        averageSpeed: 0,
+      };
+    }
+
+    return systemData.summary;
+  };
+
+  // Get analytics data
+  const getAnalyticsMetrics = () => {
+    if (!analyticsData || !analyticsData.analytics) {
+      return {
+        emissions: null,
+        fuel: null,
+        gps: null,
+      };
+    }
+
+    return analyticsData.analytics;
+  };
+
+  const summary = getSummaryMetrics();
+  const analytics = getAnalyticsMetrics();
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-emerald-50 to-white">
@@ -83,21 +185,29 @@ export default function AdminDashboard() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="h-9">
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Refresh Data
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9"
+              onClick={handleRefresh}
+              disabled={isLoading}
+            >
+              <RefreshCw
+                className={`mr-2 h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+              />
+              {isLoading ? "Loading..." : "Refresh Data"}
             </Button>
             <Button variant="outline" size="sm" className="h-9">
               <Download className="mr-2 h-4 w-4" />
               Export
             </Button>
-            <Button
+            {/* <Button
               size="sm"
               className="h-9 bg-emerald-600 hover:bg-emerald-700"
             >
               <Plus className="mr-2 h-4 w-4" />
               Add New Client
-            </Button>
+            </Button> */}
           </div>
         </div>
 
@@ -110,13 +220,13 @@ export default function AdminDashboard() {
             <TabsList className="bg-muted/50">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="clients">Clients</TabsTrigger>
-              <TabsTrigger value="vehicles">Vehicles</TabsTrigger>
-              <TabsTrigger value="devices">Devices</TabsTrigger>
-              <TabsTrigger value="analytics">Analytics</TabsTrigger>
             </TabsList>
 
             <div className="flex items-center gap-2">
-              <Select defaultValue="today">
+              <Select
+                defaultValue="today"
+                onValueChange={(value) => setTimeframe(value)}
+              >
                 <SelectTrigger className="h-9 w-[180px]">
                   <SelectValue placeholder="Select timeframe" />
                 </SelectTrigger>
@@ -139,218 +249,82 @@ export default function AdminDashboard() {
           {/* Overview Tab Content */}
           <TabsContent value="overview" className="space-y-6">
             {/* Key Metrics */}
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               <MetricCard
-                title="Total Clients"
-                value="128"
-                change="+12%"
+                title="Total Vehicles"
+                value={mapData?.totalVehicles?.toString() || "0"}
+                // value={analytics?.gps?.activeVehicles?.toString() || "0"}
+                change={"All"}
                 trend="up"
-                description="From previous period"
-                icon={<Users className="h-5 w-5 text-emerald-600" />}
-              />
-              <MetricCard
-                title="Active Vehicles"
-                value="342"
-                change="+8%"
-                trend="up"
-                description="Currently online"
+                description="All vehicles in the system"
                 icon={<Car className="h-5 w-5 text-emerald-600" />}
               />
               <MetricCard
-                title="Total Devices"
-                value="512"
-                change="+5%"
-                trend="up"
-                description="Deployed in the field"
-                icon={<Fuel className="h-5 w-5 text-emerald-600" />}
+                title="Average Speed"
+                value={`${summary.averageSpeed?.toFixed(1) || 0}`}
+                change={analytics?.gps?.highSpeedCount > 10 ? "High" : "Normal"}
+                trend={analytics?.gps?.highSpeedCount > 10 ? "down" : "neutral"}
+                description="km/h across all vehicles"
+                icon={<Car className="h-5 w-5 text-emerald-600" />}
               />
               <MetricCard
-                title="System Health"
-                value="98.7%"
-                change="-0.3%"
-                trend="down"
-                description="Overall uptime"
-                icon={<LineChart className="h-5 w-5 text-emerald-600" />}
+                title="Fuel Consumption"
+                value={`${summary.averageFuelConsumption?.toFixed(1) || 0}`}
+                change={
+                  analytics?.fuel?.highConsumptionCount > 30 ? "High" : "Normal"
+                }
+                trend={
+                  analytics?.fuel?.highConsumptionCount > 30 ? "down" : "up"
+                }
+                description="L/100km average"
+                icon={<Fuel className="h-5 w-5 text-emerald-600" />}
+              />
+            </div>
+
+            {/* Small Metric Data Cards */}
+            <div className="grid grid-cols-3 gap-3">
+              <GPSMetricCard
+                value={analytics?.gps?.speed?.average?.toFixed(1) || "0"}
+                status={
+                  analytics?.gps?.highSpeedCount > 20 ? "warning" : "normal"
+                }
+              />
+              <FuelMetricCard
+                value={analytics?.fuel?.level?.average?.toFixed(1) || "0"}
+                status={
+                  analytics?.fuel?.lowFuelCount > 0 ? "warning" : "normal"
+                }
+              />
+              <EmissionsMetricCard
+                value={analytics?.emissions?.co2?.average?.toFixed(1) || "0"}
+                status={
+                  analytics?.emissions?.anomalies > 50 ? "critical" : "warning"
+                }
               />
             </div>
 
             {/* Charts Section */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              <Card className="col-span-2">
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <div className="space-y-1">
-                    <CardTitle>Client Growth</CardTitle>
-                    <CardDescription>
-                      New client acquisitions over time
-                    </CardDescription>
-                  </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>View Details</DropdownMenuItem>
-                      <DropdownMenuItem>Export Data</DropdownMenuItem>
-                      <DropdownMenuItem>Set Alert</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-[300px] w-full bg-emerald-50 rounded-md flex items-center justify-center">
-                    <p className="text-muted-foreground">Client Growth Chart</p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle>Device Distribution</CardTitle>
-                  <CardDescription>By type and status</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-[300px] w-full bg-emerald-50 rounded-md flex items-center justify-center">
-                    <p className="text-muted-foreground">
-                      Device Distribution Chart
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+              <ClientGrowthChart
+                isLoading={isLoading}
+                data={systemData?.data?.gps || []}
+              />
+              <EmissionsChart
+                isLoading={isLoading}
+                data={analyticsData?.analytics?.emissions || {}}
+              />
             </div>
 
             {/* Recent Activity & Alerts */}
-            <div className="grid gap-6 md:grid-cols-2">
-              <Card>
-                <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between">
-                    <CardTitle>Recent Activity</CardTitle>
-                    <Button variant="ghost" size="sm" className="h-8 text-xs">
-                      View All
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {[1, 2, 3, 4, 5].map((i) => (
-                      <div
-                        key={i}
-                        className="flex items-start gap-4 rounded-lg border p-3"
-                      >
-                        <Avatar className="mt-1 h-9 w-9">
-                          <AvatarFallback
-                            className={`bg-emerald-${i * 100} text-white`}
-                          >
-                            {String.fromCharCode(64 + i)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 space-y-1">
-                          <p className="text-sm font-medium">
-                            New client registered
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            Client #{i} registered a new account and added 3
-                            vehicles
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            2 hours ago
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between">
-                    <CardTitle>System Alerts</CardTitle>
-                    <Badge
-                      variant="outline"
-                      className="bg-red-50 text-red-500 border-red-200"
-                    >
-                      5 New
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {[
-                      {
-                        title: "Device Offline",
-                        desc: "GPS Tracker #GT-2234 is offline for 3 hours",
-                        severity: "high",
-                      },
-                      {
-                        title: "Fuel Level Critical",
-                        desc: "Vehicle R789B fuel level below 10%",
-                        severity: "medium",
-                      },
-                      {
-                        title: "Emissions Alert",
-                        desc: "Vehicle T456C emissions above threshold",
-                        severity: "high",
-                      },
-                      {
-                        title: "System Update Required",
-                        desc: "New firmware available for 23 devices",
-                        severity: "low",
-                      },
-                      {
-                        title: "License Expiring",
-                        desc: "Client #45 license expires in 7 days",
-                        severity: "medium",
-                      },
-                    ].map((alert, i) => (
-                      <div
-                        key={i}
-                        className="flex items-start gap-4 rounded-lg border p-3"
-                      >
-                        <div
-                          className={`mt-1 h-2 w-2 rounded-full ${
-                            alert.severity === "high"
-                              ? "bg-red-500"
-                              : alert.severity === "medium"
-                              ? "bg-amber-500"
-                              : "bg-blue-500"
-                          }`}
-                        />
-                        <div className="flex-1 space-y-1">
-                          <p className="text-sm font-medium">{alert.title}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {alert.desc}
-                          </p>
-                          <div className="flex items-center gap-2">
-                            <Badge
-                              variant="outline"
-                              className={`text-xs ${
-                                alert.severity === "high"
-                                  ? "bg-red-50 text-red-500 border-red-200"
-                                  : alert.severity === "medium"
-                                  ? "bg-amber-50 text-amber-500 border-amber-200"
-                                  : "bg-blue-50 text-blue-500 border-blue-200"
-                              }`}
-                            >
-                              {alert.severity.toUpperCase()}
-                            </Badge>
-                            <span className="text-xs text-muted-foreground">
-                              1 hour ago
-                            </span>
-                          </div>
-                        </div>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <ActivityAndAlertsSection
+              isLoading={isLoading}
+              emissions={systemData?.data?.emissions || []}
+              fuels={systemData?.data?.fuels || []}
+              gps={systemData?.data?.gps || []}
+            />
 
             {/* Client Map */}
-            <Card>
+            <Card className="mt-6">
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <div>
@@ -362,176 +336,45 @@ export default function AdminDashboard() {
                   <div className="flex items-center gap-2">
                     <Badge className="bg-green-100 text-green-700 hover:bg-green-200">
                       <div className="mr-1 h-2 w-2 rounded-full bg-green-500" />
-                      Online: 287
+                      Vehicles with GPS: {mapData?.vehiclesWithGpsData || 0}
                     </Badge>
                     <Badge
                       variant="outline"
                       className="bg-gray-100 text-gray-700 hover:bg-gray-200"
                     >
                       <div className="mr-1 h-2 w-2 rounded-full bg-gray-500" />
-                      Offline: 55
+                      Without GPS:{" "}
+                      {(mapData?.totalVehicles || 0) -
+                        (mapData?.vehiclesWithGpsData || 0)}
                     </Badge>
-                    <Button variant="outline" size="sm" className="h-8">
-                      <MapPin className="mr-2 h-3 w-3" />
-                      Expand Map
-                    </Button>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="h-[400px] w-full bg-emerald-50 rounded-md flex items-center justify-center">
-                  <p className="text-muted-foreground">
-                    Interactive Map with Vehicle Locations
-                  </p>
-                </div>
+              <CardContent className="p-0">
+                <MapWrapper
+                  isLoading={isLoading}
+                  vehicles={
+                    mapData?.mapData?.map((vehicle:any) => ({
+                      position: {
+                        lat: vehicle.latitude,
+                        lng: vehicle.longitude,
+                      },
+                      plateNumber: vehicle.plateNumber,
+                      vehicleId: vehicle.vehicleId,
+                      speed: vehicle.speed,
+                      isActive: vehicle.trackingStatus,
+                      lastSeen: vehicle.timestamp,
+                    })) || []
+                  }
+                  stats={{
+                    totalVehicles: mapData?.totalVehicles || 0,
+                    activeVehicles: mapData?.vehiclesWithGpsData || 0,
+                    inactiveVehicles:
+                      (mapData?.totalVehicles || 0) -
+                      (mapData?.vehiclesWithGpsData || 0),
+                  }}
+                />
               </CardContent>
-            </Card>
-
-            {/* Recent Clients Table */}
-            <Card>
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle>Recent Clients</CardTitle>
-                  <Button variant="outline" size="sm" className="h-8">
-                    View All Clients
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr className="border-b text-left">
-                        <th className="pb-2 pt-3 font-medium">Client Name</th>
-                        <th className="pb-2 pt-3 font-medium">Vehicles</th>
-                        <th className="pb-2 pt-3 font-medium">Devices</th>
-                        <th className="pb-2 pt-3 font-medium">Status</th>
-                        <th className="pb-2 pt-3 font-medium">Last Active</th>
-                        <th className="pb-2 pt-3 font-medium text-right">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {[
-                        {
-                          name: "Acme Corporation",
-                          vehicles: 12,
-                          devices: 24,
-                          status: "active",
-                          lastActive: "2 mins ago",
-                        },
-                        {
-                          name: "TechDrive Fleet",
-                          vehicles: 8,
-                          devices: 16,
-                          status: "active",
-                          lastActive: "15 mins ago",
-                        },
-                        {
-                          name: "EcoTransport Ltd",
-                          vehicles: 5,
-                          devices: 10,
-                          status: "active",
-                          lastActive: "1 hour ago",
-                        },
-                        {
-                          name: "City Logistics",
-                          vehicles: 15,
-                          devices: 30,
-                          status: "inactive",
-                          lastActive: "2 days ago",
-                        },
-                        {
-                          name: "Green Delivery Co",
-                          vehicles: 7,
-                          devices: 14,
-                          status: "active",
-                          lastActive: "5 mins ago",
-                        },
-                      ].map((client, i) => (
-                        <tr key={i} className="border-b">
-                          <td className="py-3">
-                            <div className="flex items-center gap-2">
-                              <Avatar className="h-8 w-8">
-                                <AvatarFallback className="bg-emerald-100 text-emerald-700">
-                                  {client.name.charAt(0)}
-                                </AvatarFallback>
-                              </Avatar>
-                              <Link
-                                href={`/admin/clients/${i + 1}`}
-                                className="font-medium hover:text-emerald-600"
-                              >
-                                {client.name}
-                              </Link>
-                            </div>
-                          </td>
-                          <td className="py-3">{client.vehicles}</td>
-                          <td className="py-3">{client.devices}</td>
-                          <td className="py-3">
-                            <Badge
-                              className={
-                                client.status === "active"
-                                  ? "bg-green-100 text-green-700"
-                                  : "bg-gray-100 text-gray-700"
-                              }
-                            >
-                              {client.status}
-                            </Badge>
-                          </td>
-                          <td className="py-3 text-muted-foreground">
-                            {client.lastActive}
-                          </td>
-                          <td className="py-3 text-right">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8"
-                                >
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem asChild>
-                                  <Link href={`/admin/clients/${i + 1}`}>
-                                    View Details
-                                  </Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem>Edit Client</DropdownMenuItem>
-                                <DropdownMenuItem>
-                                  Manage Vehicles
-                                </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                  Manage Devices
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem className="text-red-500">
-                                  Deactivate
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-              <CardFooter className="flex items-center justify-between border-t px-6 py-3">
-                <div className="text-sm text-muted-foreground">
-                  Showing 5 of 128 clients
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" disabled>
-                    Previous
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    Next
-                  </Button>
-                </div>
-              </CardFooter>
             </Card>
           </TabsContent>
 
@@ -544,67 +387,7 @@ export default function AdminDashboard() {
                   View and manage all client accounts
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="h-[400px] flex items-center justify-center bg-muted rounded-md">
-                  <p className="text-muted-foreground">
-                    Clients Management Interface
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="vehicles" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Vehicles Management</CardTitle>
-                <CardDescription>
-                  View and manage all registered vehicles
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[400px] flex items-center justify-center bg-muted rounded-md">
-                  <p className="text-muted-foreground">
-                    Vehicles Management Interface
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="devices" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Devices Management</CardTitle>
-                <CardDescription>
-                  View and manage all tracking devices
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[400px] flex items-center justify-center bg-muted rounded-md">
-                  <p className="text-muted-foreground">
-                    Devices Management Interface
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="analytics" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Advanced Analytics</CardTitle>
-                <CardDescription>
-                  Detailed platform analytics and insights
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[400px] flex items-center justify-center bg-muted rounded-md">
-                  <p className="text-muted-foreground">
-                    Advanced Analytics Dashboard
-                  </p>
-                </div>
-              </CardContent>
+              <UserTable />
             </Card>
           </TabsContent>
         </Tabs>
@@ -648,5 +431,30 @@ function MetricCard({
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+// Activity and Alerts Section
+function ActivityAndAlertsSection({
+  isLoading,
+  emissions,
+  fuels,
+  gps,
+}: {
+  isLoading: boolean;
+  emissions: any[];
+  fuels: any[];
+  gps: any[];
+}) {
+  return (
+    <div className="grid gap-6 md:grid-cols-2">
+      <RecentActivityCard isLoading={isLoading} data={gps} />
+      <SystemAlertsCard
+        isLoading={isLoading}
+        emissions={emissions}
+        fuels={fuels}
+        gps={gps}
+      />
+    </div>
   );
 }

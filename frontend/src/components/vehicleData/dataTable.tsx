@@ -19,7 +19,6 @@ interface FuelData {
   consumption: number;
 }
 
-
 interface DataTableProps {
   title: string;
   dataType: "emissions" | "fuel" | "gps";
@@ -49,19 +48,19 @@ const DataTable: React.FC<DataTableProps> = ({
       case "emissions":
         return (
           <>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-sms uppercase tracking-wider">
               Time
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-sms uppercase tracking-wider">
               CO₂ (ppm)
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-sms uppercase tracking-wider">
               CO (ppm)
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-sms uppercase tracking-wider">
               NO (ppm)
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-sms uppercase tracking-wider">
               HC (ppm)
             </th>
           </>
@@ -69,13 +68,13 @@ const DataTable: React.FC<DataTableProps> = ({
       case "fuel":
         return (
           <>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-sms uppercase tracking-wider">
               Time
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-sms uppercase tracking-wider">
               Fuel Level (L)
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-sms uppercase tracking-wider">
               Fuel Consumption (L/100km)
             </th>
           </>
@@ -92,19 +91,19 @@ const DataTable: React.FC<DataTableProps> = ({
           const emissionItem = item as EmissionData;
           return (
             <tr key={emissionItem.id}>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-sms">
                 {new Date(emissionItem.timestamp).toLocaleString()}
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-sms">
                 {emissionItem.co2}
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-sms">
                 {emissionItem.co}
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-sms">
                 {emissionItem.no}
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-sms">
                 {emissionItem.HC}
               </td>
             </tr>
@@ -115,13 +114,13 @@ const DataTable: React.FC<DataTableProps> = ({
           const fuelItem = item as FuelData;
           return (
             <tr key={fuelItem.id}>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-sms">
                 {new Date(fuelItem.timestamp).toLocaleString()}
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-sms">
                 {fuelItem.level}
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-sms">
                 {fuelItem.consumption}
               </td>
             </tr>
@@ -134,7 +133,7 @@ const DataTable: React.FC<DataTableProps> = ({
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm">
-      <h2 className="text-xl font-bold mb-4 text-gray-800">
+      <h2 className="text-xl font-bold mb-4 text-sms">
         {dataType === "emissions" ? "📊 Emissions Data" : "⛽ Fuel Data"}
       </h2>
       {isLoading ? (
@@ -165,13 +164,13 @@ const DataTable: React.FC<DataTableProps> = ({
               onPageChange={({ selected }) => setPage(selected)}
               containerClassName={"flex justify-center mt-4 space-x-1"}
               previousLinkClassName={
-                "px-3 py-2 rounded-md bg-gray-100 text-gray-800 hover:bg-gray-200"
+                "px-3 py-2 rounded-md bg-gray-100 text-sms hover:bg-gray-200"
               }
               nextLinkClassName={
-                "px-3 py-2 rounded-md bg-gray-100 text-gray-800 hover:bg-gray-200"
+                "px-3 py-2 rounded-md bg-gray-100 text-sms hover:bg-gray-200"
               }
               pageClassName={
-                "px-3 py-2 rounded-md bg-gray-100 text-gray-800 hover:bg-gray-200"
+                "px-3 py-2 rounded-md bg-gray-100 text-sms hover:bg-gray-200"
               }
               activeClassName={"bg-blue-500 text-white hover:bg-blue-600"}
               disabledClassName={"opacity-50 cursor-not-allowed"}
