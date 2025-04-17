@@ -25,7 +25,7 @@ import TableToolbar from "@/app/(admin)/admin/users/_components/TableToolbar";
 import TableActions, { type ActionItem } from "./TableActions";
 import SearchAndFilter from "@/app/(admin)/admin/users/_components/SearchAndFilter";
 
- 
+// MUI theme for consistent styling
 const muiTheme = createTheme({
   palette: {
     primary: {
@@ -58,7 +58,7 @@ const muiTheme = createTheme({
   },
 });
 
-export interface Pagination {
+interface Pagination {
   currentPage: number;
   totalPages: number;
   totalItems: number;
@@ -70,17 +70,18 @@ interface DataTableProps<T> {
   description: string;
   icon: React.ReactNode;
   columns: GridColDef[];
-  data: T[];
-  pagination: Pagination;
-  loading?: boolean;
-  onPageChange: (page: number, limit: number) => void;
+  fetchData: (
+    page: number,
+    limit: number
+  ) => Promise<{ data: T[]; 
+    pagination: Pagination }>;
   addButtonLabel?: string;
   onAddItem?: () => void;
   searchPlaceholder?: string;
   searchFields?: string[];
   handleExportPDF?: (selectedItems: T[]) => void;
   handleExportExcel?: (selectedItems: T[]) => void;
-  handlePrint?: (selectedItems: T[]) => void;
+  handlePrint?: (selectedItems: T[]) => void; 
   bulkActionsComponent?: React.ReactNode;
   getRowActions?: (item: T) => ActionItem[];
 }
@@ -90,10 +91,7 @@ function DataTable<T extends { id: string | number }>({
   description,
   icon,
   columns,
-  data,
-  pagination,
-  loading = false,
-  onPageChange,
+  fetchData,
   addButtonLabel = "",
   onAddItem,
   searchPlaceholder = "Search...",
@@ -104,11 +102,21 @@ function DataTable<T extends { id: string | number }>({
   bulkActionsComponent,
   getRowActions,
 }: DataTableProps<T>) {
-  const [filteredItems, setFilteredItems] = useState<T[]>(data);
-  const [selectionModel, setSelectionModel] = useState<GridRowSelectionModel>([]);
+  const [items, setItems] = useState<T[]>([]);
+  const [filteredItems, setFilteredItems] = useState<T[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectionModel, setSelectionModel] = useState<GridRowSelectionModel>(
+    []
+  );
   const [searchQuery, setSearchQuery] = useState("");
+  const [pagination, setPagination] = useState<Pagination>({
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    limit: 10,
+  });
 
-   
+  // Add actions column if getRowActions is provided
   const columnsWithActions = getRowActions
     ? [
         ...columns,
@@ -118,7 +126,7 @@ function DataTable<T extends { id: string | number }>({
           width: 100,
           sortable: false,
           filterable: false,
-          renderCell: (params: any) => {
+          renderCell: (params:any) => {
             const item = params.row as T;
             const actions = getRowActions(item);
             return <TableActions actions={actions} />;
@@ -127,14 +135,34 @@ function DataTable<T extends { id: string | number }>({
       ]
     : columns;
 
-   
+  // Fetch data with pagination
+  const loadData = async (page = 1, limit = 10) => {
+    try {
+      setLoading(true);
+      const response = await fetchData(page, limit);
+      setItems(response.data);
+      setFilteredItems(response.data);
+      setPagination(response.pagination);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initialize data on component mount
+  useEffect(() => {
+    loadData(pagination.currentPage, pagination.limit);
+  }, [pagination.currentPage, pagination.limit]);
+
+  // Apply search filter
   useEffect(() => {
     if (!searchQuery.trim() || searchFields.length === 0) {
-      setFilteredItems(data);
+      setFilteredItems(items);
       return;
     }
 
-    const filtered = data.filter((item) => {
+    const filtered = items.filter((item) => {
       return searchFields.some((field) => {
         const value = (item as any)[field];
         return (
@@ -145,23 +173,43 @@ function DataTable<T extends { id: string | number }>({
     });
 
     setFilteredItems(filtered);
-  }, [searchQuery, data, searchFields]);
+  }, [searchQuery, items, searchFields]);
 
-   
+  // Custom pagination limit handling
   const handlePaginationLimitChange = (newLimit: number | string) => {
     if (typeof newLimit === "number") {
-      onPageChange(1, newLimit);
+      setPagination((prev) => ({ ...prev, limit: newLimit, currentPage: 1 }));
+      loadData(1, newLimit);
     } else if (newLimit === "all") {
-       
-      onPageChange(1, 999999);
+      fetchAllRecords();
     }
   };
 
-   
+  // Function to fetch all records
+  const fetchAllRecords = async () => {
+    try {
+      setLoading(true);
+      const response = await fetchData(1, 999999);
+      setItems(response.data);
+      setFilteredItems(response.data);
+      setPagination((prev) => ({
+        ...prev,
+        limit: response.data.length,
+        currentPage: 1,
+        totalItems: response.data.length,
+      }));
+    } catch (error) {
+      console.error("Failed to fetch all records", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle PDF export
   const handleExportPDFWrapper = () => {
     if (selectionModel.length === 0 || !handleExportPDF) return;
     try {
-      const selectedItems = data.filter((item) =>
+      const selectedItems = items.filter((item) =>
         selectionModel.includes(item.id as never)
       );
       handleExportPDF(selectedItems as T[]);
@@ -170,11 +218,11 @@ function DataTable<T extends { id: string | number }>({
     }
   };
 
-   
+  // Handle Excel export
   const handleExportExcelWrapper = () => {
     if (selectionModel.length === 0 || !handleExportExcel) return;
     try {
-      const selectedItems = data.filter((item) =>
+      const selectedItems = items.filter((item) =>
         selectionModel.includes(item.id as never)
       );
       handleExportExcel(selectedItems as T[]);
@@ -183,11 +231,11 @@ function DataTable<T extends { id: string | number }>({
     }
   };
 
-   
+  // Handle Print
   const handlePrintWrapper = () => {
     if (selectionModel.length === 0 || !handlePrint) return;
     try {
-      const selectedItems = data.filter((item) =>
+      const selectedItems = items.filter((item) =>
         selectionModel.includes(item.id as never)
       );
       handlePrint(selectedItems as T[]);
@@ -273,14 +321,17 @@ function DataTable<T extends { id: string | number }>({
                   page: pagination.currentPage - 1,
                   pageSize: pagination.limit,
                 }}
-                onPaginationModelChange={(newPaginationModel) => 
-                  onPageChange(newPaginationModel.page + 1, newPaginationModel.pageSize)
+                onPaginationModelChange={(newPaginationModel) =>
+                  setPagination((prev) => ({
+                    ...prev,
+                    currentPage: newPaginationModel.page + 1,
+                  }))
                 }
                 slots={{
                   toolbar: (props) => (
                     <TableToolbar
                       selectedRows={selectionModel}
-                      data={data as any[]}
+                      data={items as any[]}
                       handleExportPDF={handleExportPDFWrapper}
                       handleExportExcel={handleExportExcelWrapper}
                       handlePrint={handlePrint ? handlePrintWrapper : undefined}

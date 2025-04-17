@@ -6,7 +6,9 @@ import {
   getAllTrackingDevices,
   getTrackingDeviceById,
   getTrackingDevicesByVehicleId,
-  addTrackingDeviceToVehicle
+  addTrackingDeviceToVehicle,
+  getTrackingDevicesByUser,
+  getDeviceDetails
 } from '../controllers/trackingDeviceController.js'
 
 const deviceRouter = express.Router()
@@ -16,6 +18,14 @@ deviceRouter.post('/add/:vehicleId', addTrackingDeviceToVehicle)
 deviceRouter.get(
   '/vehicle/:vehicleId/devices',
   getTrackingDevicesByVehicleId
+)
+deviceRouter.get(
+  '/:userId/devices',
+  getTrackingDevicesByUser
+)
+deviceRouter.get(
+  '/devices/:deviceId',
+  getDeviceDetails
 )
 
 deviceRouter.delete(

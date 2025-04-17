@@ -187,7 +187,7 @@ export function VehicleTable({
   // Open delete confirmation
   const openDeleteConfirm = (vehicle: VehicleData) => {
     if (isComponentMounted.current) {
-      setVehicleToDelete({ ...vehicle }); // Create a copy to ensure complete data retention
+      setVehicleToDelete(vehicle);
       setShowDeleteConfirm(true);
     }
   };
@@ -195,7 +195,6 @@ export function VehicleTable({
   const closeDeleteConfirm = () => {
     if (isComponentMounted.current) {
       setShowDeleteConfirm(false);
-    
       // Use a timeout to ensure the UI updates before resetting state
       setTimeout(() => {
         if (isComponentMounted.current) {
@@ -366,6 +365,7 @@ export function VehicleTable({
                           onClick={() => fetchVehicleDevices(vehicle.id)}
                           title="Refresh devices"
                         >
+                          <RefreshCw className="h-3 w-3" />
                         </Button>
                       </div>
                     )}

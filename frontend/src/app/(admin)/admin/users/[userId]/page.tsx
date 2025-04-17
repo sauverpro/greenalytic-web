@@ -1,9 +1,7 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -37,7 +35,10 @@ import {
 import { toast } from "sonner";
 import { getVehiclesForUser } from "@/services/vehicleService";
 import { VehicleTable } from "./TableData";
-import EditUserDrawer from "../EditUserDrawer";
+import EditUserDrawer from "../_components/EditUserDrawer";
+import { getDevicesByUser } from "@/services/deviceServices";
+import { DeviceDetailsModal } from "@/components/device/device-details-model";
+import { DeviceDetailsDrawer } from "@/components/device/device-details-drawer";
 
 export default function ClientDetails() {
   const params = useParams();
@@ -58,8 +59,16 @@ export default function ClientDetails() {
   const [vehicles, setVehicles] = useState<VehicleData[]>([]);
   const [devices, setDevices] = useState<DeviceData[]>([]);
   const [userData, setUserData] = useState<User | null>(null);
+  const [trackingDevices, setTrackingDevices] = useState<any[]>([]);
+  const [isDeviceModalOpen, setIsDeviceModalOpen] = useState(false);
+  const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
+  const [isDeviceDrawerOpen, setIsDeviceDrawerOpen] = useState(false);
 
-    
+  const handleViewDeviceDetails = (deviceId: string) => {
+    setSelectedDeviceId(deviceId);
+    setIsDeviceModalOpen(true);
+  };
+
   const fetchClientData = async () => {
     if (!userId) {
       console.log("No userId found in params");
@@ -71,10 +80,7 @@ export default function ClientDetails() {
 
     try {
       const clientData = await getUserById(userId);
-
-        
       setUserData(clientData.user);
-
       setClient({
         id: clientData.user.id.toString(),
         name: clientData.user.username,
@@ -106,35 +112,60 @@ export default function ClientDetails() {
         contactPhone: clientData.user.contactPhone || "N/A",
       });
 
-      const extractedDevices: DeviceData[] =
-        clientData.user.trackingDevices.map((device: any) => ({
-          id: device.id.toString(),
-          type: `${
-            device.type.charAt(0).toUpperCase() +
-            device.type.slice(1).toLowerCase()
-          } Tracker`,
-          vehicle: "Unassigned",
-          date: new Date(device.createdAt || "2023-01-01").toLocaleDateString(),
-          status: device.isActive ? "online" : "offline",
-          lastPing: "N/A",
-        }));
-      setDevices(extractedDevices);
-
       const fetchedVehicles = await getVehiclesForUser(userId);
-      console.log(
-        "Fetched vehicles data:::::::::::::::: ",
-        fetchedVehicles.vehicles
-      );
-
       setVehicles(
         Array.isArray(fetchedVehicles.vehicles) ? fetchedVehicles.vehicles : []
       );
+      await fetchTrackingDevices();
     } catch (error) {
-      console.error("Error fetching client data:", error);
-      toast("Error fetching client data");
+        
       setVehicles([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchTrackingDevices = async () => {
+    if (!userId) return;
+
+    try {
+      const response = await getDevicesByUser(userId);
+      if (response.success && Array.isArray(response.data)) {
+        setTrackingDevices(response.data || []);
+
+          
+        const formattedDevices: DeviceData[] = response.data.map(
+          (device: any) => ({
+            id: device.id.toString(),
+            type:
+              device.type.charAt(0).toUpperCase() +
+              device.type.slice(1).toLowerCase() +
+              " Tracker",
+            vehicle: device.vehicle
+              ? `${device.vehicle.plateNumber} (${device.vehicle.vehicleModel})`
+              : "Unassigned",
+            date: new Date(
+              device.createdAt || "2023-01-01"
+            ).toLocaleDateString(),
+            status: device.status === "active" ? "online" : "offline",
+            lastPing: device.lastPing
+              ? new Date(device.lastPing).toLocaleString()
+              : "N/A",
+            serialNumber: device.serialNumber,
+            model: device.model,
+          })
+        );
+
+        setDevices(formattedDevices);
+      } else {
+        setTrackingDevices([]);
+        setDevices([]);
+      }
+    } catch (error) {
+      console.error("Error fetching tracking devices:", error);
+      toast("Error fetching tracking devices");
+      setTrackingDevices([]);
+      setDevices([]);
     }
   };
 
@@ -144,12 +175,12 @@ export default function ClientDetails() {
 
   const handleDeviceAdded = () => {
     toast("The device has been successfully added to the vehicle.");
-    fetchClientData();   
+    fetchClientData();
   };
 
   const handleVehicleAdded = () => {
     toast("The vehicle has been successfully added to this client.");
-    fetchClientData();   
+    fetchClientData();
   };
 
   if (loading) {
@@ -388,7 +419,6 @@ export default function ClientDetails() {
                   </div>
                 </div>
               </div>
-
             </CardContent>
           </Card>
         </div>
@@ -423,12 +453,10 @@ export default function ClientDetails() {
               <Button
                 className="bg-emerald-600 hover:bg-emerald-700"
                 onClick={() => {
-                    
                   if (vehicles.length === 0) {
                     toast("Please add a vehicle first before adding devices.");
                   }
-                    
-                    
+
                   setIsAddDeviceModalOpen(true);
                 }}
               >
@@ -444,38 +472,44 @@ export default function ClientDetails() {
                     <thead>
                       <tr className="border-b bg-muted/50 text-left">
                         <th className="p-4 font-medium">Device ID</th>
+                        <th className="p-4 font-medium">Serial Number</th>
+                        <th className="p-4 font-medium">Model</th>
                         <th className="p-4 font-medium">Type</th>
                         <th className="p-4 font-medium">Vehicle</th>
-                        <th className="p-4 font-medium">Installation Date</th>
                         <th className="p-4 font-medium">Status</th>
                         <th className="p-4 font-medium">Last Ping</th>
                         <th className="p-4 font-medium text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {devices.map((device, i) => (
-                        <tr key={i} className="border-b">
-                          <td className="p-4">{device.id}</td>
+                      {trackingDevices.map((device, index) => (
+                        <tr key={index} className="border-b">
+                          <td className="p-4">{index + 1}</td>
+                          <td className="p-4">{device.serialNumber}</td>
+                          <td className="p-4">{device.model}</td>
                           <td className="p-4">
                             <div className="flex items-center gap-2">
-                              {device.type === "GPS Tracker" && (
-                                <MapPin className="h-4 w-4 text-blue-500" />
-                              )}
-                              {device.type === "Fuel Sensor" && (
+                              {device.type === "FUEL" && (
                                 <Fuel className="h-4 w-4 text-amber-500" />
                               )}
-                              {device.type === "Emissions Monitor" && (
+                              {device.type === "EMISSION" && (
                                 <Router className="h-4 w-4 text-green-500" />
                               )}
-                              <span>{device.type}</span>
+                              {device.type === "GPS" && (
+                                <MapPin className="h-4 w-4 text-blue-500" />
+                              )}
+                              <span>{device.type} Tracker</span>
                             </div>
                           </td>
-                          <td className="p-4 font-medium">{device.vehicle}</td>
-                          <td className="p-4">{device.date}</td>
+                          <td className="p-4 font-medium">
+                            {device.vehicle
+                              ? `${device.vehicle.plateNumber} (${device.vehicle.vehicleModel})`
+                              : "Unassigned"}
+                          </td>
                           <td className="p-4">
                             <Badge
                               className={
-                                device.status === "online"
+                                device.status === "active"
                                   ? "bg-green-100 text-green-700"
                                   : "bg-gray-100 text-sms"
                               }
@@ -484,7 +518,9 @@ export default function ClientDetails() {
                             </Badge>
                           </td>
                           <td className="p-4 text-muted-foreground">
-                            {device.lastPing}
+                            {device.lastPing
+                              ? new Date(device.lastPing).toLocaleString()
+                              : "N/A"}
                           </td>
                           <td className="p-4 text-right">
                             <DropdownMenu>
@@ -498,13 +534,14 @@ export default function ClientDetails() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    handleViewDeviceDetails(device.id)
+                                  }
+                                >
                                   View Details
                                 </DropdownMenuItem>
                                 <DropdownMenuItem>Edit Device</DropdownMenuItem>
-                                <DropdownMenuItem>
-                                  Reassign Device
-                                </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem className="text-red-500">
                                   <Trash className="mr-2 h-4 w-4" />
@@ -521,17 +558,18 @@ export default function ClientDetails() {
               </CardContent>
               <CardFooter className="flex items-center justify-between border-t px-6 py-3">
                 <div className="text-sm text-muted-foreground">
-                  Showing {devices.length} of{" "}
-                  {parseInt(String(client?.GPSDevices ?? 0)) +
-                    parseInt(String(client?.fuelDevices ?? 0)) +
-                    parseInt(String(client?.emissionsDevices ?? 0))}
+                  Showing {trackingDevices.length} of {trackingDevices.length}{" "}
                   devices
                 </div>
                 <div className="flex items-center gap-2">
                   <Button variant="outline" size="sm" disabled>
                     Previous
                   </Button>
-                  <Button variant="outline" size="sm">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={trackingDevices.length <= 10}
+                  >
                     Next
                   </Button>
                 </div>
@@ -560,6 +598,16 @@ export default function ClientDetails() {
         onOpenChange={setIsEditUserDrawerOpen}
         user={userData}
         refetchUsers={fetchClientData}
+      />
+      <DeviceDetailsModal
+        isOpen={isDeviceModalOpen}
+        onClose={() => setIsDeviceModalOpen(false)}
+        deviceId={selectedDeviceId}
+      />
+      <DeviceDetailsDrawer
+        open={isDeviceDrawerOpen}
+        onOpenChange={setIsDeviceDrawerOpen}
+        deviceId={selectedDeviceId}
       />
     </div>
   );

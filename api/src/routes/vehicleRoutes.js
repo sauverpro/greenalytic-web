@@ -64,11 +64,6 @@ VehicleRouter.get(
 );
 
 
-// VehicleRouter.get(
-//   "/analytics/data",
-//   vehicleDataController.analyticHub
-// );
-
 VehicleRouter.get(
   "/map/data",
   vehicleDataController.getMapData
