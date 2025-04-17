@@ -39,4 +39,20 @@ export const getAllDevices = async () => {
     throw new Error(`Failed to fetch vehicles for user: ${error}`);
   }
 }
+export const getDevicesByUser = async (userId: string) => {
+  try {
+    const response = await client.get(`/trackingDevices/${userId}/devices`);
+    return response.data;
+  } catch (error) {
+    throw new Error(`Failed to fetch tracking devices for user: ${error}`);
+  }
+};
+export const viewDevice = async (deviceId: string) => {
+  try {
+    const response = await client.get(`/trackingDevices/devices/${deviceId}`);
+    return response.data;
+  } catch (error) {
+    throw new Error(`Failed to fetch more information on device: ${error}`);
+  }
+};
 

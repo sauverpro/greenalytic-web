@@ -1,15 +1,21 @@
 "use client";
 
-import { Users, Edit, Eye, Trash, Car } from "lucide-react";
+import { Users, Edit, Eye, Trash } from "lucide-react";
 import type { GridColDef } from "@mui/x-data-grid";
-import DataTable from "@/components/DataTable/GenericDataTable";
+import DataTable, {
+  type Pagination,
+} from "@/components/DataTable/GenericDataTable";
 import { getAllUsers, deleteUser } from "@/services/userService";
 import type { ActionItem } from "@/components/DataTable/TableActions";
-import { useState } from "react";
-import { exportToPDF, exportToExcel, printUsers } from "./ExportUtils";
+import { useState, useEffect } from "react";
+import {
+  exportToPDF,
+  exportToExcel,
+  printUsers,
+} from "./_components/ExportUtils";
 import type { User } from "@/types/types";
-import AddUserDrawer from "./AddUserDrawer";
-import EditUserDrawer from "./EditUserDrawer";
+
+import EditUserDrawer from "./_components/EditUserDrawer";
 
 import { toast } from "sonner";
 import {
@@ -24,7 +30,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import ViewUserDrawer from "./ViewUserDrawer";
+import ViewUserDrawer from "./_components/ViewUserDrawer";
+import AddUserDrawer from "./_components/AddUserDrawer";
 
 export function ConfirmAndToastDialog({
   onConfirm,
@@ -74,17 +81,26 @@ export default function UsersPage() {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [openAddUserDrawer, setOpenAddUserDrawer] = useState(false);
   const [openEditUserDrawer, setOpenEditUserDrawer] = useState(false);
-  const [openAddVehicleDrawer, setOpenAddVehicleDrawer] = useState(false);
   const [openViewUserDialog, setOpenViewUserDialog] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [pagination, setPagination] = useState<Pagination>({
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    limit: 10,
+  });
+
+  // Fetch users on component mount and when pagination changes
+  useEffect(() => {
+    fetchUsers(pagination.currentPage, pagination.limit);
+  }, []);
 
   const fetchUsers = async (page = 1, limit = 10) => {
     try {
+      setLoading(true);
       const response = await getAllUsers(page, limit);
-      console.log(
-        "response  structure of the  users  list++++{+++",
-        response.users
-      );
+
       const users = Array.isArray(response.users) ? response.users : [];
 
       const sortedUsers = users.sort(
@@ -99,32 +115,26 @@ export default function UsersPage() {
       }));
 
       setUsers(usersWithNumbers);
-      return {
-        data: usersWithNumbers,
-        pagination: response.pagination,
-      };
+      setPagination(response.pagination);
+      setLoading(false);
     } catch (error) {
       console.error("Error fetching users:", error);
-      return {
-        data: [],
-        pagination: {
-          currentPage: 1,
-          totalPages: 1,
-          totalItems: 0,
-          limit: limit,
-        },
-      };
+      setLoading(false);
     }
+  };
+
+  // Handle page change from the DataTable
+  const handlePageChange = (page: number, limit: number) => {
+    fetchUsers(page, limit);
+  };
+
+  const refetchUsers = () => {
+    fetchUsers(pagination.currentPage, pagination.limit);
   };
 
   const handleEditUser = (user: User) => {
     setSelectedUser(user);
     setOpenEditUserDrawer(true);
-  };
-
-  const handleOpenAddVehicleDrawer = (userId: string) => {
-    setSelectedUserId(userId);
-    setOpenAddVehicleDrawer(true);
   };
 
   const handleViewUser = (user: User) => {
@@ -134,7 +144,7 @@ export default function UsersPage() {
 
   const handleUserAdded = (newUser: User) => {
     setOpenAddUserDrawer(false);
-    setUsers((prevUsers) => [...prevUsers, newUser]);
+    refetchUsers(); // Refresh the data when a new user is added
   };
 
   const handleEditDrawerChange = (open: boolean) => {
@@ -145,6 +155,7 @@ export default function UsersPage() {
       }, 300);
     }
   };
+
   const handleViewDrawerChange = (open: boolean) => {
     setOpenViewUserDialog(open);
     if (!open) {
@@ -154,26 +165,16 @@ export default function UsersPage() {
     }
   };
 
-  const handleAddVehicleDrawerChange = (open: boolean) => {
-    setOpenAddVehicleDrawer(open);
-    if (!open) {
-      setTimeout(() => {
-        setSelectedUserId(null);
-      }, 300);
-    }
-  };
-
   const handleDeleteUser = async (user: User) => {
     try {
       await deleteUser(String(user.id));
-      setUsers((prevUsers) => prevUsers.filter((u) => u.id !== user.id));
+      refetchUsers(); // Refresh after deletion
       toast.success("User deleted successfully");
     } catch (error) {
       console.error("Error deleting user:", error);
       toast.error("Failed to delete user. Please try again.");
     }
   };
-
   const getUserActions = (user: User): ActionItem[] => {
     return [
       {
@@ -212,6 +213,11 @@ export default function UsersPage() {
       field: "email",
       headerName: "Email",
       width: 200,
+    },
+    {
+      field: "phoneNumber",
+      headerName: "Phone",
+      width: 150,
     },
     {
       field: "vehicles",
@@ -280,31 +286,28 @@ export default function UsersPage() {
 
   const handleExportPDF = (selectedUsers: User[]) => {
     try {
-      console.log("Export to PDF", selectedUsers);
       exportToPDF(selectedUsers);
     } catch (error) {
       console.error("Error exporting to PDF:", error);
-      alert("Failed to export to PDF. Please try again.");
+      toast.error("Failed to export to PDF. Please try again.");
     }
   };
 
   const handleExportExcel = (selectedUsers: User[]) => {
     try {
-      console.log("Export to Excel", selectedUsers);
       exportToExcel(selectedUsers);
     } catch (error) {
       console.error("Error exporting to Excel:", error);
-      alert("Failed to export to Excel. Please try again.");
+      toast.error("Failed to export to Excel. Please try again.");
     }
   };
 
   const handlePrint = (selectedUsers: User[]) => {
     try {
-      console.log("Print users", selectedUsers);
       printUsers(selectedUsers);
     } catch (error) {
       console.error("Error printing users:", error);
-      alert("Failed to print. Please try again.");
+      toast.error("Failed to print. Please try again.");
     }
   };
 
@@ -315,7 +318,10 @@ export default function UsersPage() {
         description="Manage all users and their details in one place"
         icon={<Users size={20} />}
         columns={columns}
-        fetchData={fetchUsers}
+        data={users}
+        pagination={pagination}
+        loading={loading}
+        onPageChange={handlePageChange}
         addButtonLabel="Add User"
         onAddItem={() => setOpenAddUserDrawer(true)}
         searchPlaceholder="Search users by name, email, role..."
@@ -334,7 +340,7 @@ export default function UsersPage() {
 
       <ViewUserDrawer
         open={openViewUserDialog}
-        onOpenChange={setOpenViewUserDialog}
+        onOpenChange={handleViewDrawerChange}
         user={selectedUser}
       />
 
@@ -342,9 +348,7 @@ export default function UsersPage() {
         open={openEditUserDrawer}
         onOpenChange={handleEditDrawerChange}
         user={selectedUser}
-        refetchUsers={() => {
-          fetchUsers();
-        }}
+        refetchUsers={refetchUsers}
       />
     </div>
   );

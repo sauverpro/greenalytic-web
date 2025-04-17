@@ -1,11 +1,11 @@
 "use client";
 
-import { Car, Eye, Edit, Trash } from "lucide-react";
+import { Car, Eye, Edit, Trash, FileText, BarChart2 } from "lucide-react";
 import type { GridColDef } from "@mui/x-data-grid";
-import DataTable from "@/components/DataTable/GenericDataTable";
+import DataTable, { Pagination } from "@/components/DataTable/GenericDataTable";
 import { getAllVehicles, deleteVehicle } from "@/services/vehicleService";
 import type { ActionItem } from "@/components/DataTable/TableActions";
-import { useState, useRef, useEffect } from "react";
+import { use, useEffect, useState } from "react";
 import {
   exportToPDF,
   exportToExcel,
@@ -13,38 +13,17 @@ import {
   type Vehicle,
 } from "./ExportUtils";
 import { toast } from "sonner";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 function VehiclesPage() {
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [vehicleToDelete, setVehicleToDelete] = useState<Vehicle | null>(null);
+  const [loading, setLoading] = useState(true);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const isComponentMounted = useRef(true);
-
-  useEffect(() => {
-    // Initialize vehicles
-    const initVehicles = async () => {
-      const result = await fetchVehicles(1, 1000); // Fetch all for local state
-      setVehicles(result.data);
-    };
-
-    initVehicles();
-
-    // Cleanup function
-    return () => {
-      isComponentMounted.current = false;
-    };
-  }, []);
+  const [pagination, setPagination] = useState<Pagination>({
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    limit: 10,
+  });
 
   const fetchVehicles = async (page = 1, limit = 10) => {
     try {
@@ -92,6 +71,14 @@ function VehiclesPage() {
     }
   };
 
+  useEffect(() => {
+    fetchVehicles().then((data) => {
+      setVehicles(data.data);
+      setPagination(data.pagination);
+      setLoading(false);
+    });
+  }, []);
+
   const handleViewVehicle = (vehicle: Vehicle) => {
     console.log("View vehicle details:", vehicle);
   };
@@ -101,33 +88,32 @@ function VehiclesPage() {
     console.log("Edit vehicle:", vehicle);
   };
 
-  const handleDeleteVehicle = (vehicle: Vehicle) => {
-    setVehicleToDelete(vehicle);
-    setShowDeleteConfirm(true);
-  };
-
-  const confirmDelete = async () => {
-    if (!vehicleToDelete) return;
+  const handleDeleteVehicle = async (vehicle: Vehicle) => {
     try {
-      await deleteVehicle(vehicleToDelete.id);
+      setLoading(true);
+      console.log("Deleting vehicle:", vehicle);
 
-      if (isComponentMounted.current) {
-        toast.success("Vehicle deleted successfully");
-        setVehicles(vehicles.filter((v) => v.id !== vehicleToDelete.id));
+       
+      const result = await deleteVehicle(Number(vehicle.id));
+
+      if (result.success) {
+         
+        const updatedData = await fetchVehicles(
+          pagination.currentPage,
+          pagination.limit
+        );
+        setVehicles(updatedData.data);
+        setPagination(updatedData.pagination);
+
+         
+        toast("Vehicle deleted successfully!");
       }
     } catch (error) {
       console.error("Error deleting vehicle:", error);
-      if (isComponentMounted.current) {
-        toast.error("Failed to delete vehicle");
-      }
+      alert("Failed to delete vehicle. Please try again.");
     } finally {
-      closeDeleteConfirm();
+      setLoading(false);
     }
-  };
-
-  const closeDeleteConfirm = () => {
-    setShowDeleteConfirm(false);
-    setVehicleToDelete(null);
   };
 
   const handleViewReports = (vehicle: Vehicle) => {
@@ -144,16 +130,16 @@ function VehiclesPage() {
 
   const getVehicleActions = (vehicle: Vehicle): ActionItem[] => {
     return [
-      // {
-      //   label: "View Details",
-      //   onClick: () => handleViewVehicle(vehicle),
-      //   icon: <Eye size={16} />,
-      // },
-      // {
-      //   label: "Edit Vehicle",
-      //   onClick: () => handleEditVehicle(vehicle),
-      //   icon: <Edit size={16} />,
-      // },
+      {
+        label: "View Details",
+        onClick: () => handleViewVehicle(vehicle),
+        icon: <Eye size={16} />,
+      },
+      {
+        label: "Edit Vehicle",
+        onClick: () => handleEditVehicle(vehicle),
+        icon: <Edit size={16} />,
+      },
       {
         label: "Delete Vehicle",
         onClick: () => handleDeleteVehicle(vehicle),
@@ -292,7 +278,9 @@ function VehiclesPage() {
         description="Manage all vehicles in one place"
         icon={<Car size={20} />}
         columns={columns}
-        fetchData={fetchVehicles}
+        data={vehicles}
+        pagination={pagination}
+        loading={loading}
         addButtonLabel="Add Vehicle"
         onAddItem={handleAddVehicle}
         searchPlaceholder="Search vehicles by model, license plate..."
@@ -307,36 +295,15 @@ function VehiclesPage() {
         handleExportExcel={handleExportExcel}
         handlePrint={handlePrint}
         getRowActions={getVehicleActions}
+        onPageChange={(newPage) => {
+          setLoading(true);
+          fetchVehicles(newPage, pagination.limit).then((data) => {
+            setVehicles(data.data);
+            setPagination(data.pagination);
+            setLoading(false);
+          });
+        }}
       />
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this vehicle?
-              {vehicleToDelete && (
-                <span className="font-medium block mt-2">
-                  {vehicleToDelete.model} - {vehicleToDelete.licensePlate}
-                </span>
-              )}
-              This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={closeDeleteConfirm}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDelete}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

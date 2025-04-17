@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { addVehicleToUser } from "../../../../services/vehicleService";
+
 import { Button } from "@/components/ui/button";
 import { Vehicle } from "@/types/types";
+import { addVehicleToUser } from "@/services/vehicleService";
 
 const VehicleForm = ({
   userId,

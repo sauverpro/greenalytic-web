@@ -1,3 +1,4 @@
+import { PaginationService } from '../services/paginationService.js';
 import TrackingDeviceService from '../services/trackingDeviceService.js'
 
 export const addTrackingDeviceToVehicle = async (req, res) => {
@@ -47,49 +48,6 @@ export const addTrackingDeviceToVehicle = async (req, res) => {
   }
 };
 
-// export const addTrackingDeviceToVehicle = async (req, res) => {
-//   try {
-//     const { type, plateNumber } = req.body;
-
- 
-
-//     if (!req.body || Object.keys(req.body).length === 0) {
-//       return res
-//         .status(400)
-//         .json({ success: false, message: 'Request body cannot be empty' })
-//     }
-
-//     if (!plateNumber) {
-//       return res
-//         .status(400)
-//         .json({ success: false, message: 'Plate number is required' })
-//     }
-
-//     const validTypes = ['GPS', 'FUEL', 'EMISSION']
-//     if (!type || !validTypes.includes(type.toUpperCase())) {
-//       return res.status(400).json({
-//         success: false,
-//         message: `Invalid device type. Type must be one of: ${validTypes.join(', ')}`
-//       })
-//     }
-
-//         const normalizedBody = {
-//           ...req.body,
-//           type: type.toUpperCase(),
-//         };
-
-//     const trackingDevice =
-//       await TrackingDeviceService.addTrackingDeviceToVehicle(normalizedBody);
-
-//     return res.status(201).json({
-//       success: true,
-//       message: 'Tracking device added successfully',
-//       data: trackingDevice
-//     })
-//   } catch (error) {
-//     return res.status(400).json({ success: false, message: error.message })
-//   }
-// }
 
 
 
@@ -252,3 +210,78 @@ export const getTrackingDeviceById = async (req, res) => {
     return res.status(400).json({ success: false, message: error.message })
   }
 }
+
+export const getTrackingDevicesByUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const parsedUserId = parseInt(userId, 10);
+    if (isNaN(parsedUserId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user ID",
+      });
+    }
+
+    // Get tracking devices for the user
+    const trackingDevices =
+      await TrackingDeviceService.getTrackingDevicesByUser(parsedUserId);
+
+    if (!trackingDevices || trackingDevices.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No tracking devices found for this user",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      count: trackingDevices.length,
+      data: trackingDevices,
+    });
+  } catch (error) {
+    console.error("Error retrieving tracking devices for user:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Internal server error",
+    });
+  }
+};
+
+export const getDeviceDetails = async (req, res) => {
+  try {
+    const { deviceId } = req.params;
+    const { startDate, endDate, page = 1, limit = 10 } = req.query;
+
+    const paginationParams = PaginationService.parsePaginationParams(
+      req.query,
+      10
+    );
+
+    const dateRange = {};
+    if (startDate && endDate) {
+      dateRange.startDate = startDate;
+      dateRange.endDate = endDate;
+    }
+
+    const deviceDetails = await TrackingDeviceService.getDeviceDetails(
+      deviceId,
+      dateRange,
+      paginationParams
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Device details fetched successfully",
+      data: deviceDetails.device,
+      deviceData: deviceDetails.data,
+      pagination: deviceDetails.pagination,
+    });
+  } catch (error) {
+    console.error("Error retrieving device details:", error);
+    return res.status(400).json({
+      success: false,
+      message: error.message || "Error retrieving device details",
+    });
+  }
+};

@@ -15,7 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   getVehiclesByLoggedUser,
   getVehiclesForUser,
-} from "../../../../services/vehicleService";
+} from "../../../../../services/vehicleService";
 import { User, Vehicle } from "@/types/types";
 import { Car, Phone, Mail, User as UserIcon, Fuel } from "lucide-react";
 

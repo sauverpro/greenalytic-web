@@ -3,15 +3,19 @@
 import { Users, Edit, Eye, Trash, Car } from "lucide-react";
 import type { GridColDef } from "@mui/x-data-grid";
 import DataTable from "@/components/DataTable/GenericDataTable";
-import { getAllUsers } from "@/services/userService";
+import { getAllUsers, deleteUser } from "@/services/userService";
 import type { ActionItem } from "@/components/DataTable/TableActions";
 import { useState } from "react";
-import { exportToPDF, exportToExcel, printUsers } from "./ExportUtils";
+import {
+  exportToPDF,
+  exportToExcel,
+  printUsers,
+} from "./_components/ExportUtils";
 import type { User } from "@/types/types";
-import AddUserDrawer from "./AddUserDrawer";
-import EditUserDrawer from "./EditUserDrawer";
 
-import { toast } from "sonner"
+import EditUserDrawer from "./_components/EditUserDrawer";
+
+import { toast } from "sonner";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,16 +26,22 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import { Button } from "@/components/ui/button"
-// import AddVehicleDrawer from "./AddVehicleDrawer";
-import ViewUserDrawer from "./ViewUserDrawer";
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import ViewUserDrawer from "./_components/ViewUserDrawer";
+import AddUserDrawer from "./_components/AddUserDrawer";
+import UsersTable from "./_components/UserTable";
 
-export function ConfirmAndToastDialog() {
+export function ConfirmAndToastDialog({
+  onConfirm,
+}: {
+  onConfirm: () => void;
+}) {
   const [open, setOpen] = useState(false);
 
   const handleConfirm = () => {
     setOpen(false);
+    onConfirm();
     toast("Action Confirmed", {
       description: "Your settings have been saved successfully.",
       action: {
@@ -72,7 +82,12 @@ export default function UsersPage() {
   const [openEditUserDrawer, setOpenEditUserDrawer] = useState(false);
   const [openAddVehicleDrawer, setOpenAddVehicleDrawer] = useState(false);
   const [openViewUserDialog, setOpenViewUserDialog] = useState(false);
-
+  const [users, setUsers] = useState<User[]>([]);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const refetchUsers = async () => {
+    await fetchUsers();
+    setRefreshTrigger((prev) => prev + 1);
+  };
   const fetchUsers = async (page = 1, limit = 10) => {
     try {
       const response = await getAllUsers(page, limit);
@@ -93,6 +108,7 @@ export default function UsersPage() {
         no: startIndex + index + 1,
       }));
 
+      setUsers(usersWithNumbers);
       return {
         data: usersWithNumbers,
         pagination: response.pagination,
@@ -128,6 +144,7 @@ export default function UsersPage() {
 
   const handleUserAdded = (newUser: User) => {
     setOpenAddUserDrawer(false);
+    setUsers((prevUsers) => [...prevUsers, newUser]);
   };
 
   const handleEditDrawerChange = (open: boolean) => {
@@ -156,6 +173,17 @@ export default function UsersPage() {
     }
   };
 
+  const handleDeleteUser = async (user: User) => {
+    try {
+      await deleteUser(String(user.id));
+      setUsers((prevUsers) => prevUsers.filter((u) => u.id !== user.id));
+      toast.success("User deleted successfully");
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      toast.error("Failed to delete user. Please try again.");
+    }
+  };
+
   const getUserActions = (user: User): ActionItem[] => {
     return [
       {
@@ -168,10 +196,9 @@ export default function UsersPage() {
         onClick: () => handleEditUser(user),
         icon: <Edit size={16} />,
       },
-
       {
         label: "Delete User",
-        onClick: () => console.log("Delete user::::::::", user),
+        onClick: () => handleDeleteUser(user),
         variant: "destructive",
         icon: <Trash size={16} />,
       },
@@ -197,6 +224,11 @@ export default function UsersPage() {
       width: 200,
     },
     {
+      field: "phoneNumber",
+      headerName: "Phone",
+      width: 150,
+    },
+    {
       field: "vehicles",
       headerName: "Vehicles",
       width: 120,
@@ -216,7 +248,6 @@ export default function UsersPage() {
         </span>
       ),
     },
-
     {
       field: "role",
       headerName: "Role",
@@ -309,6 +340,7 @@ export default function UsersPage() {
         handlePrint={handlePrint}
         getRowActions={getUserActions}
       />
+      {/* <UsersTable/> */}
 
       <AddUserDrawer
         open={openAddUserDrawer}
@@ -326,12 +358,8 @@ export default function UsersPage() {
         open={openEditUserDrawer}
         onOpenChange={handleEditDrawerChange}
         user={selectedUser}
-        refetchUsers={() => {
-          fetchUsers();
-        }}
+        refetchUsers={refetchUsers}
       />
     </div>
   );
 }
-
-
