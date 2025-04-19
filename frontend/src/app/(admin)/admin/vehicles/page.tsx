@@ -59,7 +59,10 @@ function VehiclesPage() {
 
       return {
         data: paginatedVehicles.map((vehicle: any, index: number) => ({
+        data: paginatedVehicles.map((vehicle: any, index: number) => ({
           id: vehicle.id,
+          no: startIndex + index + 1,
+          model: vehicle.vehicleModel,
           no: startIndex + index + 1,
           model: vehicle.vehicleModel,
           year: vehicle.yearOfManufacture,
@@ -69,6 +72,7 @@ function VehiclesPage() {
           usage: vehicle.usage,
           owner: vehicle.user?.username || "Unknown",
           status: vehicle.deletedAt ? "inactive" : "active",
+          email: vehicle.user?.email ?? "unknown@example.com",
           email: vehicle.user?.email ?? "unknown@example.com",
         })),
         pagination: {
@@ -164,6 +168,7 @@ function VehiclesPage() {
   };
 
   const columns: GridColDef[] = [
+    { field: "no", headerName: "No", width: 70 },
     { field: "no", headerName: "No", width: 70 },
     {
       field: "model",
@@ -263,9 +268,33 @@ function VehiclesPage() {
       console.error("Error exporting to PDF:", error);
       alert("Failed to export to PDF. Please try again.");
     }
+    try {
+      console.log("Export to PDF", selectedVehicles);
+      exportToPDF(selectedVehicles);
+    } catch (error) {
+      console.error("Error exporting to PDF:", error);
+      alert("Failed to export to PDF. Please try again.");
+    }
   };
 
   const handleExportExcel = (selectedVehicles: Vehicle[]) => {
+    try {
+      console.log("Export to Excel", selectedVehicles);
+      exportToExcel(selectedVehicles);
+    } catch (error) {
+      console.error("Error exporting to Excel:", error);
+      alert("Failed to export to Excel. Please try again.");
+    }
+  };
+
+  const handlePrint = (selectedVehicles: Vehicle[]) => {
+    try {
+      console.log("Print vehicles", selectedVehicles);
+      printVehicles(selectedVehicles);
+    } catch (error) {
+      console.error("Error printing vehicles:", error);
+      alert("Failed to print. Please try again.");
+    }
     try {
       console.log("Export to Excel", selectedVehicles);
       exportToExcel(selectedVehicles);
@@ -287,6 +316,7 @@ function VehiclesPage() {
 
   return (
     <div className="h-full flex flex-1 max-w-[100%]">
+      <DataTable
       <DataTable
         title="Vehicle Management"
         description="Manage all vehicles in one place"
@@ -342,3 +372,4 @@ function VehiclesPage() {
 }
 
 export default VehiclesPage;
+

@@ -1,14 +1,13 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { AddDeviceModal } from "@/components/adminComponents/add-device-modal";
+import { ClientData, DeviceData, User, VehicleData } from "@/types/types";
 import { ClientData, DeviceData, User, VehicleData } from "@/types/types";
 import { getUserById } from "@/services/userService";
 import { CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
@@ -50,6 +49,7 @@ export default function ClientDetails() {
   const [isAddVehicleModalOpen, setIsAddVehicleModalOpen] = useState(false);
   const [isAddDeviceModalOpen, setIsAddDeviceModalOpen] = useState(false);
   const [isEditUserDrawerOpen, setIsEditUserDrawerOpen] = useState(false);
+  const [isEditUserDrawerOpen, setIsEditUserDrawerOpen] = useState(false);
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(
     null
   );
@@ -66,6 +66,8 @@ export default function ClientDetails() {
       return;
     }
 
+    setLoading(true);
+    console.log("Fetching client data for userId:", userId);
     setLoading(true);
     console.log("Fetching client data for userId:", userId);
 
@@ -203,9 +205,13 @@ export default function ClientDetails() {
           </Button>
           <Button
             variant="outline"
+            variant="outline"
             size="sm"
             onClick={() => setIsEditUserDrawerOpen(true)}
+            onClick={() => setIsEditUserDrawerOpen(true)}
           >
+            <Edit className="mr-2 h-4 w-4" />
+            Edit user
             <Edit className="mr-2 h-4 w-4" />
             Edit user
           </Button>
@@ -444,38 +450,44 @@ export default function ClientDetails() {
                     <thead>
                       <tr className="border-b bg-muted/50 text-left">
                         <th className="p-4 font-medium">Device ID</th>
+                        <th className="p-4 font-medium">Serial Number</th>
+                        <th className="p-4 font-medium">Model</th>
                         <th className="p-4 font-medium">Type</th>
                         <th className="p-4 font-medium">Vehicle</th>
-                        <th className="p-4 font-medium">Installation Date</th>
                         <th className="p-4 font-medium">Status</th>
                         <th className="p-4 font-medium">Last Ping</th>
                         <th className="p-4 font-medium text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {devices.map((device, i) => (
-                        <tr key={i} className="border-b">
-                          <td className="p-4">{device.id}</td>
+                      {trackingDevices.map((device, index) => (
+                        <tr key={index} className="border-b">
+                          <td className="p-4">{index + 1}</td>
+                          <td className="p-4">{device.serialNumber}</td>
+                          <td className="p-4">{device.model}</td>
                           <td className="p-4">
                             <div className="flex items-center gap-2">
-                              {device.type === "GPS Tracker" && (
-                                <MapPin className="h-4 w-4 text-blue-500" />
-                              )}
-                              {device.type === "Fuel Sensor" && (
+                              {device.type === "FUEL" && (
                                 <Fuel className="h-4 w-4 text-amber-500" />
                               )}
-                              {device.type === "Emissions Monitor" && (
+                              {device.type === "EMISSION" && (
                                 <Router className="h-4 w-4 text-green-500" />
                               )}
-                              <span>{device.type}</span>
+                              {device.type === "GPS" && (
+                                <MapPin className="h-4 w-4 text-blue-500" />
+                              )}
+                              <span>{device.type} Tracker</span>
                             </div>
                           </td>
-                          <td className="p-4 font-medium">{device.vehicle}</td>
-                          <td className="p-4">{device.date}</td>
+                          <td className="p-4 font-medium">
+                            {device.vehicle
+                              ? `${device.vehicle.plateNumber} (${device.vehicle.vehicleModel})`
+                              : "Unassigned"}
+                          </td>
                           <td className="p-4">
                             <Badge
                               className={
-                                device.status === "online"
+                                device.status === "active"
                                   ? "bg-green-100 text-green-700"
                                   : "bg-gray-100 text-sms"
                               }
@@ -484,7 +496,9 @@ export default function ClientDetails() {
                             </Badge>
                           </td>
                           <td className="p-4 text-muted-foreground">
-                            {device.lastPing}
+                            {device.lastPing
+                              ? new Date(device.lastPing).toLocaleString()
+                              : "N/A"}
                           </td>
                           <td className="p-4 text-right">
                             <DropdownMenu>
@@ -498,13 +512,14 @@ export default function ClientDetails() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    handleViewDeviceDetails(device.id)
+                                  }
+                                >
                                   View Details
                                 </DropdownMenuItem>
                                 <DropdownMenuItem>Edit Device</DropdownMenuItem>
-                                <DropdownMenuItem>
-                                  Reassign Device
-                                </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem className="text-red-500">
                                   <Trash className="mr-2 h-4 w-4" />
@@ -521,17 +536,18 @@ export default function ClientDetails() {
               </CardContent>
               <CardFooter className="flex items-center justify-between border-t px-6 py-3">
                 <div className="text-sm text-muted-foreground">
-                  Showing {devices.length} of{" "}
-                  {parseInt(String(client?.GPSDevices ?? 0)) +
-                    parseInt(String(client?.fuelDevices ?? 0)) +
-                    parseInt(String(client?.emissionsDevices ?? 0))}
+                  Showing {trackingDevices.length} of {trackingDevices.length}{" "}
                   devices
                 </div>
                 <div className="flex items-center gap-2">
                   <Button variant="outline" size="sm" disabled>
                     Previous
                   </Button>
-                  <Button variant="outline" size="sm">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={trackingDevices.length <= 10}
+                  >
                     Next
                   </Button>
                 </div>

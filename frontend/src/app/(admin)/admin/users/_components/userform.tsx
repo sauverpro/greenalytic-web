@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { User } from "@/types/types";
 import { Button } from "@/components/ui/button";
-import { updateUser } from "../../../../services/userService";
+import { updateUser } from "../../../../../services/userService";
 
 type UserFormProps = {
   user: User;

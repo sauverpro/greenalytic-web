@@ -1,67 +1,59 @@
-import prisma from '../../prismaClient.js'
-import { passHashing } from '../utils/passwordfunctions.js'
+import prisma from "../../prismaClient.js";
+import { passHashing } from "../utils/passwordfunctions.js";
 
-prisma
+prisma;
 
-// **1️⃣ Create User** - Create a new user
-export const createUserService = async userData => {
-  console.log('Creating user:', userData)
+export const createUserService = async (userData) => {
+  console.log("Creating user:", userData);
   try {
-    // Validate email uniqueness
     const existingUser = await prisma.user.findFirst({
       where: {
-        email: userData.email
-      }
-    })
+        email: userData.email,
+      },
+    });
 
     if (existingUser) {
       return {
         success: false,
-        message: 'Email is already in use.'
-      }
+        message: "Email is already in use.",
+      };
     }
 
-    // Hash the password before saving it
-    const hashedPassword = await passHashing(userData.password)
+    const hashedPassword = await passHashing(userData.password);
 
-    // Prepare user data for creation
     const newUser = await prisma.user.create({
       data: {
         ...userData,
-        password: hashedPassword
-      }
-    })
+        password: hashedPassword,
+      },
+    });
 
     return {
       success: true,
-      user: newUser
-    }
+      user: newUser,
+    };
   } catch (error) {
-    console.error('Error creating user:', error)
+    console.error("Error creating user:", error);
     return {
       success: false,
-      message: 'Error creating user, please try again.'
-    }
+      message: "Error creating user, please try again.",
+    };
   }
-}
+};
 
-// **2️⃣ Get All Users** - Retrieve all users
 export const getAllUsersService = async (page, limit) => {
   try {
-    // Get total number of users
-    // Get total number of users excluding soft-deleted ones
     const totalItems = await prisma.user.count({
       where: {
-        deletedAt: null // Exclude users who have a deletedAt timestamp
-      }
-    })
-    // Calculate total pages
-    const totalPages = Math.ceil(totalItems / limit)
+        deletedAt: null,
+      },
+    });
 
-    // Fetch users with pagination
+    const totalPages = Math.ceil(totalItems / limit);
+
     const users = await prisma.user.findMany({
       where: {
-        deletedAt: null // Exclude users who have a deletedAt timestamp
+        deletedAt: null,
       },
       skip: (page - 1) * limit,
       take: limit,
@@ -80,8 +72,8 @@ export const getAllUsersService = async (page, limit) => {
             id: true,
             plateNumber: true,
             vehicleModel: true,
-            vehicleType: true
-          }
+            vehicleType: true,
+          },
         },
         trackingDevices: {
           select: {
@@ -89,11 +81,11 @@ export const getAllUsersService = async (page, limit) => {
             serialNumber: true,
             model: true,
             type: true,
-            isActive: true
-          }
-        }
-      }
-    })
+            isActive: true,
+          },
+        },
+      },
+    });
 
     return {
       success: true,
@@ -101,21 +93,21 @@ export const getAllUsersService = async (page, limit) => {
       pagination: {
         currentPage: page,
         totalPages,
-        remainingItems: Math.max(0, totalItems - page * limit), // Items left after current page
+        remainingItems: Math.max(0, totalItems - page * limit),
         totalItems,
-        limit
-      }
-    }
+        limit,
+      },
+    };
   } catch (error) {
-    console.error('Error retrieving users:', error)
+    console.error("Error retrieving users:", error);
     return {
       success: false,
-      message: 'Error retrieving users, please try again.'
-    }
+      message: "Error retrieving users, please try again.",
+    };
   }
-}
+};
 
-export const getUserByIdService = async id => {
+export const getUserByIdService = async (id) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: Number(id) },
@@ -139,10 +131,10 @@ export const getUserByIdService = async id => {
               select: {
                 emissionDatas: true,
                 fuelDatas: true,
-                gpsDatas: true
-              }
-            }
-          }
+                gpsDatas: true,
+              },
+            },
+          },
         },
         trackingDevices: {
           select: {
@@ -155,54 +147,54 @@ export const getUserByIdService = async id => {
               select: {
                 emissionDatas: true,
                 fuelDatas: true,
-                gpsDatas: true
-              }
-            }
-          }
+                gpsDatas: true,
+              },
+            },
+          },
         },
         _count: {
           select: {
             vehicles: true,
-            trackingDevices: true
-          }
-        }
-      }
-    })
+            trackingDevices: true,
+          },
+        },
+      },
+    });
 
     if (!user) {
       return {
         success: false,
-        message: 'User not found'
-      }
+        message: "User not found",
+      };
     }
 
     let totalEmissions = 0;
     let totalFuelData = 0;
     let totalGpsData = 0;
 
-      const deviceCounts = {
-        gps: 0,
-        fuel: 0,
-        emissions: 0,
-        total: user.trackingDevices.length,
+    const deviceCounts = {
+      gps: 0,
+      fuel: 0,
+      emissions: 0,
+      total: user.trackingDevices.length,
     };
-    
-       user.trackingDevices.forEach((device) => {
-         totalEmissions += device._count.emissionDatas;
-         totalFuelData += device._count.fuelDatas;
-         totalGpsData += device._count.gpsDatas;
 
-         const deviceType = device.type.toLowerCase();
-         if (deviceType === "gps") {
-           deviceCounts.gps++;
-         } else if (deviceType === "fuel") {
-           deviceCounts.fuel++;
-         } else if (deviceType === "emission") {
-           deviceCounts.emissions++;
-         }
-       });
+    user.trackingDevices.forEach((device) => {
+      totalEmissions += device._count.emissionDatas;
+      totalFuelData += device._count.fuelDatas;
+      totalGpsData += device._count.gpsDatas;
 
-    user.vehicles.forEach(vehicle => {
+      const deviceType = device.type.toLowerCase();
+      if (deviceType === "gps") {
+        deviceCounts.gps++;
+      } else if (deviceType === "fuel") {
+        deviceCounts.fuel++;
+      } else if (deviceType === "emission") {
+        deviceCounts.emissions++;
+      }
+    });
+
+    user.vehicles.forEach((vehicle) => {
       totalEmissions += vehicle._count.emissionDatas;
       totalFuelData += vehicle._count.fuelDatas;
       totalGpsData += vehicle._count.gpsDatas;
@@ -235,72 +227,68 @@ export const getUserByIdService = async id => {
       };
     });
 
-
     const userWithCounts = {
       ...user,
       totalEmissions,
       totalFuelData,
       totalGpsData,
       deviceCounts,
-      vehiclesWithDevices
+      vehiclesWithDevices,
     };
-
-
 
     return {
       success: true,
-      user: userWithCounts
-    }
+      user: userWithCounts,
+    };
   } catch (error) {
-    console.error('Error retrieving user:', error)
+    console.error("Error retrieving user:", error);
     return {
       success: false,
-      message: 'Error retrieving user, please try again.'
-    }
+      message: "Error retrieving user, please try again.",
+    };
   }
-}
+};
 
 export const updateUserService = async (id, updateData) => {
-  const { vehicles, trackingDevices, ...userData } = updateData
+  const { vehicles, trackingDevices, ...userData } = updateData;
 
   try {
     const updatedUser = await prisma.user.update({
       where: { id: Number(id) },
-      data: userData
-    })
+      data: userData,
+    });
 
     return {
       success: true,
-      message: 'User updated successfully',
-      user: updatedUser
-    }
+      message: "User updated successfully",
+      user: updatedUser,
+    };
   } catch (error) {
-    console.error('Error updating user:', error)
+    console.error("Error updating user:", error);
     return {
       success: false,
-      message: 'Error updating user, please try again.'
-    }
+      message: "Error updating user, please try again.",
+    };
   }
-}
+};
 
-// **5️⃣ Delete User (Soft Delete)** - Soft delete a user
-export const deleteUserService = async id => {
+export const deleteUserService = async (id) => {
   try {
     const deletedUser = await prisma.user.update({
       where: { id: Number(id) },
-      data: { deletedAt: new Date() } // Soft delete
-    })
+      data: { deletedAt: new Date() },
+    });
 
     return {
       success: true,
-      message: 'User deleted successfully',
-      user: deletedUser
-    }
+      message: "User deleted successfully",
+      user: deletedUser,
+    };
   } catch (error) {
-    console.error('Error deleting user:', error)
+    console.error("Error deleting user:", error);
     return {
       success: false,
-      message: 'Error deleting user, please try again.'
-    }
+      message: "Error deleting user, please try again.",
+    };
   }
-}
+};

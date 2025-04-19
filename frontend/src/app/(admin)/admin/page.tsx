@@ -98,6 +98,8 @@ export default function AdminDashboard() {
             getAnalyticsData(),
             getMapData(),
           ]);
+         console.log("map response Data fetched successfully XXXXXXXXXXXXXXXXX", getMapData());
+         
 
         setSystemData(systemResponse);
         setAnalyticsData(analyticsResponse);
@@ -107,7 +109,7 @@ export default function AdminDashboard() {
 
         setMapData(mapResponse);
 
-        console.log("map response Data fetched successfully", mapResponse);
+        console.log("map response Data fetched successfully ||||||||||||||||||||||", mapResponse);
       } catch (err: any) {
         console.error("Error fetching dashboard data:", err);
         setError(err.message || "Failed to fetch dashboard data");

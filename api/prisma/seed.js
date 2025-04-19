@@ -3,11 +3,11 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
-  let vehicleId = 5;
+  let vehicleId = 12;
   let plateNumber = "RA002A";
-  let gpsId = 10;
-  let fuelId = 11;
-  let emId = 3;
+  let gpsId = 38;
+  let fuelId = 23;
+  let emId = 22;
 
   const endDate = new Date();
   const startDate = new Date();

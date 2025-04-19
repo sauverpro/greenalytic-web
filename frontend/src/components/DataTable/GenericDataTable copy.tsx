@@ -20,10 +20,10 @@ import {
 } from "@/components/ui/card";
 import { Plus } from "lucide-react";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import SearchAndFilter from "@/app/(admin)/admin/users/SearchAndFilter";
-import PaginationControls from "@/app/(admin)/admin/users/PaginationControls";
-import TableToolbar from "@/app/(admin)/admin/users/TableToolbar";
+import PaginationControls from "@/app/(admin)/admin/users/_components/PaginationControls";
+import TableToolbar from "@/app/(admin)/admin/users/_components/TableToolbar";
 import TableActions, { type ActionItem } from "./TableActions";
+import SearchAndFilter from "@/app/(admin)/admin/users/_components/SearchAndFilter";
 
 // MUI theme for consistent styling
 const muiTheme = createTheme({
@@ -58,7 +58,7 @@ const muiTheme = createTheme({
   },
 });
 
-export interface Pagination {
+interface Pagination {
   currentPage: number;
   totalPages: number;
   totalItems: number;
@@ -70,10 +70,11 @@ interface DataTableProps<T> {
   description: string;
   icon: React.ReactNode;
   columns: GridColDef[];
-  data: T[];
-  pagination: Pagination;
-  loading?: boolean;
-  onPageChange: (page: number, limit: number) => void;
+  fetchData: (
+    page: number,
+    limit: number
+  ) => Promise<{ data: T[]; 
+    pagination: Pagination }>;
   addButtonLabel?: string;
   onAddItem?: () => void;
   searchPlaceholder?: string;
@@ -90,10 +91,7 @@ function DataTable<T extends { id: string | number }>({
   description,
   icon,
   columns,
-  data,
-  pagination,
-  loading = false,
-  onPageChange,
+  fetchData,
   addButtonLabel = "",
   onAddItem,
   searchPlaceholder = "Search...",
@@ -104,9 +102,19 @@ function DataTable<T extends { id: string | number }>({
   bulkActionsComponent,
   getRowActions,
 }: DataTableProps<T>) {
-  const [filteredItems, setFilteredItems] = useState<T[]>(data);
-  const [selectionModel, setSelectionModel] = useState<GridRowSelectionModel>([]);
+  const [items, setItems] = useState<T[]>([]);
+  const [filteredItems, setFilteredItems] = useState<T[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectionModel, setSelectionModel] = useState<GridRowSelectionModel>(
+    []
+  );
   const [searchQuery, setSearchQuery] = useState("");
+  const [pagination, setPagination] = useState<Pagination>({
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    limit: 10,
+  });
 
   // Add actions column if getRowActions is provided
   const columnsWithActions = getRowActions
@@ -142,14 +150,19 @@ function DataTable<T extends { id: string | number }>({
     }
   };
 
-  // Update filtered items when data changes or search changes
+  // Initialize data on component mount
+  useEffect(() => {
+    loadData(pagination.currentPage, pagination.limit);
+  }, [pagination.currentPage, pagination.limit]);
+
+  // Apply search filter
   useEffect(() => {
     if (!searchQuery.trim() || searchFields.length === 0) {
-      setFilteredItems(data);
+      setFilteredItems(items);
       return;
     }
 
-    const filtered = data.filter((item) => {
+    const filtered = items.filter((item) => {
       return searchFields.some((field) => {
         const value = (item as any)[field];
         return (
@@ -160,15 +173,35 @@ function DataTable<T extends { id: string | number }>({
     });
 
     setFilteredItems(filtered);
-  }, [searchQuery, data, searchFields]);
+  }, [searchQuery, items, searchFields]);
 
-  // Handle limit change from pagination controls
+  // Custom pagination limit handling
   const handlePaginationLimitChange = (newLimit: number | string) => {
     if (typeof newLimit === "number") {
-      onPageChange(1, newLimit);
+      setPagination((prev) => ({ ...prev, limit: newLimit, currentPage: 1 }));
+      loadData(1, newLimit);
     } else if (newLimit === "all") {
-      // If "all" is selected, let the parent component handle it
-      onPageChange(1, 999999);
+      fetchAllRecords();
+    }
+  };
+
+  // Function to fetch all records
+  const fetchAllRecords = async () => {
+    try {
+      setLoading(true);
+      const response = await fetchData(1, 999999);
+      setItems(response.data);
+      setFilteredItems(response.data);
+      setPagination((prev) => ({
+        ...prev,
+        limit: response.data.length,
+        currentPage: 1,
+        totalItems: response.data.length,
+      }));
+    } catch (error) {
+      console.error("Failed to fetch all records", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -231,7 +264,7 @@ function DataTable<T extends { id: string | number }>({
                   variant="default"
                   className="bg-primary hover:bg-primary-dark text-white rounded-md shadow-sm"
                 >
-                  <Plus size={16} className="mr-1" /> {addButtonLabel} 
+                  <Plus size={16} className="mr-1" /> {addButtonLabel}
                 </Button>
               )}
             </div>
@@ -239,6 +272,7 @@ function DataTable<T extends { id: string | number }>({
 
           <CardContent className="p-6">
             <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              {/* Search and filter component */}
               <SearchAndFilter
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
@@ -246,8 +280,10 @@ function DataTable<T extends { id: string | number }>({
               />
 
               <div className="flex flex-wrap items-center gap-3">
+                {/* Bulk actions component */}
                 {selectionModel.length > 0 && bulkActionsComponent}
 
+                {/* Pagination controls component */}
                 <PaginationControls
                   limit={pagination.limit}
                   onLimitChange={handlePaginationLimitChange}
@@ -285,8 +321,11 @@ function DataTable<T extends { id: string | number }>({
                   page: pagination.currentPage - 1,
                   pageSize: pagination.limit,
                 }}
-                onPaginationModelChange={(newPaginationModel) => 
-                  onPageChange(newPaginationModel.page + 1, newPaginationModel.pageSize)
+                onPaginationModelChange={(newPaginationModel) =>
+                  setPagination((prev) => ({
+                    ...prev,
+                    currentPage: newPaginationModel.page + 1,
+                  }))
                 }
                 slots={{
                   toolbar: (props) => (
@@ -310,7 +349,7 @@ function DataTable<T extends { id: string | number }>({
                     backgroundColor: "#f3f4f6",
                   },
                   "& .MuiDataGrid-cell": {
-                    padding: "12px 16px ",
+                    padding: "12px 16px",
                   },
                   "& .MuiDataGrid-footerContainer": {
                     backgroundColor: "#f9fafb",
