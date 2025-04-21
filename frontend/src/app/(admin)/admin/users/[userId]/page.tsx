@@ -544,7 +544,7 @@ export default function ClientDetails() {
 
                                   {/* View Details */}
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>Edit Device</DropdownMenuItem>
+                                <DropdownMenuItem>Edit Deviceeee</DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem className="text-red-500">
                                   <Trash className="mr-2 h-4 w-4" />
@@ -582,15 +582,7 @@ export default function ClientDetails() {
       </main>
 
       {/* Add Device Modal */}
-      <AddDeviceModal
-        isOpen={isAddDeviceModalOpen}
-        onClose={() => {
-          setIsAddDeviceModalOpen(false);
-          // fetchClientData()
-        }}
-        vehicleId={selectedVehicleId || ""}
-      initialData={selectedDevice}
-      />
+    
       <EditUserDrawer
         open={isEditUserDrawerOpen}
         onOpenChange={setIsEditUserDrawerOpen}

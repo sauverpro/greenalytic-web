@@ -1,6 +1,6 @@
 "use client";
 
-import { Car, Eye, Edit, Trash } from "lucide-react";
+import { Car, Eye, Edit, Trash, MoreHorizontal } from "lucide-react";
 import type { GridColDef } from "@mui/x-data-grid";
 import DataTable, { Pagination } from "@/components/DataTable/GenericDataTable";
 import { getAllVehicles, deleteVehicle } from "@/services/vehicleService";
@@ -13,7 +13,26 @@ import {
   type Vehicle
 } from "./ExportUtils";
 import { toast } from "sonner";
-
+import { AddDeviceModal } from "@/components/adminComponents/add-device-modal";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 function VehiclesPage() {
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [loading, setLoading] = useState(true);
@@ -24,6 +43,7 @@ function VehiclesPage() {
     totalItems: 0,
     limit: 10
   });
+  
 
   const fetchVehicles = async (page = 1, limit = 10) => {
     try {
@@ -108,6 +128,7 @@ function VehiclesPage() {
       onClick: () => handleEditVehicle(vehicle),
       icon: <Edit size={16} />
     },
+  
     {
       label: "Delete Vehicle",
       onClick: () => handleDeleteVehicle(vehicle),
@@ -170,7 +191,77 @@ function VehiclesPage() {
           </div>
         );
       }
-    }
+    },
+    
+    {
+  field: "actions",
+  headerName: "Actions",
+  flex: 1,
+  sortable: false,
+  filterable: false,
+  renderCell: (params) => {
+    const vehicleId = params.row.id;
+
+    return (
+      <div className="">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent align="end" className="w-48">
+            {/* View Details */}
+            <DropdownMenuItem>viw details</DropdownMenuItem>
+
+            {/* Add Device */}
+            <DropdownMenuItem asChild>
+              <AddDeviceModal
+                vehicleId={vehicleId}
+                onClose={() => {
+                  // optional cleanup
+                }}
+                onSuccess={() => {
+                  // optional toast or refetch
+                }}
+              />
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator />
+
+            {/* Delete */}
+            <DropdownMenuItem asChild>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button size="sm" variant="destructive">
+                    Delete Vehicle
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will permanently delete the vehicle and its devices.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => handleDeleteVehicle(vehicleId)}>
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    );
+  }
+}
+
   ];
 
   const handleExportPDF = (selected: Vehicle[]) => {
@@ -220,7 +311,7 @@ function VehiclesPage() {
         handleExportPDF={handleExportPDF}
         handleExportExcel={handleExportExcel}
         handlePrint={handlePrint}
-        getRowActions={getVehicleActions}
+        // getRowActions={getVehicleActions}
         onPageChange={(newPage) => {
           setLoading(true);
           fetchVehicles(newPage, pagination.limit).then((data) => {

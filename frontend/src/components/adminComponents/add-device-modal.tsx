@@ -13,7 +13,8 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
+  DialogTrigger
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -49,15 +50,15 @@ const deviceFormSchema = z.object({
 type DeviceFormValues = z.infer<typeof deviceFormSchema>;
 
 interface AddDeviceModalProps {
-  isOpen: boolean;
+
   onClose: () => void;
   vehicleId?: string;
-  initialData: TrackingDeviceWithVehicle | null ;
+  initialData?: TrackingDeviceWithVehicle | null ;
   onSuccess?: () => void;
 }
 
 export function AddDeviceModal({
-  isOpen,
+
   onClose,
   vehicleId,
   initialData,
@@ -125,7 +126,10 @@ export function AddDeviceModal({
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="outline">Edit   the device</Button>
+      </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <div className="flex items-center gap-2">

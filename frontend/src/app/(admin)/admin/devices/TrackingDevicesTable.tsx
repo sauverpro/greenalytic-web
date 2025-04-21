@@ -164,9 +164,17 @@ const columns: GridColDef[] = [
               <DropdownMenuItem asChild>
                 <DeviceDetailsModal deviceId={String(device.id)} />
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleEditDevice(device)}>
-                <Edit className="mr-2 h-4 w-4" />
-                Edit Device
+              <DropdownMenuItem asChild>
+               
+                <AddDeviceModal
+                  onClose={() => {
+                    setIsAddDeviceModalOpen(false), setSelectedDevice(null);
+                  }}
+                  initialData={device}
+                  onSuccess={() => {
+                    setIsAddDeviceModalOpen(false);
+                  }}
+                />
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
@@ -292,15 +300,7 @@ const columns: GridColDef[] = [
         </CardContent>
       </Card>
       {/* Add Device Modal */}
-      <AddDeviceModal
-        isOpen={isAddDeviceModalOpen}
-        onClose={() => {setIsAddDeviceModalOpen(false),setSelectedDevice(null)}}
-        initialData={selectedDevice}
-        onSuccess={() => {
-     
-          setIsAddDeviceModalOpen(false);
-        }}
-      />
+    
     </div>
   );
 };
