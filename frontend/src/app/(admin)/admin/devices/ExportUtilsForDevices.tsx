@@ -5,23 +5,13 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import { TrackingDeviceWithVehicle } from "./TrackingDevicesTable";
 
 // Define a proper Device interface
-export interface Device {
-  id: string | number;
-  name: string;
-  serialNumber: string;
-  status: string;
-  type: string;
-  plateNumber?: string;
-  isActive: boolean;
-  assignedTo?: string;
-  lastActive?: string;
-  batteryLevel?: number;
-}
+
 
 // Export to PDF function
-export const exportToPDF = (devices: Device[]): void => {
+export const exportToPDF = (devices: TrackingDeviceWithVehicle[]): void => {
   try {
     const doc = new jsPDF();
 
@@ -40,17 +30,17 @@ export const exportToPDF = (devices: Device[]): void => {
       "Type",
       "Plate Number",
       "Active",
-      "Assigned To",
+      "Assigned To"
     ];
     const tableRows = devices.map((device) => [
       device.id,
-      device.name,
+      device.model,
       device.serialNumber,
-      device.status,
+
       device.type,
       device.plateNumber || "N/A",
       device.isActive ? "Yes" : "No",
-      device.assignedTo || "Unassigned",
+   
     ]);
 
     // Use the autoTable function
@@ -60,7 +50,7 @@ export const exportToPDF = (devices: Device[]): void => {
       startY: 40,
       styles: { fontSize: 10, cellPadding: 3 },
       headStyles: { fillColor: [6, 81, 61] }, // Primary color
-      alternateRowStyles: { fillColor: [240, 240, 240] },
+      alternateRowStyles: { fillColor: [240, 240, 240] }
     });
 
     // Save the PDF
@@ -72,25 +62,20 @@ export const exportToPDF = (devices: Device[]): void => {
 };
 
 // Export to Excel function
-export const exportToExcel = (devices: Device[]): void => {
+export const exportToExcel = (devices: TrackingDeviceWithVehicle[]): void => {
   try {
     // Prepare data for Excel
     const worksheet = XLSX.utils.json_to_sheet(
       devices.map((device) => ({
         ID: device.id,
-        "Device Model": device.name,
+        "Device Model": device.model,
         "Serial Number": device.serialNumber,
-        Status: device.status,
+
         Type: device.type,
         "Plate Number": device.plateNumber || "N/A",
         Active: device.isActive ? "Yes" : "No",
-        "Assigned To": device.assignedTo || "Unassigned",
-        "Battery Level": device.batteryLevel
-          ? `${device.batteryLevel}%`
-          : "N/A",
-        "Last Active": device.lastActive
-          ? new Date(device.lastActive).toLocaleString()
-          : "N/A",
+   
+      
       }))
     );
 
@@ -105,7 +90,7 @@ export const exportToExcel = (devices: Device[]): void => {
       { wch: 10 }, // Active
       { wch: 20 }, // Assigned To
       { wch: 15 }, // Battery Level
-      { wch: 20 }, // Last Active
+      { wch: 20 } // Last Active
     ];
     worksheet["!cols"] = columnWidths;
 
@@ -116,7 +101,7 @@ export const exportToExcel = (devices: Device[]): void => {
     // Generate Excel file
     const excelBuffer = XLSX.write(workbook, {
       bookType: "xlsx",
-      type: "array",
+      type: "array"
     });
     const data = new Blob([excelBuffer], { type: "application/octet-stream" });
 
@@ -132,7 +117,7 @@ export const exportToExcel = (devices: Device[]): void => {
 };
 
 // Print function
-export const printDevices = (devices: Device[]): void => {
+export const printDevices = (devices: TrackingDeviceWithVehicle[]): void => {
   try {
     // Create a new window for printing
     const printWindow = window.open("", "_blank");
@@ -177,13 +162,13 @@ export const printDevices = (devices: Device[]): void => {
               .map(
                 (device) => `
               <tr>
-                <td>${device.name}</td>
+                <td>${device.model}</td>
                 <td>${device.serialNumber}</td>
-                <td>${device.status}</td>
+             
                 <td>${device.type}</td>
                 <td>${device.plateNumber || "N/A"}</td>
                 <td>${device.isActive ? "Yes" : "No"}</td>
-                <td>${device.assignedTo || "Unassigned"}</td>
+              
               </tr>
             `
               )

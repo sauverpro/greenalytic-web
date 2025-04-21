@@ -33,9 +33,10 @@ import {
 } from "@/components/ui/select";
 
 import { toast } from "sonner";
-import { addDeviceToVehicle } from "../../services/deviceServices";
+import {
+  addDeviceToVehicle
+} from "../../services/deviceServices";
 import { TrackingDevice } from "@/types/types";
-import { TrackingDeviceWithVehicle } from "@/app/(admin)/admin/devices/TrackingDevicesTable";
 
 // Schema
 const deviceFormSchema = z.object({
@@ -43,7 +44,8 @@ const deviceFormSchema = z.object({
     .string()
     .min(3, "Serial number must be at least 3 characters"),
   model: z.string().min(1, "Model is required"),
-  type: z.string().min(1, "Type is required")
+  type: z.string().min(1, "Type is required"),
+  plateNumber: z.string().min(1, "Plate number is required")
 });
 
 type DeviceFormValues = z.infer<typeof deviceFormSchema>;
@@ -51,29 +53,43 @@ type DeviceFormValues = z.infer<typeof deviceFormSchema>;
 interface AddDeviceModalProps {
   isOpen: boolean;
   onClose: () => void;
-  vehicleId?: string;
-  initialData: TrackingDeviceWithVehicle | null ;
+  vehicleId?: string; // ✅ Optional in edit mode
+  availableVehicles: Array<{ id: string; plate: string }>;
   onSuccess?: () => void;
+  initialData?: TrackingDevice;
 }
 
 export function AddDeviceModal({
   isOpen,
   onClose,
   vehicleId,
-  initialData,
-  onSuccess
+  availableVehicles,
+  onSuccess,
+  initialData
 }: AddDeviceModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+
   const isEditMode = !!initialData;
+
+  const selectedVehicle = availableVehicles.find(
+    (v) => v.id === (initialData?.vehicleId?.toString() || vehicleId)
+  );
 
   const form = useForm<DeviceFormValues>({
     resolver: zodResolver(deviceFormSchema),
     defaultValues: {
       serialNumber: initialData?.serialNumber || "",
       model: initialData?.model || "",
-      type: initialData?.type || ""
+      type: initialData?.type || "",
+      plateNumber: selectedVehicle?.plate || initialData?.plateNumber || ""
     }
   });
+
+  useEffect(() => {
+    if (!initialData && selectedVehicle) {
+      form.setValue("plateNumber", selectedVehicle.plate);
+    }
+  }, [selectedVehicle, initialData, form]);
 
   async function onSubmit(data: DeviceFormValues) {
     setIsSubmitting(true);
@@ -85,7 +101,7 @@ export function AddDeviceModal({
           ...data,
           updatedAt: new Date()
         };
-        console.log("Update Device:", updatedDevice);
+console.log(initialData.id, updatedDevice);
         toast.success("Device updated successfully");
       } else {
         if (!vehicleId) {
@@ -98,8 +114,7 @@ export function AddDeviceModal({
           id: 0,
           isActive: true,
           lastPing: undefined,
-          plateNumber:"",
-       
+          gpsDatas: [],
           fuelDatas: [],
           emissionDatas: [],
           userId: undefined,
@@ -133,13 +148,13 @@ export function AddDeviceModal({
               <MapPin className="h-5 w-5 text-blue-700" />
             </div>
             <DialogTitle>
-              {isEditMode ? "Edit Device" : "Add New Device!"}
+              {isEditMode ? "Edit Device" : "Add New Device"}
             </DialogTitle>
           </div>
           <DialogDescription>
             {isEditMode
               ? "Update this tracking device's information."
-              : "Add a new tracking device to a vehicle."}
+              : "Add a new tracking device to a vehicle. All fields are required."}
           </DialogDescription>
         </DialogHeader>
 
@@ -174,47 +189,50 @@ export function AddDeviceModal({
               />
             </div>
 
-            <FormItem>
-              <FormLabel>Plate Number</FormLabel>
-              <FormControl>
-                <Input
-                  value={
-                    initialData?.plateNumber
-                      ? initialData.plateNumber
-                      : vehicleId
-                      ? `Vehicle ID: ${vehicleId}`
-                      : "No plate info"
-                  }
-                  disabled
-                  className="bg-gray-100 text-muted-foreground"
-                />
-              </FormControl>
-            </FormItem>
-
-            <FormField
-              control={form.control}
-              name="type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Device Type</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}>
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Device Type</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select device type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="GPS">GPS</SelectItem>
+                        <SelectItem value="FUEL">FUEL</SelectItem>
+                        <SelectItem value="EMISSION">EMISSION</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="plateNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Vehicle Plate Number</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select device type" />
-                      </SelectTrigger>
+                      <Input
+                        placeholder="Plate Number"
+                        {...field}
+                        disabled
+                        className="bg-gray-100"
+                      />
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="GPS">GPS</SelectItem>
-                      <SelectItem value="FUEL">FUEL</SelectItem>
-                      <SelectItem value="EMISSION">EMISSION</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <DialogFooter className="mt-6">
               <Button

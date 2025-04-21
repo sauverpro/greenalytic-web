@@ -451,9 +451,11 @@ export function VehicleTable({
         isOpen={isAddVehicleModalOpen}
         onClose={() => {
           setIsAddVehicleModalOpen(false);
+        
         }}
         userId={userId || ""}
-        onSuccess={() => fetchVehicles(userId)}
+        onSuccess={() =>{ fetchVehicles(userId), onAddVehicle()
+        }}
       />
     </div>
   );

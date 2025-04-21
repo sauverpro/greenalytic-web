@@ -68,6 +68,18 @@ export const getAnalyticsData = async () => {
     throw new Error(`Failed to fetch analytics data: ${error}`);
   }
 };
+export const getDashboardCounts = async (timeFilter = "today") => {
+  try {
+    const response = await client.get(
+      `/vehicles/data/counts?timeFilter=${timeFilter}`
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(`Failed to fetch dashboard data: ${error}`);
+  }
+};
+
+
 export const getMapData = async () => {
   try {
     const response = await client.get("/vehicles/map/data");

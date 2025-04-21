@@ -3,7 +3,15 @@
 import type React from "react";
 
 import { useEffect, useState } from "react";
-import { Calendar, Car, Download, Fuel, Plus, RefreshCw, Users } from "lucide-react";
+import {
+  Calendar,
+  Car,
+  Download,
+  Fuel,
+  Plus,
+  RefreshCw,
+  Users,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -25,9 +33,12 @@ import ClientGrowthChart from "@/components/adminComponents/client-growth-chart"
 import { format } from "date-fns";
 import EmissionsChart from "@/components/adminComponents/emissionsChart";
 import MapWrapper from "@/components/adminComponents/mapWrapper";
-import { GPSMetricCard, FuelMetricCard, EmissionsMetricCard } from "@/components/adminComponents/metricCards";
-import { getAllDataInSystem, getAnalyticsData, getMapData } from "@/services/vehicleData";
-// import UserTable from "./users/UserTable";
+import {
+  GPSMetricCard,
+  FuelMetricCard,
+  EmissionsMetricCard,
+} from "@/components/adminComponents/metricCards";
+import { getDashboardCounts, getMapData } from "@/services/vehicleData";
 
 interface MetricCardProps {
   title: string;
@@ -38,50 +49,107 @@ interface MetricCardProps {
   icon: React.ReactNode;
 }
 
+// Define TypeScript interfaces for better type checking
+interface DashboardData {
+  success: boolean;
+  timestamp: string;
+  counts: {
+    users: number;
+    vehicles: number;
+    devices: number;
+    gpsData: number;
+    fuelData: number;
+    emissionData: number;
+  };
+  analytics: {
+    gps: {
+      speed: {
+        average: number;
+        min: number;
+        max: number;
+      };
+      activeVehicles: number;
+      movingVehicles: number;
+      stoppedVehicles: number;
+      highSpeedCount: number;
+    } | null;
+    fuel: {
+      consumption: {
+        average: number;
+        min: number;
+        max: number;
+      };
+      level: {
+        average: number;
+        min: number;
+        max: number;
+      };
+      lowFuelCount: number;
+      highConsumptionCount: number;
+    } | null;
+    emissions: {
+      co2: {
+        average: number;
+        min: number;
+        max: number;
+      };
+      co: {
+        average: number;
+        min: number;
+        max: number;
+      };
+      o2: {
+        average: number;
+        min: number;
+        max: number;
+      };
+      hc: {
+        average: number;
+        min: number;
+        max: number;
+      };
+      anomalies: number;
+    } | null;
+  };
+}
+
+interface MapData {
+  totalVehicles: number;
+  vehiclesWithGpsData: number;
+  mapData: Array<{
+    latitude: number;
+    longitude: number;
+    plateNumber: string;
+    vehicleId: string;
+    speed: number;
+    trackingStatus: boolean;
+    timestamp: string;
+  }>;
+}
+
 export default function AdminDashboard() {
   const [selectedTab, setSelectedTab] = useState("overview");
-  const [timeframe, setTimeframe] = useState("today");
+  const [timeFilter, setTimeFilter] = useState("today");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [systemData, setSystemData] = useState<any>(null);
-  const [analyticsData, setAnalyticsData] = useState<any>(null);
-  const [mapData, setMapData] = useState<any>(null);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(
+    null
+  );
+  const [mapData, setMapData] = useState<MapData | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const getDateRange = () => {
-    const endDate = new Date();
-    const startDate = new Date();
-
-    switch (timeframe) {
-      case "today":
-        startDate.setHours(0, 0, 0, 0);
-        break;
-      case "yesterday":
-        startDate.setDate(startDate.getDate() - 1);
-        startDate.setHours(0, 0, 0, 0);
-        endDate.setDate(endDate.getDate() - 1);
-        endDate.setHours(23, 59, 59, 999);
-        break;
-      case "week":
-        startDate.setDate(startDate.getDate() - 7);
-        break;
-      case "month":
-        startDate.setMonth(startDate.getMonth() - 1);
-        break;
-      case "quarter":
-        startDate.setMonth(startDate.getMonth() - 3);
-        break;
-      case "year":
-        startDate.setFullYear(startDate.getFullYear() - 1);
-        break;
-      default:
-        startDate.setHours(0, 0, 0, 0);
-    }
-
-    return {
-      startDate: format(startDate, "yyyy-MM-dd"),
-      endDate: format(endDate, "yyyy-MM-dd"),
+  // Map the UI timeframe values to backend timeFilter values
+  const mapTimeframeToFilter = (timeframe: string) => {
+    const mapping: Record<string, string> = {
+      today: "today",
+      yesterday: "yesterday", // Note: Backend needs to handle this case
+      week: "week",
+      month: "month",
+      quarter: "quarter",
+      year: "year",
+      all: "all",
     };
+    return mapping[timeframe] || "today";
   };
 
   // Fetch data for the dashboard
@@ -90,26 +158,20 @@ export default function AdminDashboard() {
       setIsLoading(true);
       setError(null);
       try {
-        const dateRange = getDateRange();
+        // Get the proper timeFilter value for the backend
+        const backendTimeFilter = mapTimeframeToFilter(timeFilter);
 
-        const [systemResponse, analyticsResponse, mapResponse] =
-          await Promise.all([
-            getAllDataInSystem(),
-            getAnalyticsData(),
-            getMapData(),
-          ]);
-         console.log("map response Data fetched successfully XXXXXXXXXXXXXXXXX", getMapData());
-         
+        // Get dashboard data with the timeFilter parameter
+        const dashboardResponse = await getDashboardCounts(backendTimeFilter);
 
-        setSystemData(systemResponse);
-        setAnalyticsData(analyticsResponse);
+        // Debug log to see full response
+        console.log("Dashboard response:", dashboardResponse);
 
-        console.log("System Data:", systemResponse);
-        console.log("Analytics Data:", analyticsResponse);
+        // Get map data
+        const mapResponse = await getMapData();
 
+        setDashboardData(dashboardResponse);
         setMapData(mapResponse);
-
-        console.log("map response Data fetched successfully ||||||||||||||||||||||", mapResponse);
       } catch (err: any) {
         console.error("Error fetching dashboard data:", err);
         setError(err.message || "Failed to fetch dashboard data");
@@ -119,16 +181,16 @@ export default function AdminDashboard() {
     };
 
     fetchData();
-  }, [timeframe, refreshTrigger]);
+  }, [timeFilter, refreshTrigger]);
 
   // Handle refresh button click
   const handleRefresh = () => {
     setRefreshTrigger((prev) => prev + 1);
   };
 
-  // Extract summary metrics from data
+  // Extract summary metrics from dashboard data with null checks
   const getSummaryMetrics = () => {
-    if (!systemData || !systemData.summary) {
+    if (!dashboardData || !dashboardData.analytics) {
       return {
         averageCO2: 0,
         averageFuelConsumption: 0,
@@ -136,12 +198,17 @@ export default function AdminDashboard() {
       };
     }
 
-    return systemData.summary;
+    return {
+      averageCO2: dashboardData.analytics.emissions?.co2?.average || 0,
+      averageFuelConsumption:
+        dashboardData.analytics.fuel?.consumption?.average || 0,
+      averageSpeed: dashboardData.analytics.gps?.speed?.average || 0,
+    };
   };
 
-  // Get analytics data
+  // Get analytics metrics directly from dashboard data
   const getAnalyticsMetrics = () => {
-    if (!analyticsData || !analyticsData.analytics) {
+    if (!dashboardData || !dashboardData.analytics) {
       return {
         emissions: null,
         fuel: null,
@@ -149,11 +216,53 @@ export default function AdminDashboard() {
       };
     }
 
-    return analyticsData.analytics;
+    return dashboardData.analytics;
   };
 
   const summary = getSummaryMetrics();
   const analytics = getAnalyticsMetrics();
+
+  // Get date range display for the selected timeframe
+  const getDateRangeDisplay = () => {
+    const now = new Date();
+    let start = new Date();
+
+    switch (timeFilter) {
+      case "today":
+        return `Today (${format(now, "MMM d, yyyy")})`;
+      case "yesterday":
+        start.setDate(start.getDate() - 1);
+        return `Yesterday (${format(start, "MMM d, yyyy")})`;
+      case "week":
+        start.setDate(start.getDate() - 7);
+        return `Last 7 days (${format(start, "MMM d")} - ${format(
+          now,
+          "MMM d, yyyy"
+        )})`;
+      case "month":
+        start.setMonth(start.getMonth() - 1);
+        return `Last 30 days (${format(start, "MMM d")} - ${format(
+          now,
+          "MMM d, yyyy"
+        )})`;
+      case "quarter":
+        start.setMonth(start.getMonth() - 3);
+        return `Last quarter (${format(start, "MMM d")} - ${format(
+          now,
+          "MMM d, yyyy"
+        )})`;
+      case "year":
+        start.setFullYear(start.getFullYear() - 1);
+        return `Last year (${format(start, "MMM yyyy")} - ${format(
+          now,
+          "MMM yyyy"
+        )})`;
+      case "all":
+        return "All time";
+      default:
+        return "Today";
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-emerald-50 to-white">
@@ -175,9 +284,7 @@ export default function AdminDashboard() {
             <h2 className="text-2xl font-bold tracking-tight text-emerald-900">
               Welcome back, Admin
             </h2>
-            <p className="text-muted-foreground">
-              Here's what's happening across your platform today.
-            </p>
+            <p className="text-muted-foreground">{getDateRangeDisplay()}</p>
           </div>
 
           <div className="flex items-center gap-2">
@@ -193,7 +300,6 @@ export default function AdminDashboard() {
               />
               {isLoading ? "Loading..." : "Refresh Data"}
             </Button>
- 
           </div>
         </div>
 
@@ -211,7 +317,8 @@ export default function AdminDashboard() {
             <div className="flex items-center gap-2">
               <Select
                 defaultValue="today"
-                onValueChange={(value) => setTimeframe(value)}
+                onValueChange={(value) => setTimeFilter(value)}
+                value={timeFilter}
               >
                 <SelectTrigger className="h-9 w-[180px]">
                   <SelectValue placeholder="Select timeframe" />
@@ -223,6 +330,7 @@ export default function AdminDashboard() {
                   <SelectItem value="month">This Month</SelectItem>
                   <SelectItem value="quarter">This Quarter</SelectItem>
                   <SelectItem value="year">This Year</SelectItem>
+                  <SelectItem value="all">All Time</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -236,8 +344,7 @@ export default function AdminDashboard() {
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               <MetricCard
                 title="Total Vehicles"
-                value={mapData?.totalVehicles?.toString() || "0"}
-                // value={analytics?.gps?.activeVehicles?.toString() || "0"}
+                value={dashboardData?.counts?.vehicles?.toString() || "0"}
                 change={"All"}
                 trend="up"
                 description="All vehicles in the system"
@@ -246,8 +353,14 @@ export default function AdminDashboard() {
               <MetricCard
                 title="Average Speed"
                 value={`${summary.averageSpeed?.toFixed(1) || 0}`}
-                change={analytics?.gps?.highSpeedCount > 10 ? "High" : "Normal"}
-                trend={analytics?.gps?.highSpeedCount > 10 ? "down" : "neutral"}
+                change={
+                  (analytics?.gps?.highSpeedCount ?? 0) > 10 ? "High" : "Normal"
+                }
+                trend={
+                  (analytics?.gps?.highSpeedCount ?? 0) > 10
+                    ? "down"
+                    : "neutral"
+                }
                 description="km/h across all vehicles"
                 icon={<Car className="h-5 w-5 text-emerald-600" />}
               />
@@ -255,10 +368,14 @@ export default function AdminDashboard() {
                 title="Fuel Consumption"
                 value={`${summary.averageFuelConsumption?.toFixed(1) || 0}`}
                 change={
-                  analytics?.fuel?.highConsumptionCount > 30 ? "High" : "Normal"
+                  (analytics?.fuel?.highConsumptionCount ?? 0) > 30
+                    ? "High"
+                    : "Normal"
                 }
                 trend={
-                  analytics?.fuel?.highConsumptionCount > 30 ? "down" : "up"
+                  (analytics?.fuel?.highConsumptionCount ?? 0) > 30
+                    ? "down"
+                    : "up"
                 }
                 description="L/100km average"
                 icon={<Fuel className="h-5 w-5 text-emerald-600" />}
@@ -270,19 +387,25 @@ export default function AdminDashboard() {
               <GPSMetricCard
                 value={analytics?.gps?.speed?.average?.toFixed(1) || "0"}
                 status={
-                  analytics?.gps?.highSpeedCount > 20 ? "warning" : "normal"
+                  (analytics?.gps?.highSpeedCount ?? 0) > 20
+                    ? "warning"
+                    : "normal"
                 }
               />
               <FuelMetricCard
                 value={analytics?.fuel?.level?.average?.toFixed(1) || "0"}
                 status={
-                  analytics?.fuel?.lowFuelCount > 0 ? "warning" : "normal"
+                  (analytics?.fuel?.lowFuelCount ?? 0) > 0
+                    ? "warning"
+                    : "normal"
                 }
               />
               <EmissionsMetricCard
                 value={analytics?.emissions?.co2?.average?.toFixed(1) || "0"}
                 status={
-                  analytics?.emissions?.anomalies > 50 ? "critical" : "warning"
+                  (analytics?.emissions?.anomalies ?? 0) > 50
+                    ? "critical"
+                    : "warning"
                 }
               />
             </div>
@@ -291,14 +414,13 @@ export default function AdminDashboard() {
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               <ClientGrowthChart
                 isLoading={isLoading}
-                data={systemData?.data?.gps || []}
+                data={[]} // Update this to use appropriate data from dashboardData
               />
               <EmissionsChart
                 isLoading={isLoading}
-                data={analyticsData?.analytics?.emissions || {}}
+                data={dashboardData?.analytics?.emissions || {}}
               />
             </div>
-
 
             {/* Client Map */}
             <Card className="mt-6">
@@ -332,7 +454,7 @@ export default function AdminDashboard() {
                 <MapWrapper
                   isLoading={isLoading}
                   vehicles={
-                    mapData?.mapData?.map((vehicle:any) => ({
+                    mapData?.mapData?.map((vehicle) => ({
                       position: {
                         lat: vehicle.latitude,
                         lng: vehicle.longitude,
@@ -345,10 +467,10 @@ export default function AdminDashboard() {
                     })) || []
                   }
                   stats={{
-                    totalVehicles: mapData?.totalVehicles || 0,
+                    totalVehicles: dashboardData?.counts?.vehicles || 0,
                     activeVehicles: mapData?.vehiclesWithGpsData || 0,
                     inactiveVehicles:
-                      (mapData?.totalVehicles || 0) -
+                      (dashboardData?.counts?.vehicles || 0) -
                       (mapData?.vehiclesWithGpsData || 0),
                   }}
                 />

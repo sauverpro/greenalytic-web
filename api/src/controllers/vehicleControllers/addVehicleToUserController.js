@@ -8,7 +8,7 @@ export const addVehicleToUser = async (req, res) => {
     const updatedUser = await addVehicleToUserService(userId, vehicleData);
     return res.status(201).json({
       success: true,
-      message: "Vehicle added successfully",
+      message: "Vehicle added successfully..",
       data: updatedUser,
     });
   } catch (error) {

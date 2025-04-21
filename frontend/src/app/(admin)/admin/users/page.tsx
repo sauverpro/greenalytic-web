@@ -1,33 +1,107 @@
 "use client";
 
-import { Users, Edit, Eye, Trash, Car } from "lucide-react";
+import { Users, Edit, Eye, Trash } from "lucide-react";
 import type { GridColDef } from "@mui/x-data-grid";
-import DataTable from "@/components/DataTable/GenericDataTable";
-import { getAllUsers } from "@/services/userService";
+import DataTable, {
+  type Pagination
+} from "@/components/DataTable/GenericDataTable";
+import { getAllUsers, deleteUser } from "@/services/userService";
 import type { ActionItem } from "@/components/DataTable/TableActions";
-import { useState } from "react";
-import { exportToPDF, exportToExcel, printUsers } from "./ExportUtils";
+import { useState, useEffect } from "react";
+import {
+  exportToPDF,
+  exportToExcel,
+  printUsers
+} from "./_components/ExportUtils";
 import type { User } from "@/types/types";
-import AddUserDrawer from "./AddUserDrawer";
-import EditUserDrawer from "./EditUserDrawer";
-// import AddVehicleDrawer from "./AddVehicleDrawer";
-import ViewUserDrawer from "./ViewUserDrawer";
+
+import EditUserDrawer from "./_components/EditUserDrawer";
+
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import ViewUserDrawer from "./_components/ViewUserDrawer";
+import AddUserDrawer from "./_components/AddUserDrawer";
+import UserDrawer from "@/components/UserDrawer";
+
+export function ConfirmAndToastDialog({
+  onConfirm
+}: {
+  onConfirm: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+
+  const handleConfirm = () => {
+    setOpen(false);
+    onConfirm();
+    toast("Action Confirmed", {
+      description: "Your settings have been saved successfully.",
+      action: {
+        label: "Undo",
+        onClick: () => console.log("Undo clicked")
+      }
+    });
+  };
+
+  return (
+    <AlertDialog open={open} onOpenChange={setOpen}>
+      <AlertDialogTrigger asChild>
+        <Button variant="outline">Show Dialog</Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This action cannot be undone. It will permanently remove the
+            selected data.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction asChild>
+            <Button onClick={handleConfirm}>Continue</Button>
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
 
 export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [openAddUserDrawer, setOpenAddUserDrawer] = useState(false);
   const [openEditUserDrawer, setOpenEditUserDrawer] = useState(false);
-  const [openAddVehicleDrawer, setOpenAddVehicleDrawer] = useState(false);
   const [openViewUserDialog, setOpenViewUserDialog] = useState(false);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [pagination, setPagination] = useState<Pagination>({
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    limit: 10
+  });
+
+  // Fetch users on component mount and when pagination changes
+  useEffect(() => {
+    fetchUsers(pagination.currentPage, pagination.limit);
+  }, []);
 
   const fetchUsers = async (page = 1, limit = 10) => {
     try {
+      setLoading(true);
       const response = await getAllUsers(page, limit);
-      console.log(
-        "response  structure of the  users  list++++{+++",
-        response.users
-      );
+
       const users = Array.isArray(response.users) ? response.users : [];
 
       const sortedUsers = users.sort(
@@ -38,35 +112,30 @@ export default function UsersPage() {
       const startIndex = (page - 1) * limit;
       const usersWithNumbers = sortedUsers.map((user: User, index: number) => ({
         ...user,
-        no: startIndex + index + 1,
+        no: startIndex + index + 1
       }));
 
-      return {
-        data: usersWithNumbers,
-        pagination: response.pagination,
-      };
+      setUsers(usersWithNumbers);
+      setPagination(response.pagination);
+      setLoading(false);
     } catch (error) {
       console.error("Error fetching users:", error);
-      return {
-        data: [],
-        pagination: {
-          currentPage: 1,
-          totalPages: 1,
-          totalItems: 0,
-          limit: limit,
-        },
-      };
+      setLoading(false);
     }
+  };
+
+  // Handle page change from the DataTable
+  const handlePageChange = (page: number, limit: number) => {
+    fetchUsers(page, limit);
+  };
+
+  const refetchUsers = () => {
+    fetchUsers(pagination.currentPage, pagination.limit);
   };
 
   const handleEditUser = (user: User) => {
     setSelectedUser(user);
     setOpenEditUserDrawer(true);
-  };
-
-  const handleOpenAddVehicleDrawer = (userId: string) => {
-    setSelectedUserId(userId);
-    setOpenAddVehicleDrawer(true);
   };
 
   const handleViewUser = (user: User) => {
@@ -76,6 +145,7 @@ export default function UsersPage() {
 
   const handleUserAdded = (newUser: User) => {
     setOpenAddUserDrawer(false);
+    refetchUsers(); // Refresh the data when a new user is added
   };
 
   const handleEditDrawerChange = (open: boolean) => {
@@ -86,6 +156,7 @@ export default function UsersPage() {
       }, 300);
     }
   };
+
   const handleViewDrawerChange = (open: boolean) => {
     setOpenViewUserDialog(open);
     if (!open) {
@@ -95,34 +166,34 @@ export default function UsersPage() {
     }
   };
 
-  const handleAddVehicleDrawerChange = (open: boolean) => {
-    setOpenAddVehicleDrawer(open);
-    if (!open) {
-      setTimeout(() => {
-        setSelectedUserId(null);
-      }, 300);
+  const handleDeleteUser = async (user: User) => {
+    try {
+      await deleteUser(String(user.id));
+      refetchUsers(); // Refresh after deletion
+      toast.success("User deleted successfully");
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      toast.error("Failed to delete user. Please try again.");
     }
   };
-
   const getUserActions = (user: User): ActionItem[] => {
     return [
       {
         label: "Manage Account",
         href: `/admin/users/${user.id}`,
-        icon: <Eye size={16} />,
+        icon: <Eye size={16} />
       },
       {
         label: "Edit User",
         onClick: () => handleEditUser(user),
-        icon: <Edit size={16} />,
+        icon: <Edit size={16} />
       },
-
       {
         label: "Delete User",
-        onClick: () => console.log("Delete user:", user),
+        onClick: () => handleDeleteUser(user),
         variant: "destructive",
-        icon: <Trash size={16} />,
-      },
+        icon: <Trash size={16} />
+      }
     ];
   };
 
@@ -131,18 +202,23 @@ export default function UsersPage() {
       field: "no",
       headerName: "No",
       width: 70,
-      sortable: false,
+      sortable: false
     },
     {
       field: "username",
       headerName: "Username",
       width: 150,
-      renderCell: (params) => <div className="font-medium">{params.value}</div>,
+      renderCell: (params) => <div className="font-medium">{params.value}</div>
     },
     {
       field: "email",
       headerName: "Email",
-      width: 200,
+      width: 200
+    },
+    {
+      field: "phoneNumber",
+      headerName: "Phone",
+      width: 150
     },
     {
       field: "vehicles",
@@ -152,7 +228,7 @@ export default function UsersPage() {
         <span className="text-sm text-center font-medium">
           {params.value?.length ?? 0}
         </span>
-      ),
+      )
     },
     {
       field: "trackingDevices",
@@ -162,9 +238,8 @@ export default function UsersPage() {
         <span className="text-sm text-center font-medium">
           {params.value?.length ?? 0}
         </span>
-      ),
+      )
     },
-
     {
       field: "role",
       headerName: "Role",
@@ -186,12 +261,11 @@ export default function UsersPage() {
 
         return (
           <div
-            className={`px-2 py-1 rounded-full text-xs font-semibold ${bgColor} ${textColor}`}
-          >
+            className={`px-2 py-1 rounded-full text-xs font-semibold ${bgColor} ${textColor}`}>
             {params.value}
           </div>
         );
-      },
+      }
     },
     {
       field: "createdAt",
@@ -206,37 +280,34 @@ export default function UsersPage() {
           console.error("Error formatting date:", e);
           return <span>{params.value}</span>;
         }
-      },
-    },
+      }
+    }
   ];
 
   const handleExportPDF = (selectedUsers: User[]) => {
     try {
-      console.log("Export to PDF", selectedUsers);
       exportToPDF(selectedUsers);
     } catch (error) {
       console.error("Error exporting to PDF:", error);
-      alert("Failed to export to PDF. Please try again.");
+      toast.error("Failed to export to PDF. Please try again.");
     }
   };
 
   const handleExportExcel = (selectedUsers: User[]) => {
     try {
-      console.log("Export to Excel", selectedUsers);
       exportToExcel(selectedUsers);
     } catch (error) {
       console.error("Error exporting to Excel:", error);
-      alert("Failed to export to Excel. Please try again.");
+      toast.error("Failed to export to Excel. Please try again.");
     }
   };
 
   const handlePrint = (selectedUsers: User[]) => {
     try {
-      console.log("Print users", selectedUsers);
       printUsers(selectedUsers);
     } catch (error) {
       console.error("Error printing users:", error);
-      alert("Failed to print. Please try again.");
+      toast.error("Failed to print. Please try again.");
     }
   };
 
@@ -247,7 +318,10 @@ export default function UsersPage() {
         description="Manage all users and their details in one place"
         icon={<Users size={20} />}
         columns={columns}
-        fetchData={fetchUsers}
+        data={users}
+        pagination={pagination}
+        loading={loading}
+        onPageChange={handlePageChange}
         addButtonLabel="Add User"
         onAddItem={() => setOpenAddUserDrawer(true)}
         searchPlaceholder="Search users by name, email, role..."
@@ -258,25 +332,25 @@ export default function UsersPage() {
         getRowActions={getUserActions}
       />
 
-      <AddUserDrawer
-        open={openAddUserDrawer}
-        onOpenChange={setOpenAddUserDrawer}
-        addUserToState={handleUserAdded}
-      />
-
       <ViewUserDrawer
         open={openViewUserDialog}
-        onOpenChange={setOpenViewUserDialog}
+        onOpenChange={handleViewDrawerChange}
         user={selectedUser}
       />
-
-      <EditUserDrawer
-        open={openEditUserDrawer}
-        onOpenChange={handleEditDrawerChange}
-        user={selectedUser}
-        refetchUsers={() => {
-          fetchUsers();
+      <UserDrawer
+        open={openAddUserDrawer || openEditUserDrawer}
+        onOpenChange={(open) => {
+          if (openAddUserDrawer) {
+            setOpenAddUserDrawer(open);
+          }
+          if (openEditUserDrawer) {
+            handleEditDrawerChange(open);
+          }
         }}
+        mode={selectedUser ? "edit" : "create"}
+        user={selectedUser}
+        addUserToState={!selectedUser ? handleUserAdded : undefined}
+        refetchUsers={refetchUsers}
       />
     </div>
   );

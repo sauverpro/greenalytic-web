@@ -34,6 +34,7 @@ import {
 import { addVehicleToUser } from "../../services/vehicleService";
 import { toast } from "sonner";
 
+
 // Define the form schema with validation
 const vehicleFormSchema = z.object({
   plateNumber: z.string().min(3, "Plate number must be at least 3 characters"),
@@ -86,9 +87,10 @@ async function onSubmit(data: VehicleFormValues) {
   try {
     const response = await addVehicleToUser(userId, data);
     if (response?.success==true) {
+ 
       toast.success(response.message);
     } else {
-      toast.success("Vehicle added successfully");
+      toast.success("Vehicle added successfully???");
     }
     form.reset();
     onSuccess?.();

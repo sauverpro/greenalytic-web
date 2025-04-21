@@ -1,18 +1,26 @@
+"use client";
 import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { User } from "@/types/types";
-import UserForm from "./userform";
+import { getUserById, signup } from "@/services/userService";
+import UserForm from "@/app/(admin)/admin/users/_components/userform";
 
-export default function EditUserDrawer({
+
+
+export default function UserDrawer({
   open,
   onOpenChange,
-  user,
+  user = null,
+  mode = "create",
+  addUserToState,
   refetchUsers,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  user: User | null;
-  refetchUsers: () => void;
+  user?: User | null;
+  mode?: "edit" | "create";
+  addUserToState?: (newUser: User) => void;
+  refetchUsers?: () => void;
 }) {
   const drawerRef = useRef<HTMLDivElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
@@ -34,7 +42,8 @@ export default function EditUserDrawer({
     if (!drawerRef.current || !backdropRef.current) return;
 
     if (open) {
-      document.body.style.overflow = "hidden"; 
+      document.body.style.overflow = "hidden";
+
       backdropRef.current.classList.remove("opacity-0");
       backdropRef.current.classList.add("opacity-50");
       drawerRef.current.classList.remove("translate-x-full");
@@ -52,12 +61,57 @@ export default function EditUserDrawer({
     }
   }, [open]);
 
-  const handleSuccess = () => {
-    refetchUsers();
+  const handleEditSuccess = (userData: User) => {
+    if (refetchUsers) {
+      refetchUsers?.();
+    }
     onOpenChange(false);
   };
 
-  if (!user) return null;
+  const handleCreateSuccess = async (userData: User) => {
+    try {
+      const response: {
+        success: boolean;
+        message: string;
+        userInformation?: { id: string };
+      } = await signup({
+        username: userData.username || "",
+        email: userData.email || "",
+        password: "defaultPassword", // Replace with actual password logic
+        phoneNumber: userData.phoneNumber || "",
+        gender: userData.gender || "",
+      });
+        console.log(response);
+      if (response.success) {
+      
+          refetchUsers?.();
+           onOpenChange(false);
+          
+      } else {
+        console.error("Failed to add user:", response.message);
+      }
+    } catch (error) {
+      console.error("Error adding user:", error);
+    }
+  };
+
+  // For edit mode, we need a user
+  if (mode === "edit" && !user) return null;
+
+  // For create mode, we need a default empty user
+  const emptyUser: User = {
+    id: 0,
+    username: "",
+    email: "",
+    image: "",
+    gender: "",
+    role: "USER",
+    phoneNumber: "",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    vehicles: [],
+    trackingDevices: [],
+  };
 
   if (!open) return null;
 
@@ -77,7 +131,9 @@ export default function EditUserDrawer({
       >
         {/* Header */}
         <div className="border-b p-4 flex justify-between items-center">
-          <h2 className="text-lg font-semibold">Edit Userrr</h2>
+          <h2 className="text-lg font-semibold">
+            {mode === "edit" ? "Edit User" : "Add New User"}
+          </h2>
           <button
             className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-800"
             onClick={() => onOpenChange(false)}
@@ -101,14 +157,18 @@ export default function EditUserDrawer({
 
         {/* Content */}
         <div className="flex-1 overflow-auto p-4">
-          <UserForm user={user} onSubmit={handleSuccess} />
+          <UserForm
+            user={mode === "edit" ? user! : emptyUser}
+            onSubmit={mode === "edit" ? handleEditSuccess : handleCreateSuccess}
+            isNewUser={mode === "create"}
+          />
         </div>
 
-        {/* Footer */}
+        {/* Footer - Only show Cancel button if UserForm doesn't already have a button */}
         <div className="border-t p-4">
           <Button
             variant="outline"
-            className="w-full"
+            className="w-full mt-2"
             onClick={() => onOpenChange(false)}
           >
             Cancel

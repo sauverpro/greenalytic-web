@@ -47,13 +47,13 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Skeleton } from "@/components/ui/skeleton"
 import { DatePickerWithRange } from "./date-range-picker"
+import { DialogTrigger } from "@radix-ui/react-dialog"
 
   
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend)
 
 interface DeviceDetailsModalProps {
-  isOpen: boolean
-  onClose: () => void
+
   deviceId: string | null
 }
 
@@ -169,8 +169,7 @@ interface DeviceResponse {
 }
 
 export function DeviceDetailsModal({
-  isOpen,
-  onClose,
+
   deviceId,
 }: DeviceDetailsModalProps) {
   const [loading, setLoading] = useState(true);
@@ -184,10 +183,10 @@ export function DeviceDetailsModal({
   const [activeTab, setActiveTab] = useState("overview");
 
   useEffect(() => {
-    if (isOpen && deviceId) {
+    if (deviceId) {
       fetchDeviceDetails();
     }
-  }, [isOpen, deviceId, currentPage, limit, dateRange]);
+  }, [deviceId, currentPage, limit, dateRange]);
 
   const fetchDeviceDetails = async () => {
     if (!deviceId) return;
@@ -470,7 +469,11 @@ export function DeviceDetailsModal({
   const chartData = getChartData();
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog>
+      <DialogTrigger >
+         view details
+      </DialogTrigger>
+   
       <DialogContent className="max-w-[98%] h-[95vh] overflow-y-auto">
         {loading ? (
           <div className="space-y-4">
@@ -490,30 +493,40 @@ export function DeviceDetailsModal({
                 <DialogTitle className="text-xl">
                   {deviceDetails.data.model} Details
                 </DialogTitle>
-                <Badge variant="outline" className={getDeviceTypeColor(deviceDetails.data.type)}>
+                <Badge
+                  variant="outline"
+                  className={getDeviceTypeColor(deviceDetails.data.type)}>
                   {deviceDetails.data.type}
                 </Badge>
               </div>
               <DialogDescription>
-                Serial Number: {deviceDetails.data.serialNumber} | Last Updated: {format(new Date(deviceDetails.data.lastPing), 'MMM dd, yyyy HH:mm:ss')}
+                Serial Number: {deviceDetails.data.serialNumber} | Last Updated:{" "}
+                {format(
+                  new Date(deviceDetails.data.lastPing),
+                  "MMM dd, yyyy HH:mm:ss"
+                )}
               </DialogDescription>
             </DialogHeader>
 
             <div className="mt-4">
-              <DatePickerWithRange 
-                date={dateRange} 
-                setDate={setDateRange} 
+              <DatePickerWithRange
+                date={dateRange}
+                setDate={setDateRange}
                 className="w-full md:w-auto"
               />
             </div>
 
-            <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="mt-6">
+            <Tabs
+              defaultValue="overview"
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="mt-6">
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="data">Device Data</TabsTrigger>
                 <TabsTrigger value="chart">Analytics</TabsTrigger>
               </TabsList>
-              
+
               <TabsContent value="overview" className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                   <Card>
@@ -526,40 +539,72 @@ export function DeviceDetailsModal({
                     <CardContent>
                       <dl className="grid grid-cols-1 gap-2 text-sm">
                         <div className="flex justify-between py-1 border-b">
-                          <dt className="font-medium text-muted-foreground">Device ID:</dt>
+                          <dt className="font-medium text-muted-foreground">
+                            Device ID:
+                          </dt>
                           <dd>{deviceDetails.data.id}</dd>
                         </div>
                         <div className="flex justify-between py-1 border-b">
-                          <dt className="font-medium text-muted-foreground">Serial Number:</dt>
+                          <dt className="font-medium text-muted-foreground">
+                            Serial Number:
+                          </dt>
                           <dd>{deviceDetails.data.serialNumber}</dd>
                         </div>
                         <div className="flex justify-between py-1 border-b">
-                          <dt className="font-medium text-muted-foreground">Model:</dt>
+                          <dt className="font-medium text-muted-foreground">
+                            Model:
+                          </dt>
                           <dd>{deviceDetails.data.model}</dd>
                         </div>
                         <div className="flex justify-between py-1 border-b">
-                          <dt className="font-medium text-muted-foreground">Type:</dt>
+                          <dt className="font-medium text-muted-foreground">
+                            Type:
+                          </dt>
                           <dd>
-                            <Badge className={getDeviceTypeColor(deviceDetails.data.type)}>
+                            <Badge
+                              className={getDeviceTypeColor(
+                                deviceDetails.data.type
+                              )}>
                               {deviceDetails.data.type}
                             </Badge>
                           </dd>
                         </div>
                         <div className="flex justify-between py-1 border-b">
-                          <dt className="font-medium text-muted-foreground">Status:</dt>
+                          <dt className="font-medium text-muted-foreground">
+                            Status:
+                          </dt>
                           <dd>
-                            <Badge variant={deviceDetails.data.status === "default" ? "default" : "secondary"}>
+                            <Badge
+                              variant={
+                                deviceDetails.data.status === "default"
+                                  ? "default"
+                                  : "secondary"
+                              }>
                               {deviceDetails.data.status}
                             </Badge>
                           </dd>
                         </div>
                         <div className="flex justify-between py-1 border-b">
-                          <dt className="font-medium text-muted-foreground">Last Ping:</dt>
-                          <dd>{format(new Date(deviceDetails.data.lastPing), 'MMM dd, yyyy HH:mm:ss')}</dd>
+                          <dt className="font-medium text-muted-foreground">
+                            Last Ping:
+                          </dt>
+                          <dd>
+                            {format(
+                              new Date(deviceDetails.data.lastPing),
+                              "MMM dd, yyyy HH:mm:ss"
+                            )}
+                          </dd>
                         </div>
                         <div className="flex justify-between py-1">
-                          <dt className="font-medium text-muted-foreground">Created At:</dt>
-                          <dd>{format(new Date(deviceDetails.data.createdAt), 'MMM dd, yyyy')}</dd>
+                          <dt className="font-medium text-muted-foreground">
+                            Created At:
+                          </dt>
+                          <dd>
+                            {format(
+                              new Date(deviceDetails.data.createdAt),
+                              "MMM dd, yyyy"
+                            )}
+                          </dd>
                         </div>
                       </dl>
                     </CardContent>
@@ -575,31 +620,47 @@ export function DeviceDetailsModal({
                     <CardContent>
                       <dl className="grid grid-cols-1 gap-2 text-sm">
                         <div className="flex justify-between py-1 border-b">
-                          <dt className="font-medium text-muted-foreground">Vehicle ID:</dt>
+                          <dt className="font-medium text-muted-foreground">
+                            Vehicle ID:
+                          </dt>
                           <dd>{deviceDetails.data.vehicle.id}</dd>
                         </div>
                         <div className="flex justify-between py-1 border-b">
-                          <dt className="font-medium text-muted-foreground">Plate Number:</dt>
+                          <dt className="font-medium text-muted-foreground">
+                            Plate Number:
+                          </dt>
                           <dd>{deviceDetails.data.vehicle.plateNumber}</dd>
                         </div>
                         <div className="flex justify-between py-1 border-b">
-                          <dt className="font-medium text-muted-foreground">Chassis Number:</dt>
+                          <dt className="font-medium text-muted-foreground">
+                            Chassis Number:
+                          </dt>
                           <dd>{deviceDetails.data.vehicle.chassisNumber}</dd>
                         </div>
                         <div className="flex justify-between py-1 border-b">
-                          <dt className="font-medium text-muted-foreground">Vehicle Type:</dt>
+                          <dt className="font-medium text-muted-foreground">
+                            Vehicle Type:
+                          </dt>
                           <dd>{deviceDetails.data.vehicle.vehicleType}</dd>
                         </div>
                         <div className="flex justify-between py-1 border-b">
-                          <dt className="font-medium text-muted-foreground">Model:</dt>
+                          <dt className="font-medium text-muted-foreground">
+                            Model:
+                          </dt>
                           <dd>{deviceDetails.data.vehicle.vehicleModel}</dd>
                         </div>
                         <div className="flex justify-between py-1 border-b">
-                          <dt className="font-medium text-muted-foreground">Year:</dt>
-                          <dd>{deviceDetails.data.vehicle.yearOfManufacture}</dd>
+                          <dt className="font-medium text-muted-foreground">
+                            Year:
+                          </dt>
+                          <dd>
+                            {deviceDetails.data.vehicle.yearOfManufacture}
+                          </dd>
                         </div>
                         <div className="flex justify-between py-1">
-                          <dt className="font-medium text-muted-foreground">Usage:</dt>
+                          <dt className="font-medium text-muted-foreground">
+                            Usage:
+                          </dt>
                           <dd>{deviceDetails.data.vehicle.usage}</dd>
                         </div>
                       </dl>
@@ -617,11 +678,20 @@ export function DeviceDetailsModal({
                   <CardContent>
                     <div className="flex items-center gap-4">
                       <Avatar className="h-16 w-16">
-                        <AvatarImage src={deviceDetails.data.user.image || "/placeholder.svg"} alt={deviceDetails.data.user.username} />
-                        <AvatarFallback>{deviceDetails.data.user.username.charAt(0)}</AvatarFallback>
+                        <AvatarImage
+                          src={
+                            deviceDetails.data.user.image || "/placeholder.svg"
+                          }
+                          alt={deviceDetails.data.user.username}
+                        />
+                        <AvatarFallback>
+                          {deviceDetails.data.user.username.charAt(0)}
+                        </AvatarFallback>
                       </Avatar>
                       <div>
-                        <h3 className="text-lg font-semibold">{deviceDetails.data.user.username}</h3>
+                        <h3 className="text-lg font-semibold">
+                          {deviceDetails.data.user.username}
+                        </h3>
                         <div className="flex flex-col gap-1 text-sm">
                           <div className="flex items-center gap-2">
                             <Mail className="h-4 w-4 text-muted-foreground" />
@@ -632,37 +702,36 @@ export function DeviceDetailsModal({
                             <span>{deviceDetails.data.user.phoneNumber}</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Badge variant="outline">{deviceDetails.data.user.role}</Badge>
+                            <Badge variant="outline">
+                              {deviceDetails.data.user.role}
+                            </Badge>
                           </div>
                         </div>
                       </div>
                     </div>
-                    </CardContent>
-                    
-                  </Card>
+                  </CardContent>
+                </Card>
               </TabsContent>
-              
+
               <TabsContent value="data" className="space-y-4">
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg flex items-center gap-2">
                       <Calendar className="h-5 w-5" />
-                      {deviceDetails.data.type === "EMISSION" 
-                        ? "Emission Data" 
-                        : deviceDetails.data.type === "GPS" 
-                          ? "GPS Data" 
-                          : "Fuel Data"}
+                      {deviceDetails.data.type === "EMISSION"
+                        ? "Emission Data"
+                        : deviceDetails.data.type === "GPS"
+                        ? "GPS Data"
+                        : "Fuel Data"}
                     </CardTitle>
                     <CardDescription>
                       Showing data for the selected date range
                     </CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    {renderDeviceDataTable()}
-                  </CardContent>
+                  <CardContent>{renderDeviceDataTable()}</CardContent>
                 </Card>
               </TabsContent>
-              
+
               <TabsContent value="chart" className="space-y-4">
                 <Card>
                   <CardHeader className="pb-2">
@@ -681,7 +750,9 @@ export function DeviceDetailsModal({
                       </div>
                     ) : (
                       <div className="flex items-center justify-center h-[400px]">
-                        <p className="text-muted-foreground">No data available for visualization</p>
+                        <p className="text-muted-foreground">
+                          No data available for visualization
+                        </p>
                       </div>
                     )}
                   </CardContent>
@@ -690,7 +761,7 @@ export function DeviceDetailsModal({
             </Tabs>
 
             <DialogFooter className="mt-6">
-              <Button variant="outline" onClick={onClose}>Close</Button>
+         
             </DialogFooter>
           </>
         ) : (
@@ -700,7 +771,7 @@ export function DeviceDetailsModal({
             <p className="text-muted-foreground text-center">
               The requested device information could not be loaded.
             </p>
-            <Button variant="outline" onClick={onClose} className="mt-4">
+            <Button variant="outline" className="mt-4">
               Close
             </Button>
           </div>

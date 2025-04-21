@@ -4,101 +4,138 @@ import type { GridColDef } from "@mui/x-data-grid";
 import DataTable from "@/components/DataTable/GenericDataTable";
 import { getAllDevices } from "@/services/deviceServices";
 import type { ActionItem } from "@/components/DataTable/TableActions";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   exportToPDF,
   exportToExcel,
   printDevices,
-  type Device,
-} from "./ExportUtils";
+
+} from "./ExportUtilsForDevices";
+import { TrackingDevice } from "@/types/types";
+import TrackingDevicesTable from "./TrackingDevicesTable";
+export interface TrackingDeviceWithVehicle extends TrackingDevice {
+  vehicle: {
+    id: number;
+    plateNumber: string;
+    vehicleType: string;
+    vehicleModel: string;
+  } | null;
+}
 
 function DevicesPage() {
-  const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
+  const [selectedDevice, setSelectedDevice] =
+    useState<TrackingDeviceWithVehicle | null>(null);
+  const [devices, setDevices] = useState<TrackingDeviceWithVehicle[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    limit: 10,
+  });
+
+   
+  useEffect(() => {
+    fetchDevices(pagination.currentPage, pagination.limit);
+  }, []);
 
   const fetchDevices = async (page = 1, limit = 10) => {
+    setLoading(true);
     try {
       const response = await getAllDevices();
       console.log("Fetched devices: ", response);
 
-      const devices = response.data || [];
+      const allDevices = response.data || [];
 
+       
+      const totalItems = allDevices.length;
+      const totalPages = Math.ceil(totalItems / limit);
+
+       
+      setPagination({
+        currentPage: page,
+        totalPages,
+        totalItems,
+        limit,
+      });
+
+       
       const startIndex = (page - 1) * limit;
       const endIndex = startIndex + limit;
-      const paginatedDevices = devices.slice(startIndex, endIndex);
+      const paginatedDevices = allDevices.slice(startIndex, endIndex);
 
-      return {
-        data: paginatedDevices.map((device: any) => ({
-          id: device.id,
-          name: device.model || "Unknown Device",
-          serialNumber: device.serialNumber,
-          status: device.status,
-          batteryLevel: Math.floor(Math.random() * 100),
-          lastActive: device.lastPing || device.updatedAt,
-          assignedTo: device.user?.username || "Unassigned",
-          plateNumber: device.plateNumber,
-          type: device.type,
-          isActive: device.isActive,
-        })),
-        pagination: {
-          currentPage: page,
-          totalPages: Math.ceil(devices.length / limit),
-          totalItems: devices.length,
-          limit: limit,
-        },
-      };
+      const formattedDevices = paginatedDevices.map((device: any) => ({
+        id: device.id,
+        name: device.model || "Unknown Device",
+        serialNumber: device.serialNumber,
+        status: device.status,
+        batteryLevel: Math.floor(Math.random() * 100),
+        lastActive: device.lastPing || device.updatedAt,
+        assignedTo: device.user?.username || "Unassigned",
+        plateNumber: device.plateNumber,
+        type: device.type,
+        isActive: device.isActive,
+      }));
+
+      setDevices(formattedDevices);
     } catch (error) {
       console.error("Error fetching devices:", error);
-      return {
-        data: [],
-        pagination: {
-          currentPage: 1,
-          totalPages: 1,
-          totalItems: 0,
-          limit: limit,
-        },
-      };
+      setDevices([]);
+      setPagination({
+        currentPage: 1,
+        totalPages: 1,
+        totalItems: 0,
+        limit,
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleEditDevice = (device: Device) => {
+   
+  const handlePageChange = (page: number, limit: number) => {
+    console.log(`Changing page to ${page} with limit ${limit}`);
+    fetchDevices(page, limit);
+  };
+
+  const handleEditDevice = (device: TrackingDeviceWithVehicle) => {
     setSelectedDevice(device);
     console.log("Edit device:", device);
-    // Here you would typically open a modal or navigate to edit page
   };
 
-  const handleViewDevice = (device: Device) => {
+  const handleViewDevice = (device: TrackingDeviceWithVehicle) => {
     console.log("View device details:", device);
-    // Navigate to device details page or open a modal
   };
 
-  const handleDeleteDevice = (device: Device) => {
+  const handleDeleteDevice = (device: TrackingDeviceWithVehicle) => {
     console.log("Delete device:", device);
-    // Show confirmation dialog and delete if confirmed
   };
 
   const handleAddDevice = () => {
     console.log("Add new device");
-    // Open add device modal or navigate to add device page
+     
   };
 
-  const getDeviceActions = (device: Device): ActionItem[] => {
+  const getDeviceActions = (
+    device: TrackingDeviceWithVehicle
+  ): ActionItem[] => {
     return [
       {
         label: "View Details",
         onClick: () => handleViewDevice(device),
-        icon: <Eye size={16} />,
+        icon: <Eye size={16} />
       },
       {
         label: "Edit Device",
         onClick: () => handleEditDevice(device),
-        icon: <Edit size={16} />,
+        icon: <Edit size={16} />
       },
       {
         label: "Delete Device",
         onClick: () => handleDeleteDevice(device),
         variant: "destructive",
-        icon: <Trash size={16} />,
-      },
+        icon: <Trash size={16} />
+      }
     ];
   };
 
@@ -176,8 +213,8 @@ function DevicesPage() {
     },
   ];
 
-  // Export handlers with proper error handling
-  const handleExportPDF = (selectedDevices: Device[]) => {
+   
+  const handleExportPDF = (selectedDevices: TrackingDeviceWithVehicle[]) => {
     try {
       console.log("Export to PDF", selectedDevices);
       exportToPDF(selectedDevices);
@@ -187,7 +224,7 @@ function DevicesPage() {
     }
   };
 
-  const handleExportExcel = (selectedDevices: Device[]) => {
+  const handleExportExcel = (selectedDevices: TrackingDeviceWithVehicle[]) => {
     try {
       console.log("Export to Excel", selectedDevices);
       exportToExcel(selectedDevices);
@@ -197,7 +234,7 @@ function DevicesPage() {
     }
   };
 
-  const handlePrint = (selectedDevices: Device[]) => {
+  const handlePrint = (selectedDevices: TrackingDeviceWithVehicle[]) => {
     try {
       console.log("Print devices", selectedDevices);
       printDevices(selectedDevices);
@@ -209,12 +246,15 @@ function DevicesPage() {
 
   return (
     <div className="h-full flex flex-1 max-w-[100%]">
-      <DataTable
+      {/* <DataTable
         title="Device Management"
         description="Manage all tracking devices in one place"
         icon={<HardDrive size={20} />}
         columns={columns}
-        fetchData={fetchDevices}
+        data={devices}
+        pagination={pagination}
+        loading={loading}
+        onPageChange={handlePageChange}
         addButtonLabel="Add Device"
         onAddItem={handleAddDevice}
         searchPlaceholder="Search devices by name, serial number..."
@@ -223,6 +263,11 @@ function DevicesPage() {
         handleExportExcel={handleExportExcel}
         handlePrint={handlePrint}
         getRowActions={getDeviceActions}
+      /> */}
+      <TrackingDevicesTable
+      trackingDevices={devices}
+       loading={loading}
+      
       />
     </div>
   );

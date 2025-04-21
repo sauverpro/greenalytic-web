@@ -20,12 +20,12 @@ import {
 } from "@/components/ui/card";
 import { Plus } from "lucide-react";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import SearchAndFilter from "@/app/(admin)/admin/users/SearchAndFilter";
-import PaginationControls from "@/app/(admin)/admin/users/PaginationControls";
-import TableToolbar from "@/app/(admin)/admin/users/TableToolbar";
+import PaginationControls from "@/app/(admin)/admin/users/_components/PaginationControls";
+import TableToolbar from "@/app/(admin)/admin/users/_components/TableToolbar";
 import TableActions, { type ActionItem } from "./TableActions";
+import SearchAndFilter from "@/app/(admin)/admin/users/_components/SearchAndFilter";
 
-// MUI theme for consistent styling
+ 
 const muiTheme = createTheme({
   palette: {
     primary: {
@@ -80,7 +80,7 @@ interface DataTableProps<T> {
   searchFields?: string[];
   handleExportPDF?: (selectedItems: T[]) => void;
   handleExportExcel?: (selectedItems: T[]) => void;
-  handlePrint?: (selectedItems: T[]) => void; 
+  handlePrint?: (selectedItems: T[]) => void;
   bulkActionsComponent?: React.ReactNode;
   getRowActions?: (item: T) => ActionItem[];
 }
@@ -108,7 +108,7 @@ function DataTable<T extends { id: string | number }>({
   const [selectionModel, setSelectionModel] = useState<GridRowSelectionModel>([]);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Add actions column if getRowActions is provided
+   
   const columnsWithActions = getRowActions
     ? [
         ...columns,
@@ -118,7 +118,7 @@ function DataTable<T extends { id: string | number }>({
           width: 100,
           sortable: false,
           filterable: false,
-          renderCell: (params:any) => {
+          renderCell: (params: any) => {
             const item = params.row as T;
             const actions = getRowActions(item);
             return <TableActions actions={actions} />;
@@ -127,22 +127,7 @@ function DataTable<T extends { id: string | number }>({
       ]
     : columns;
 
-  // Fetch data with pagination
-  const loadData = async (page = 1, limit = 10) => {
-    try {
-      setLoading(true);
-      const response = await fetchData(page, limit);
-      setItems(response.data);
-      setFilteredItems(response.data);
-      setPagination(response.pagination);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Update filtered items when data changes or search changes
+   
   useEffect(() => {
     if (!searchQuery.trim() || searchFields.length === 0) {
       setFilteredItems(data);
@@ -162,21 +147,21 @@ function DataTable<T extends { id: string | number }>({
     setFilteredItems(filtered);
   }, [searchQuery, data, searchFields]);
 
-  // Handle limit change from pagination controls
+   
   const handlePaginationLimitChange = (newLimit: number | string) => {
     if (typeof newLimit === "number") {
       onPageChange(1, newLimit);
     } else if (newLimit === "all") {
-      // If "all" is selected, let the parent component handle it
+       
       onPageChange(1, 999999);
     }
   };
 
-  // Handle PDF export
+   
   const handleExportPDFWrapper = () => {
     if (selectionModel.length === 0 || !handleExportPDF) return;
     try {
-      const selectedItems = items.filter((item) =>
+      const selectedItems = data.filter((item) =>
         selectionModel.includes(item.id as never)
       );
       handleExportPDF(selectedItems as T[]);
@@ -185,11 +170,11 @@ function DataTable<T extends { id: string | number }>({
     }
   };
 
-  // Handle Excel export
+   
   const handleExportExcelWrapper = () => {
     if (selectionModel.length === 0 || !handleExportExcel) return;
     try {
-      const selectedItems = items.filter((item) =>
+      const selectedItems = data.filter((item) =>
         selectionModel.includes(item.id as never)
       );
       handleExportExcel(selectedItems as T[]);
@@ -198,11 +183,11 @@ function DataTable<T extends { id: string | number }>({
     }
   };
 
-  // Handle Print
+   
   const handlePrintWrapper = () => {
     if (selectionModel.length === 0 || !handlePrint) return;
     try {
-      const selectedItems = items.filter((item) =>
+      const selectedItems = data.filter((item) =>
         selectionModel.includes(item.id as never)
       );
       handlePrint(selectedItems as T[]);
@@ -231,7 +216,7 @@ function DataTable<T extends { id: string | number }>({
                   variant="default"
                   className="bg-primary hover:bg-primary-dark text-white rounded-md shadow-sm"
                 >
-                  <Plus size={16} className="mr-1" /> {addButtonLabel} 
+                  <Plus size={16} className="mr-1" /> {addButtonLabel}
                 </Button>
               )}
             </div>
@@ -239,6 +224,7 @@ function DataTable<T extends { id: string | number }>({
 
           <CardContent className="p-6">
             <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              {/* Search and filter component */}
               <SearchAndFilter
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
@@ -246,8 +232,10 @@ function DataTable<T extends { id: string | number }>({
               />
 
               <div className="flex flex-wrap items-center gap-3">
+                {/* Bulk actions component */}
                 {selectionModel.length > 0 && bulkActionsComponent}
 
+                {/* Pagination controls component */}
                 <PaginationControls
                   limit={pagination.limit}
                   onLimitChange={handlePaginationLimitChange}
@@ -292,7 +280,7 @@ function DataTable<T extends { id: string | number }>({
                   toolbar: (props) => (
                     <TableToolbar
                       selectedRows={selectionModel}
-                      data={items as any[]}
+                      data={data as any[]}
                       handleExportPDF={handleExportPDFWrapper}
                       handleExportExcel={handleExportExcelWrapper}
                       handlePrint={handlePrint ? handlePrintWrapper : undefined}
@@ -310,7 +298,7 @@ function DataTable<T extends { id: string | number }>({
                     backgroundColor: "#f3f4f6",
                   },
                   "& .MuiDataGrid-cell": {
-                    padding: "12px 16px ",
+                    padding: "12px 16px",
                   },
                   "& .MuiDataGrid-footerContainer": {
                     backgroundColor: "#f9fafb",
