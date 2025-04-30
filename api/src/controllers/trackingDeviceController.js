@@ -48,9 +48,6 @@ export const addTrackingDeviceToVehicle = async (req, res) => {
   }
 };
 
-
-
-
   export const getTrackingDevicesByVehicleId = async (req, res) => {
     try {
       const { vehicleId } = req.params;
@@ -88,7 +85,6 @@ export const addTrackingDeviceToVehicle = async (req, res) => {
       });
     }
   };
-
 
 export const removeTrackingDevice = async (req, res) => {
   try {
@@ -283,5 +279,66 @@ export const getDeviceDetails = async (req, res) => {
       success: false,
       message: error.message || "Error retrieving device details",
     });
+  }
+};
+
+export const updateTrackingDeviceById = async (req, res) => {
+  try {
+    const { deviceId } = req.params;
+    const deviceData = req.body;
+
+    const parsedDeviceId = parseInt(deviceId, 10);
+
+    if (isNaN(parsedDeviceId)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid device ID" });
+    }
+
+    if (!deviceData || Object.keys(deviceData).length === 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "No update data provided" });
+    }
+
+    if (deviceData.type) {
+      const validTypes = ["GPS", "FUEL", "EMISSION"];
+      if (!validTypes.includes(deviceData.type.toUpperCase())) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid device type. Type must be one of: ${validTypes.join(
+            ", "
+          )}`,
+        });
+      }
+      deviceData.type = deviceData.type.toUpperCase();
+    }
+
+    if (deviceData.status) {
+      const validStatuses = ["active", "inactive", "pending", "disconnected"];
+      if (!validStatuses.includes(deviceData.status.toLowerCase())) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid status. Status must be one of: ${validStatuses.join(
+            ", "
+          )}`,
+        });
+      }
+      deviceData.status = deviceData.status.toLowerCase();
+    }
+
+    
+    const updatedDevice = await TrackingDeviceService.updateDeviceService(
+      parsedDeviceId,
+      deviceData,
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Tracking device updated successfully",
+      data: updatedDevice,
+    });
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
   }
 };

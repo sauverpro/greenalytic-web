@@ -1,5 +1,4 @@
 export class PaginationService {
-
   static getPaginationDetails(totalItems, currentPage = 1, pageSize = 10) {
     const totalPages = Math.ceil(totalItems / pageSize);
     const skip = (currentPage - 1) * pageSize;
@@ -13,7 +12,7 @@ export class PaginationService {
     };
   }
 
-  static parsePaginationParams(query, defaultLimit = 10) {
+  static parsePaginationParams(query, defaultLimit = 200) {
     const page = parseInt(query.page, 10) || 1;
     const limit = parseInt(query.limit, 10) || defaultLimit;
     const skip = (page - 1) * limit;
@@ -40,7 +39,6 @@ export class PaginationService {
       },
     };
   }
-
 
   static processMultipleDatasets(counts, paginationParams) {
     const pagination = {};

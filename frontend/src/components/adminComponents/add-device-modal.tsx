@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { MapPin } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,7 +14,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -22,7 +21,7 @@ import {
   FormField,
   FormItem,
   FormLabel,
-  FormMessage
+  FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
@@ -30,13 +29,12 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from "@/components/ui/select";
 
 import { toast } from "sonner";
 import { addDeviceToVehicle } from "../../services/deviceServices";
 import { TrackingDevice } from "@/types/types";
-import { TrackingDeviceWithVehicle } from "@/app/(admin)/admin/devices/TrackingDevicesTable";
 
 // Schema
 const deviceFormSchema = z.object({
@@ -44,75 +42,64 @@ const deviceFormSchema = z.object({
     .string()
     .min(3, "Serial number must be at least 3 characters"),
   model: z.string().min(1, "Model is required"),
-  type: z.string().min(1, "Type is required")
+  type: z.string().min(1, "Type is required"),
 });
 
 type DeviceFormValues = z.infer<typeof deviceFormSchema>;
 
 interface AddDeviceModalProps {
-
+  isOpen: boolean;
   onClose: () => void;
-  vehicleId?: string;
-  initialData?: TrackingDeviceWithVehicle | null ;
+  vehicleId: string;
+  plateNumber: string;
   onSuccess?: () => void;
 }
 
 export function AddDeviceModal({
-
+  isOpen,
   onClose,
   vehicleId,
-  initialData,
-  onSuccess
+  plateNumber,
+  onSuccess,
 }: AddDeviceModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const isEditMode = !!initialData;
 
   const form = useForm<DeviceFormValues>({
     resolver: zodResolver(deviceFormSchema),
     defaultValues: {
-      serialNumber: initialData?.serialNumber || "",
-      model: initialData?.model || "",
-      type: initialData?.type || ""
-    }
+      serialNumber: "",
+      model: "",
+      type: "",
+    },
   });
 
   async function onSubmit(data: DeviceFormValues) {
     setIsSubmitting(true);
 
     try {
-      if (isEditMode && initialData) {
-        const updatedDevice: TrackingDevice = {
-          ...initialData,
-          ...data,
-          updatedAt: new Date()
-        };
-        console.log("Update Device:", updatedDevice);
-        toast.success("Device updated successfully");
-      } else {
-        if (!vehicleId) {
-          toast.error("Vehicle ID is required to add a new device.");
-          return;
-        }
-
-        const newDevice: TrackingDevice = {
-          ...data,
-          id: 0,
-          isActive: true,
-          lastPing: undefined,
-          plateNumber:"",
-       
-          fuelDatas: [],
-          emissionDatas: [],
-          userId: undefined,
-          vehicleId: parseInt(vehicleId),
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          deletedAt: undefined
-        };
-
-        await addDeviceToVehicle(vehicleId, newDevice);
-        toast.success("Device added successfully");
+      if (!vehicleId) {
+        toast.error("Vehicle ID is required to add a new device.");
+        return;
       }
+
+      const newDevice: TrackingDevice = {
+        ...data,
+        id: 0,
+        isActive: true,
+        lastPing: undefined,
+        gpsDatas: [],
+        fuelDatas: [],
+        emissionDatas: [],
+        userId: undefined,
+        vehicleId: parseInt(vehicleId),
+        plateNumber: plateNumber,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        deletedAt: undefined,
+      };
+
+      await addDeviceToVehicle(vehicleId, newDevice);
+      toast.success("Device added successfully");
 
       form.reset();
       onSuccess?.();
@@ -126,24 +113,18 @@ export function AddDeviceModal({
   }
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="outline">Edit   the device</Button>
-      </DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <div className="flex items-center gap-2">
             <div className="rounded-full bg-blue-100 p-2">
               <MapPin className="h-5 w-5 text-blue-700" />
             </div>
-            <DialogTitle>
-              {isEditMode ? "Edit Device" : "Add New Device!"}
-            </DialogTitle>
+            <DialogTitle>Add New Device</DialogTitle>
           </div>
           <DialogDescription>
-            {isEditMode
-              ? "Update this tracking device's information."
-              : "Add a new tracking device to a vehicle."}
+            Add a new tracking device to vehicle {plateNumber}. All fields are
+            required.
           </DialogDescription>
         </DialogHeader>
 
@@ -178,23 +159,6 @@ export function AddDeviceModal({
               />
             </div>
 
-            <FormItem>
-              <FormLabel>Plate Number</FormLabel>
-              <FormControl>
-                <Input
-                  value={
-                    initialData?.plateNumber
-                      ? initialData.plateNumber
-                      : vehicleId
-                      ? `Vehicle ID: ${vehicleId}`
-                      : "No plate info"
-                  }
-                  disabled
-                  className="bg-gray-100 text-muted-foreground"
-                />
-              </FormControl>
-            </FormItem>
-
             <FormField
               control={form.control}
               name="type"
@@ -203,7 +167,8 @@ export function AddDeviceModal({
                   <FormLabel>Device Type</FormLabel>
                   <Select
                     onValueChange={field.onChange}
-                    defaultValue={field.value}>
+                    defaultValue={field.value}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select device type" />
@@ -220,25 +185,29 @@ export function AddDeviceModal({
               )}
             />
 
+            <div className="pt-2">
+              <div className="bg-gray-50 p-3 rounded-md">
+                <p className="text-sm text-gray-500">
+                  <span className="font-medium">Vehicle:</span> {plateNumber}
+                </p>
+              </div>
+            </div>
+
             <DialogFooter className="mt-6">
               <Button
                 type="button"
                 variant="outline"
                 onClick={onClose}
-                disabled={isSubmitting}>
+                disabled={isSubmitting}
+              >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 className="bg-emerald-600 hover:bg-emerald-700"
-                disabled={isSubmitting}>
-                {isSubmitting
-                  ? isEditMode
-                    ? "Updating..."
-                    : "Adding..."
-                  : isEditMode
-                  ? "Update Device"
-                  : "Add Device"}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Adding..." : "Add Device"}
               </Button>
             </DialogFooter>
           </form>

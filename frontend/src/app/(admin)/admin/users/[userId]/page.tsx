@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { AddDeviceModal } from "@/components/adminComponents/add-device-modal";
+// import { AddAndUpdateDeviceModal } from "@/components/adminComponents/add-device-modal";
 import { ClientData, DeviceData, User, VehicleData } from "@/types/types";
 
 import { getUserById } from "@/services/userService";

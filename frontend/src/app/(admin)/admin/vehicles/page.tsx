@@ -1,6 +1,6 @@
 "use client";
 
-import { Car, Eye, Edit, Trash, MoreHorizontal } from "lucide-react";
+import { Car, Eye, Edit, Trash, MoreHorizontal, HardDrive } from "lucide-react";
 import type { GridColDef } from "@mui/x-data-grid";
 import DataTable, { Pagination } from "@/components/DataTable/GenericDataTable";
 import { getAllVehicles, deleteVehicle } from "@/services/vehicleService";
@@ -10,10 +10,10 @@ import {
   exportToPDF,
   exportToExcel,
   printVehicles,
-  type Vehicle
+  type Vehicle,
 } from "./ExportUtils";
 import { toast } from "sonner";
-import { AddDeviceModal } from "@/components/adminComponents/add-device-modal";
+// import { AddAndUpdateDeviceModal } from "@/components/adminComponents/add-device-modal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,7 +24,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -33,17 +33,18 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { AddDeviceModal } from "@/components/adminComponents/add-device-modal";
 function VehiclesPage() {
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAddDeviceModalOpen, setIsAddDeviceModalOpen] = useState(false);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [pagination, setPagination] = useState<Pagination>({
     currentPage: 1,
     totalPages: 1,
     totalItems: 0,
-    limit: 10
+    limit: 10,
   });
-  
 
   const fetchVehicles = async (page = 1, limit = 10) => {
     try {
@@ -66,14 +67,14 @@ function VehiclesPage() {
           usage: vehicle.usage,
           owner: vehicle.user?.username || "Unknown",
           status: vehicle.deletedAt ? "inactive" : "active",
-          email: vehicle.user?.email ?? "unknown@example.com"
+          email: vehicle.user?.email ?? "unknown@example.com",
         })),
         pagination: {
           currentPage: page,
           totalPages: Math.ceil(allVehicles.length / limit),
           totalItems: allVehicles.length,
-          limit: limit
-        }
+          limit: limit,
+        },
       };
     } catch (error) {
       toast.error("Failed to fetch vehicles.");
@@ -121,20 +122,20 @@ function VehiclesPage() {
     {
       label: "View Details",
       onClick: () => handleViewVehicle(vehicle),
-      icon: <Eye size={16} />
+      icon: <Eye size={16} />,
     },
     {
       label: "Edit Vehicle",
       onClick: () => handleEditVehicle(vehicle),
-      icon: <Edit size={16} />
+      icon: <Edit size={16} />,
     },
-  
+
     {
       label: "Delete Vehicle",
       onClick: () => handleDeleteVehicle(vehicle),
       variant: "destructive",
-      icon: <Trash size={16} />
-    }
+      icon: <Trash size={16} />,
+    },
   ];
 
   const columns: GridColDef[] = [
@@ -151,16 +152,17 @@ function VehiclesPage() {
         const types: Record<string, string> = {
           SUV: "green",
           Sedan: "purple",
-          Truck: "orange"
+          Truck: "orange",
         };
         const color = types[params.value] || "blue";
         return (
           <div
-            className={`px-2 py-1 rounded-full text-xs font-semibold bg-${color}-100 text-${color}-700`}>
+            className={`px-2 py-1 rounded-full text-xs font-semibold bg-${color}-100 text-${color}-700`}
+          >
             {params.value}
           </div>
         );
-      }
+      },
     },
     {
       field: "usage",
@@ -172,10 +174,11 @@ function VehiclesPage() {
             params.value === "Personal"
               ? "bg-blue-100 text-blue-700"
               : "bg-yellow-100 text-yellow-700"
-          }`}>
+          }`}
+        >
           {params.value}
         </div>
-      )
+      ),
     },
     { field: "owner", headerName: "Owner", width: 150 },
     {
@@ -186,82 +189,99 @@ function VehiclesPage() {
         const color = params.value === "active" ? "green" : "red";
         return (
           <div
-            className={`px-2 py-1 rounded-full text-xs font-semibold bg-${color}-100 text-${color}-700`}>
+            className={`px-2 py-1 rounded-full text-xs font-semibold bg-${color}-100 text-${color}-700`}
+          >
             {params.value}
           </div>
         );
-      }
+      },
     },
-    
+
     {
-  field: "actions",
-  headerName: "Actions",
-  flex: 1,
-  sortable: false,
-  filterable: false,
-  renderCell: (params) => {
-    const vehicleId = params.row.id;
+      field: "actions",
+      headerName: "Actions",
+      flex: 1,
+      sortable: false,
+      filterable: false,
+      renderCell: (params) => {
+        const vehicleId = params.row.id;
 
-    return (
-      <div className="">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
+        return (
+          <div className="">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
 
-          <DropdownMenuContent align="end" className="w-48">
-            {/* View Details */}
-            <DropdownMenuItem>viw details</DropdownMenuItem>
+              <DropdownMenuContent align="end" className="w-48">
+                {/* View Details */}
+                <DropdownMenuItem>viw details</DropdownMenuItem>
 
-            {/* Add Device */}
-            <DropdownMenuItem asChild>
-              <AddDeviceModal
-                vehicleId={vehicleId}
-                onClose={() => {
-                  // optional cleanup
-                }}
-                onSuccess={() => {
-                  // optional toast or refetch
-                }}
-              />
-            </DropdownMenuItem>
+                {/* Add Device */}
+                <DropdownMenuItem asChild>
+                  {/* <AddDeviceModal
+                    vehicleId={vehicleId.toString()}
+                    plateNumber={params.row.licensePlate} // Pass the plate number here
+                    // onClose={() => {
+                    // }}
+                    onSuccess={() => {
+                      // optional toast or refetch
+                      toast.success("Device operation successful");
+                    }}
+                  /> */}
+                  <DropdownMenuItem
+                    onClick={() => setIsAddDeviceModalOpen(true)}
+                  >
+                    <HardDrive className="mr-2 h-4 w-4" />
+                    Add Device
+                  </DropdownMenuItem>
 
-            <DropdownMenuSeparator />
+                  <AddDeviceModal
+                    isOpen={isAddDeviceModalOpen}
+                    onClose={() => setIsAddDeviceModalOpen(false)}
+                    vehicleId={vehicleId.toString()}
+                    plateNumber={params.row.licensePlate}
+                    // onSuccess={handleAddDeviceSuccess}
+                  />
+                </DropdownMenuItem>
 
-            {/* Delete */}
-            <DropdownMenuItem asChild>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button size="sm" variant="destructive">
-                    Delete Vehicle
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This will permanently delete the vehicle and its devices.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={() => handleDeleteVehicle(vehicleId)}>
-                      Delete
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    );
-  }
-}
+                <DropdownMenuSeparator />
 
+                {/* Delete */}
+                <DropdownMenuItem asChild>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button size="sm" variant="destructive">
+                        Delete Vehicle
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will permanently delete the vehicle and its
+                          devices.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => handleDeleteVehicle(vehicleId)}
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        );
+      },
+    },
   ];
 
   const handleExportPDF = (selected: Vehicle[]) => {
@@ -306,7 +326,7 @@ function VehiclesPage() {
           "licensePlate",
           "chassisNumber",
           "owner",
-          "status"
+          "status",
         ]}
         handleExportPDF={handleExportPDF}
         handleExportExcel={handleExportExcel}

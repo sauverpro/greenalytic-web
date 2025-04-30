@@ -3,11 +3,11 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
-  let vehicleId = 44;
-  let plateNumber = "RA002A";
-  let gpsId = 44;
-  let fuelId = 42;
-  let emId = 43;
+  let vehicleId = 51;
+  let plateNumber = "RW1234";
+  let gpsId = 49;
+  let fuelId = 50;
+  let emId = 51;
 
   const endDate = new Date();
   const startDate = new Date();
@@ -91,17 +91,17 @@ async function main() {
     item.fuelLevel = Math.max(0, currentFuelLevel);
   });
 
-  // await prisma.emissionData.createMany({
-  //   data: emissionsData,
-  // });
+  await prisma.emissionData.createMany({
+    data: emissionsData,
+  });
 
   await prisma.gPSData.createMany({
     data: gpsData,
   });
 
-  // await prisma.fuelData.createMany({
-  //   data: fuelData,
-  // });
+  await prisma.fuelData.createMany({
+    data: fuelData,
+  });
 
   console.log(
     `Data saved successfully: ${emissionsData.length} emission records, ${gpsData.length} GPS records, ${fuelData.length} fuel records`

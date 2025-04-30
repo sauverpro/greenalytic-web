@@ -1,6 +1,6 @@
 import express from 'express'
 import { verifyingtoken } from "../utils/jwtfunctions.js";
-import { addVehicleToUser, deleteVehicle } from '../controllers/vehicleControllers/addVehicleToUserController.js'
+import { addVehicleToUser, deleteVehicle, updateVehicleById } from '../controllers/vehicleControllers/addVehicleToUserController.js'
 import {
   getVehicleByIdController,
   getAllVehiclesController,
@@ -8,11 +8,8 @@ import {
 } from "../controllers/vehicleControllers/gettingvehiclesControllers.js";
 import { getVehicleHistoryController } from '../controllers/vehicleControllers/vehicleHistory.js'
 import { vehicleDataController } from '../controllers/VehicleDataController.js'
-
 import paginationMiddleware from '../middlewares/paginationMiddleware.js'
-
 const VehicleRouter = express.Router()
-
 VehicleRouter.post('/add/:userId', addVehicleToUser)
 VehicleRouter.delete('/:vehicleId', deleteVehicle)
 VehicleRouter.get(
@@ -42,12 +39,13 @@ VehicleRouter.get(
   "/",
   vehicleDataController.getVehiclesByLoggedUser
 );
-
+VehicleRouter.patch(
+  "/:vehicleId", updateVehicleById
+);
 VehicleRouter.get(
   '/:vehicleId/emissions/range',
   vehicleDataController.getEmissionsDataByTimeRange
 );
-
 VehicleRouter.get(
   '/:vehicleId/fuels/range',
   vehicleDataController.getFuelsDataByTimeRange

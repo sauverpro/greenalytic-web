@@ -8,7 +8,8 @@ import {
   getTrackingDevicesByVehicleId,
   addTrackingDeviceToVehicle,
   getTrackingDevicesByUser,
-  getDeviceDetails
+  getDeviceDetails,
+  updateTrackingDeviceById
 } from '../controllers/trackingDeviceController.js'
 
 const deviceRouter = express.Router()
@@ -41,5 +42,6 @@ deviceRouter.get(
 deviceRouter.get('/all', getAllTrackingDevices)
 
 deviceRouter.get('/:deviceId', getTrackingDeviceById)
+deviceRouter.patch("/:deviceId", updateTrackingDeviceById);
 
 export default deviceRouter

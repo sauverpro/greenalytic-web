@@ -198,4 +198,48 @@ export const deleteVehicleService = async (vehicleId)=> {
     } catch (error) {
       throw new Error(error.message);
     }
+}
+  
+export const updateVehicleByIdService = async (vehicleId, vehicleData) => {
+  try {
+    // Check if vehicle exists first
+    const existingVehicle = await prisma.vehicle.findUnique({
+      where: {
+        id: vehicleId,
+        deletedAt: null, // Only update non-deleted vehicles
+      },
+    });
+
+    if (!existingVehicle) {
+      throw new Error("Vehicle not found");
+    }
+
+    // If updating plateNumber, check if it already exists
+    if (
+      vehicleData.plateNumber &&
+      vehicleData.plateNumber !== existingVehicle.plateNumber
+    ) {
+      const plateExists = await prisma.vehicle.findUnique({
+        where: {
+          plateNumber: vehicleData.plateNumber,
+        },
+      });
+
+      if (plateExists) {
+        throw new Error("Vehicle with this plate number already exists");
+      }
+    }
+
+    // Update the vehicle
+    const updatedVehicle = await prisma.vehicle.update({
+      where: {
+        id: vehicleId,
+      },
+      data: vehicleData,
+    });
+
+    return updatedVehicle;
+  } catch (error) {
+    throw error;
   }
+};
