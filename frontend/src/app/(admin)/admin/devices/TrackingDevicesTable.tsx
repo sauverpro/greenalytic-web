@@ -30,9 +30,10 @@ import {
   printDevices,
 
 } from "./ExportUtilsForDevices";
-import { AddDeviceModal } from "@/components/adminComponents/add-device-modal";
+// import { AddAndUpdateDeviceModal } from "@/components/adminComponents/add-device-modal";
 import DataTable, { Pagination } from "@/components/DataTable/GenericDataTable";
 import { DeviceDetailsModal } from "@/components/device/device-details-model";
+import AddAndUpdateDeviceModal from "@/components/adminComponents/add-device-modal";
 export interface TrackingDeviceWithVehicle extends TrackingDevice {
   vehicle: {
     id: number;
@@ -165,12 +166,11 @@ const columns: GridColDef[] = [
                 <DeviceDetailsModal deviceId={String(device.id)} />
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-               
-                <AddDeviceModal
-                  onClose={() => {
-                    setIsAddDeviceModalOpen(false), setSelectedDevice(null);
-                  }}
-                  initialData={device}
+                <AddAndUpdateDeviceModal
+                  // onClose={() => {
+                  //   setIsAddDeviceModalOpen(false), setSelectedDevice(null);
+                  // }}
+                  // initialData={device}
                   onSuccess={() => {
                     setIsAddDeviceModalOpen(false);
                   }}
@@ -194,7 +194,8 @@ const columns: GridColDef[] = [
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
                       <AlertDialogAction
-                        onClick={() => handleDeleteDevice(device)}>
+                        onClick={() => handleDeleteDevice(device)}
+                      >
                         Delete
                       </AlertDialogAction>
                     </AlertDialogFooter>
