@@ -246,24 +246,7 @@ function DevicesPage() {
 
   return (
     <div className="h-full flex flex-1 max-w-[100%]">
-      {/* <DataTable
-        title="Device Management"
-        description="Manage all tracking devices in one place"
-        icon={<HardDrive size={20} />}
-        columns={columns}
-        data={devices}
-        pagination={pagination}
-        loading={loading}
-        onPageChange={handlePageChange}
-        addButtonLabel="Add Device"
-        onAddItem={handleAddDevice}
-        searchPlaceholder="Search devices by name, serial number..."
-        searchFields={["name", "serialNumber", "status", "assignedTo"]}
-        handleExportPDF={handleExportPDF}
-        handleExportExcel={handleExportExcel}
-        handlePrint={handlePrint}
-        getRowActions={getDeviceActions}
-      /> */}
+     
       <TrackingDevicesTable
       trackingDevices={devices}
        loading={loading}

@@ -17,7 +17,6 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { AddDeviceModal } from "@/components/adminComponents/add-device-modal";
-import VehicleTable from "./VehicleTable";
 function VehiclesPage() {
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [loading, setLoading] = useState(true);
@@ -281,23 +280,36 @@ function VehiclesPage() {
 
   return (
     <div className="h-full flex flex-1 max-w-[100%]">
-      <VehicleTable
+      <DataTable
         title="Vehicle Management"
         description="Manage all vehicles in one place"
-      
-       
+        icon={<Car size={20} />}
+        columns={columns}
         data={vehicles}
-      
+        pagination={pagination}
         loading={loading}
-      refetch={async () => {
-        await fetchVehicles(pagination.currentPage, pagination.limit);
-      }}
-       
-       
-     
-
-   
-        
+        addButtonLabel="Add Vehicle"
+        onAddItem={handleAddVehicle}
+        searchPlaceholder="Search vehicles by model, license plate..."
+        searchFields={[
+          "model",
+          "licensePlate",
+          "chassisNumber",
+          "owner",
+          "status"
+        ]}
+        handleExportPDF={handleExportPDF}
+        handleExportExcel={handleExportExcel}
+        handlePrint={handlePrint}
+      
+        onPageChange={(newPage) => {
+          setLoading(true);
+          fetchVehicles(newPage, pagination.limit).then((data) => {
+            setVehicles(data.data);
+            setPagination(data.pagination);
+            setLoading(false);
+          });
+        }}
       />
     </div>
   );
