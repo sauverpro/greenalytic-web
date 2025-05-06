@@ -469,7 +469,7 @@ export default function ClientDetails() {
                 }}>
                 <Plus className="mr-2 h-4 w-4" />
                 Add Device
-              </Button>
+              </Button> 
             </div>
 
             <Card>
@@ -581,7 +581,7 @@ export default function ClientDetails() {
         </Tabs>
       </main>
 
-      {/* Add Device Modal */}
+      {/* Add Device Modal */} 
     
       <EditUserDrawer
         open={isEditUserDrawerOpen}

@@ -31,6 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 import { toast } from "sonner";
 import { addDeviceToVehicle } from "../../services/deviceServices";
@@ -63,6 +64,7 @@ export function AddDeviceModal({
   onSuccess,
 }: AddDeviceModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const form = useForm<DeviceFormValues>({
     resolver: zodResolver(deviceFormSchema),
@@ -75,6 +77,7 @@ export function AddDeviceModal({
 
   async function onSubmit(data: DeviceFormValues) {
     setIsSubmitting(true);
+    setErrorMessage(null);
 
     try {
       if (!vehicleId) {
@@ -106,7 +109,13 @@ export function AddDeviceModal({
       onClose();
     } catch (error) {
       console.error("Failed to save device:", error);
-      toast.error("Failed to save device");
+
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      if (errorMsg.includes("device is already assigned")) {
+        setErrorMessage(errorMsg);
+      } else {
+        toast.error("Failed to save device or device is already assigned.");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -130,6 +139,15 @@ export function AddDeviceModal({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {errorMessage && (
+              <Alert
+                variant="destructive"
+                className="bg-red-50 text-red-800 border border-red-200"
+              >
+                <AlertDescription>{errorMessage}</AlertDescription>
+              </Alert>
+            )}
+
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -166,7 +184,10 @@ export function AddDeviceModal({
                 <FormItem>
                   <FormLabel>Device Type</FormLabel>
                   <Select
-                    onValueChange={field.onChange}
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      setErrorMessage(null); // Clear error when type changes
+                    }}
                     defaultValue={field.value}
                   >
                     <FormControl>

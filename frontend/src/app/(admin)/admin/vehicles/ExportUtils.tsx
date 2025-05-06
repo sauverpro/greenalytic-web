@@ -18,6 +18,19 @@ export interface Vehicle {
   status: string;
   email?: string;
 }
+export interface IUpdateVehicle {
+  id?: number;
+  no?: number;
+  model?: string;
+  year?: number;
+  licensePlate?: string;
+  chassisNumber?: string;
+  vehicleType?: string;
+  usage?: string;
+  owner?: string;
+  status?: string;
+  email?: string;
+}
 
   
 export const exportToPDF = (vehicles: Vehicle[]): void => {

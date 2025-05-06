@@ -29,6 +29,20 @@ class TrackingDeviceService {
         );
       }
 
+          const existingDeviceType = await prisma.trackingDevice.findFirst({
+            where: {
+              vehicleId,
+              type,
+              deletedAt: null, 
+            },
+          });
+
+          if (existingDeviceType) {
+            throw new Error(
+              `A ${type} device is already assigned to this vehicle.`
+            );
+          }
+
       const trackingDevice = await prisma.trackingDevice.create({
         data: {
           serialNumber,

@@ -34,8 +34,8 @@ import {
 } from "lucide-react";
 import { deleteVehicle, getVehiclesForUser } from "@/services/vehicleService";
 import { AddVehicleModal } from "@/components/adminComponents/add-vehicle-modal";
-import { set } from "react-hook-form";
 import { getDevicesForVehicle } from "@/services/deviceServices";
+import { AddDeviceModal } from "@/components/adminComponents/add-device-modal";
 
 // Define types for our component
 interface VehicleData {
@@ -93,6 +93,10 @@ export function VehicleTable({
     null
   );
   const [isAddVehicleModalOpen, setIsAddVehicleModalOpen] = useState(false);
+  const [isAddDeviceModalOpen, setIsAddDeviceModalOpen] = useState(false);
+  const [selectedVehicle, setSelectedVehicle] = useState<VehicleData | null>(
+    null
+  );
   const isComponentMounted = useRef(true);
 
   useEffect(() => {
@@ -120,10 +124,9 @@ export function VehicleTable({
     setLoadingDevices(vehicleId);
     try {
       const response = await getDevicesForVehicle(vehicleId.toString());
-      console.log("Device response:", response);
 
       if (response && response.data) {
-        // Update the vehicles state with the new device data
+        // Update the vehicles state with the new device data without triggering rerender of other components
         setVehicles((prevVehicles) =>
           prevVehicles.map((vehicle) => {
             if (vehicle.id === vehicleId) {
@@ -135,7 +138,11 @@ export function VehicleTable({
             return vehicle;
           })
         );
-        toast.success(`Loaded ${response.count} devices for vehicle`);
+
+        // Only show success toast when explicitly refreshing devices, not after adding
+        if (!isAddDeviceModalOpen) {
+          toast.success(`Loaded ${response.count} devices for vehicle`);
+        }
       }
     } catch (error) {
       console.error("Error fetching devices:", error);
@@ -154,15 +161,16 @@ export function VehicleTable({
       toast.error("Failed to open add vehicle form");
     }
   };
-  // Handle add device with proper error handling and error boundary
-  const handleAddDevice = (vehicleId: number) => {
+
+  // Handle add device with proper error handling and open modal directly
+  const handleAddDevice = (vehicle: VehicleData) => {
     try {
-      // Wrap in setTimeout to ensure UI updates cleanly
-      setTimeout(() => {
-        if (isComponentMounted.current) {
-          onAddDevice(vehicleId);
-        }
-      }, 0);
+      // Store the vehicle data in state without triggering the parent handler
+      setSelectedVehicle(vehicle);
+      setIsAddDeviceModalOpen(true);
+
+      // We don't call onAddDevice here anymore, as it triggers page reload
+      // Instead we'll handle everything internally for a smoother experience
     } catch (error) {
       console.error("Error in add device:", error);
       if (isComponentMounted.current) {
@@ -170,6 +178,32 @@ export function VehicleTable({
       }
     }
   };
+
+  // Handle closing device modal
+  const handleDeviceModalClose = () => {
+    // Close the modal first
+    setIsAddDeviceModalOpen(false);
+
+    // Then clear the selected vehicle with a slight delay to prevent UI flicker
+    setTimeout(() => {
+      if (isComponentMounted.current) {
+        setSelectedVehicle(null);
+      }
+    }, 100);
+  };
+
+  // Handle successful device addition
+  const handleDeviceAdded = () => {
+    if (selectedVehicle) {
+      // Just fetch devices for this specific vehicle without triggering parent reload
+      fetchVehicleDevices(selectedVehicle.id);
+
+      // Don't call onAddDevice here as it causes page reload
+      // We'll still notify parent that a device was added through a modified approach
+      toast.success(`Device added to ${selectedVehicle.plateNumber}`);
+    }
+  };
+
   // Handle edit vehicle
   const handleEditVehicle = (vehicle: VehicleData) => {
     try {
@@ -195,7 +229,7 @@ export function VehicleTable({
   const closeDeleteConfirm = () => {
     if (isComponentMounted.current) {
       setShowDeleteConfirm(false);
-    
+
       // Use a timeout to ensure the UI updates before resetting state
       setTimeout(() => {
         if (isComponentMounted.current) {
@@ -253,6 +287,7 @@ export function VehicleTable({
               colorClass = "bg-amber-50 border-amber-200 text-amber-700";
               break;
             case "emissions":
+            case "emission":
               icon = <Router className="mr-1 h-3 w-3" />;
               colorClass = "bg-green-50 border-green-200 text-green-700";
               break;
@@ -365,8 +400,7 @@ export function VehicleTable({
                           className="h-6 w-6 p-0"
                           onClick={() => fetchVehicleDevices(vehicle.id)}
                           title="Refresh devices"
-                        >
-                        </Button>
+                        ></Button>
                       </div>
                     )}
                   </TableCell>
@@ -385,7 +419,7 @@ export function VehicleTable({
                           View Devices
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={() => handleAddDevice(vehicle.id)}
+                          onClick={() => handleAddDevice(vehicle)}
                         >
                           <Plus className="mr-2 h-4 w-4" />
                           Add Device
@@ -447,16 +481,34 @@ export function VehicleTable({
           </div>
         </div>
       )}
+
+      {/* Add Vehicle Modal */}
       <AddVehicleModal
         isOpen={isAddVehicleModalOpen}
         onClose={() => {
           setIsAddVehicleModalOpen(false);
-        
         }}
         userId={userId || ""}
-        onSuccess={() =>{ fetchVehicles(userId), onAddVehicle()
+        onSuccess={() => {
+          fetchVehicles(userId);
+          onAddVehicle();
         }}
       />
+
+      {/* Add Device Modal */}
+      {selectedVehicle && (
+        <AddDeviceModal
+          isOpen={isAddDeviceModalOpen}
+          onClose={() => setIsAddDeviceModalOpen(false)}
+          vehicleId={selectedVehicle.id.toString()}
+          plateNumber={selectedVehicle.plateNumber}
+          onSuccess={() => {
+            handleDeviceAdded();
+            // setIsAddDeviceModalOpen(false);
+            setTimeout(() => handleDeviceModalClose(), 300);
+          }}
+        />
+      )}
     </div>
   );
 }

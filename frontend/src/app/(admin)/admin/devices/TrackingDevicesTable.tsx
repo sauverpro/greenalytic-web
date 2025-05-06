@@ -33,7 +33,8 @@ import {
 // import { AddAndUpdateDeviceModal } from "@/components/adminComponents/add-device-modal";
 import DataTable, { Pagination } from "@/components/DataTable/GenericDataTable";
 import { DeviceDetailsModal } from "@/components/device/device-details-model";
-import AddAndUpdateDeviceModal from "@/components/adminComponents/add-device-modal";
+import { AddDeviceModal } from "@/components/adminComponents/add-device-modal";
+// import AddAndUpdateDeviceModal from "@/components/adminComponents/add-device-modal";
 export interface TrackingDeviceWithVehicle extends TrackingDevice {
   vehicle: {
     id: number;
@@ -166,15 +167,16 @@ const columns: GridColDef[] = [
                 <DeviceDetailsModal deviceId={String(device.id)} />
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <AddAndUpdateDeviceModal
+                <AddDeviceModal
                   // onClose={() => {
                   //   setIsAddDeviceModalOpen(false), setSelectedDevice(null);
                   // }}
                   // initialData={device}
                   onSuccess={() => {
                     setIsAddDeviceModalOpen(false);
-                  }}
-                />
+                  } } isOpen={false} onClose={function (): void {
+                    throw new Error("Function not implemented.");
+                  } } vehicleId={""} plateNumber={""}                />
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>

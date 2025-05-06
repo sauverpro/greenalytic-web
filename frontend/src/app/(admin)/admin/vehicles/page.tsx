@@ -1,8 +1,8 @@
 "use client";
 
-import { Car, Eye, Edit, Trash, MoreHorizontal, HardDrive } from "lucide-react";
+import { Eye, Edit, Trash, MoreHorizontal, HardDrive } from "lucide-react";
 import type { GridColDef } from "@mui/x-data-grid";
-import DataTable, { Pagination } from "@/components/DataTable/GenericDataTable";
+import { Pagination } from "@/components/DataTable/GenericDataTable";
 import { getAllVehicles, deleteVehicle } from "@/services/vehicleService";
 import type { ActionItem } from "@/components/DataTable/TableActions";
 import { useEffect, useState } from "react";
@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { AddDeviceModal } from "@/components/adminComponents/add-device-modal";
+import VehicleTable from "./VehicleTable";
 function VehiclesPage() {
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [loading, setLoading] = useState(true);
@@ -81,7 +82,13 @@ function VehiclesPage() {
       return { data: [], pagination };
     }
   };
-
+ const refetchVehicles = async () => {
+    setLoading(true);
+    const data = await fetchVehicles(pagination.currentPage, pagination.limit);
+    setVehicles(data.data);
+    setPagination(data.pagination);
+    setLoading(false);
+  };
   useEffect(() => {
     fetchVehicles(pagination.currentPage, pagination.limit).then((data) => {
       setVehicles(data.data);
@@ -196,7 +203,6 @@ function VehiclesPage() {
         );
       },
     },
-
     {
       field: "actions",
       headerName: "Actions",
@@ -243,7 +249,6 @@ function VehiclesPage() {
                     onClose={() => setIsAddDeviceModalOpen(false)}
                     vehicleId={vehicleId.toString()}
                     plateNumber={params.row.licensePlate}
-                    // onSuccess={handleAddDeviceSuccess}
                   />
                 </DropdownMenuItem>
 
@@ -309,14 +314,11 @@ function VehiclesPage() {
   };
 
   return (
-    <div className="h-full flex flex-1 max-w-[100%]">
-      <DataTable
+    <div className="h-full  w-full">
+      <VehicleTable
         title="Vehicle Management"
         description="Manage all vehicles in one place"
-        icon={<Car size={20} />}
-        columns={columns}
         data={vehicles}
-        pagination={pagination}
         loading={loading}
         addButtonLabel="Add Vehicle"
         onAddItem={handleAddVehicle}
@@ -332,7 +334,7 @@ function VehiclesPage() {
         handleExportExcel={handleExportExcel}
         handlePrint={handlePrint}
         // getRowActions={getVehicleActions}
-        onPageChange={(newPage) => {
+        onPageChange={(newPage:any) => {
           setLoading(true);
           fetchVehicles(newPage, pagination.limit).then((data) => {
             setVehicles(data.data);
@@ -340,6 +342,7 @@ function VehiclesPage() {
             setLoading(false);
           });
         }}
+        refetch={ refetchVehicles }
       />
     </div>
   );
