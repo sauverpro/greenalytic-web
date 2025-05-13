@@ -87,8 +87,8 @@ const ClientDetails: React.FC<ClientDetailsProps> = (
       <div>EditUserDrawer</div>
 
       <DeviceDetailsModal
-        isOpen={isDeviceModalOpen}
-        onClose={() => setIsDeviceModalOpen(false)}
+
+     
         deviceId={selectedDeviceId}
       />
 
