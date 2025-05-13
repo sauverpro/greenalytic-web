@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { MapPin } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -31,28 +31,28 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+
+import { toast } from "sonner";
 import { addDeviceToVehicle } from "../../services/deviceServices";
 import { TrackingDevice } from "@/types/types";
-import { toast } from "sonner";
 
-// Define the form schema with validation
+// Schema
 const deviceFormSchema = z.object({
   serialNumber: z
     .string()
     .min(3, "Serial number must be at least 3 characters"),
   model: z.string().min(1, "Model is required"),
   type: z.string().min(1, "Type is required"),
-  plateNumber: z.string().min(1, "Plate number is required"),
 });
 
-// Infer the type from the schema
 type DeviceFormValues = z.infer<typeof deviceFormSchema>;
 
 interface AddDeviceModalProps {
   isOpen: boolean;
   onClose: () => void;
   vehicleId: string;
-  availableVehicles: Array<{ id: string; plate: string }>;
+  plateNumber: string;
   onSuccess?: () => void;
 }
 
@@ -60,39 +60,34 @@ export function AddDeviceModal({
   isOpen,
   onClose,
   vehicleId,
-  availableVehicles,
+  plateNumber,
   onSuccess,
 }: AddDeviceModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Find the selected vehicle's plate number
-  const selectedVehicle = availableVehicles.find((v) => v.id === vehicleId);
-
-  // Initialize the form with default values
   const form = useForm<DeviceFormValues>({
     resolver: zodResolver(deviceFormSchema),
     defaultValues: {
       serialNumber: "",
       model: "",
       type: "",
-      plateNumber: selectedVehicle?.plate || "",
     },
   });
 
-
-   useEffect(() => {
-     if (vehicleId && selectedVehicle) {
-       form.setValue("plateNumber", selectedVehicle.plate);
-     }
-   }, [vehicleId, selectedVehicle, form]);
-
-  // Handle form submission
   async function onSubmit(data: DeviceFormValues) {
     setIsSubmitting(true);
+    setErrorMessage(null);
+
     try {
-      const completeDeviceData: TrackingDevice = {
+      if (!vehicleId) {
+        toast.error("Vehicle ID is required to add a new device.");
+        return;
+      }
+
+      const newDevice: TrackingDevice = {
         ...data,
-        id: 0, 
+        id: 0,
         isActive: true,
         lastPing: undefined,
         gpsDatas: [],
@@ -100,20 +95,27 @@ export function AddDeviceModal({
         emissionDatas: [],
         userId: undefined,
         vehicleId: parseInt(vehicleId),
+        plateNumber: plateNumber,
         createdAt: new Date(),
         updatedAt: new Date(),
         deletedAt: undefined,
       };
-      await addDeviceToVehicle(vehicleId, completeDeviceData);
-      console.log("vehicle id ", vehicleId);
-      
-      toast("Device added successfully");
+
+      await addDeviceToVehicle(vehicleId, newDevice);
+      toast.success("Device added successfully");
+
       form.reset();
       onSuccess?.();
       onClose();
     } catch (error) {
-      console.error("Failed to add device:", error);
-      toast("Failed to add device");
+      console.error("Failed to save device:", error);
+
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      if (errorMsg.includes("device is already assigned")) {
+        setErrorMessage(errorMsg);
+      } else {
+        toast.error("Failed to save device or device is already assigned.");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -130,12 +132,22 @@ export function AddDeviceModal({
             <DialogTitle>Add New Device</DialogTitle>
           </div>
           <DialogDescription>
-            Add a new tracking device to a vehicle. All fields are required.
+            Add a new tracking device to vehicle {plateNumber}. All fields are
+            required.
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {errorMessage && (
+              <Alert
+                variant="destructive"
+                className="bg-red-50 text-red-800 border border-red-200"
+              >
+                <AlertDescription>{errorMessage}</AlertDescription>
+              </Alert>
+            )}
+
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -150,7 +162,6 @@ export function AddDeviceModal({
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
                 name="model"
@@ -166,51 +177,41 @@ export function AddDeviceModal({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Device Type</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select device type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="GPS">GPS</SelectItem>
-                        <SelectItem value="FUEL">FUEL</SelectItem>
-                        <SelectItem value="EMISSION">EMISSION</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="plateNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Vehicle Plate Number</FormLabel>
+            <FormField
+              control={form.control}
+              name="type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Device Type</FormLabel>
+                  <Select
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      setErrorMessage(null); // Clear error when type changes
+                    }}
+                    defaultValue={field.value}
+                  >
                     <FormControl>
-                      <Input
-                        placeholder="Plate Number"
-                        {...field}
-                        disabled={true}
-                        className="bg-gray-100"
-                      />
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select device type" />
+                      </SelectTrigger>
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                    <SelectContent>
+                      <SelectItem value="GPS">GPS</SelectItem>
+                      <SelectItem value="FUEL">FUEL</SelectItem>
+                      <SelectItem value="EMISSION">EMISSION</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="pt-2">
+              <div className="bg-gray-50 p-3 rounded-md">
+                <p className="text-sm text-gray-500">
+                  <span className="font-medium">Vehicle:</span> {plateNumber}
+                </p>
+              </div>
             </div>
 
             <DialogFooter className="mt-6">

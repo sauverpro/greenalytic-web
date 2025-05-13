@@ -1,16 +1,14 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { AddVehicleModal } from "@/components/adminComponents/add-vehicle-modal";
-import { AddDeviceModal } from "@/components/adminComponents/add-device-modal";
-import { ClientData, DeviceData, VehicleData } from "@/types/types";
+// import { AddAndUpdateDeviceModal } from "@/components/adminComponents/add-device-modal";
+import { ClientData, DeviceData, User, VehicleData } from "@/types/types";
+
 import { getUserById } from "@/services/userService";
 import { CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
 import { Card, CardHeader, CardContent } from "@mui/material";
@@ -19,7 +17,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
+  DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
 import {
   ArrowLeft,
@@ -33,12 +31,15 @@ import {
   Plus,
   Router,
   MoreHorizontal,
-  Trash,
+  Trash
 } from "lucide-react";
 import { toast } from "sonner";
 import { getVehiclesForUser } from "@/services/vehicleService";
 import { VehicleTable } from "./TableData";
-
+import EditUserDrawer from "../_components/EditUserDrawer";
+import { getDevicesByUser } from "@/services/deviceServices";
+import { DeviceDetailsModal } from "@/components/device/device-details-model";
+import { TrackingDeviceWithVehicle } from "../../devices/TrackingDevicesTable";
 export default function ClientDetails() {
   const params = useParams();
   const rawUserId = params?.userId || params?.id;
@@ -49,6 +50,8 @@ export default function ClientDetails() {
   const [selectedTab, setSelectedTab] = useState("vehicles");
   const [isAddVehicleModalOpen, setIsAddVehicleModalOpen] = useState(false);
   const [isAddDeviceModalOpen, setIsAddDeviceModalOpen] = useState(false);
+  const [isEditUserDrawerOpen, setIsEditUserDrawerOpen] = useState(false);
+
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(
     null
   );
@@ -56,99 +59,135 @@ export default function ClientDetails() {
   const [loading, setLoading] = useState(true);
   const [vehicles, setVehicles] = useState<VehicleData[]>([]);
   const [devices, setDevices] = useState<DeviceData[]>([]);
+  const [userData, setUserData] = useState<User | null>(null);
+  const [trackingDevices, setTrackingDevices] = useState<any[]>([]);
+  const [isDeviceModalOpen, setIsDeviceModalOpen] = useState(false);
+  const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
+  const [selectedDevice, setSelectedDevice] = useState<TrackingDeviceWithVehicle | null>(null);
+  const [isDeviceDrawerOpen, setIsDeviceDrawerOpen] = useState(false);
 
-  // Fetch client data based on userId
-  useEffect(() => {
-    const fetchClientData = async () => {
-      if (!userId) {
-        console.log("No userId found in params");
-        return;
-      }
+  const handleViewDeviceDetails = (deviceId: string) => {
+    setSelectedDeviceId(deviceId);
+    setIsDeviceModalOpen(true);
+  };
 
-      setLoading(true);
-      console.log("Fetching client data for userId:", userId);
+  const fetchClientData = async () => {
+    if (!userId) {
+      console.log("No userId found in params");
+      return;
+    }
 
-      try {
-        const clientData = await getUserById(userId);
+    setLoading(true);
+    console.log("Fetching client data for userId:", userId);
+    setLoading(true);
+    console.log("Fetching client data for userId:", userId);
 
-        setClient({
-          id: clientData.user.id.toString(),
-          name: clientData.user.username,
-          email: clientData.user.email,
-          phone: clientData.user.phoneNumber,
-          status: clientData.user.verified ? "active" : "pending",
-          image: clientData.user.image,
-          totalGPS: clientData.user.totalGpsData,
-          totalFuel: clientData.user.totalFuelData,
-          totalEmissions: clientData.user.totalEmissions,
-          joinDate: new Date(clientData.user.createdAt).toLocaleDateString(),
-          subscription: "Standard",
-          vehicles: clientData.user.vehicles.length,
-          GPSDevices: clientData.user.deviceCounts.gps,
-          fuelDevices: clientData.user.deviceCounts.fuel,
-          emissionsDevices: clientData.user.deviceCounts.emissions,
-          totalDevices: clientData.user.deviceCounts.total,
-          billingInfo: {
-            plan: "Standard Plan",
-            nextBilling: "N/A",
-            amount: "$0.00",
-            paymentMethod: "Credit Card",
-          },
-          address: clientData.user.address || "N/A",
-          devices: clientData.user.devices || [],
-          contactPerson: clientData.user.contactPerson || "N/A",
-          contactRole: clientData.user.contactRole || "N/A",
-          contactEmail: clientData.user.contactEmail || "N/A",
-          contactPhone: clientData.user.contactPhone || "N/A",
-        });
+    try {
+      const clientData = await getUserById(userId);
+      setUserData(clientData.user);
+      setClient({
+        id: clientData.user.id.toString(),
+        name: clientData.user.username,
+        email: clientData.user.email,
+        phone: clientData.user.phoneNumber,
+        status: clientData.user.verified ? "active" : "pending",
+        image: clientData.user.image,
+        totalGPS: clientData.user.totalGpsData,
+        totalFuel: clientData.user.totalFuelData,
+        totalEmissions: clientData.user.totalEmissions,
+        joinDate: new Date(clientData.user.createdAt).toLocaleDateString(),
+        subscription: "Standard",
+        vehicles: clientData.user.vehicles.length,
+        GPSDevices: clientData.user.deviceCounts.gps,
+        fuelDevices: clientData.user.deviceCounts.fuel,
+        emissionsDevices: clientData.user.deviceCounts.emissions,
+        totalDevices: clientData.user.deviceCounts.total,
+        billingInfo: {
+          plan: "Standard Plan",
+          nextBilling: "N/A",
+          amount: "$0.00",
+          paymentMethod: "Credit Card"
+        },
+        address: clientData.user.address || "N/A",
+        devices: clientData.user.devices || [],
+        contactPerson: clientData.user.contactPerson || "N/A",
+        contactRole: clientData.user.contactRole || "N/A",
+        contactEmail: clientData.user.contactEmail || "N/A",
+        contactPhone: clientData.user.contactPhone || "N/A"
+      });
 
-        const extractedDevices: DeviceData[] =
-          clientData.user.trackingDevices.map((device: any) => ({
+      const fetchedVehicles = await getVehiclesForUser(userId);
+      setVehicles(
+        Array.isArray(fetchedVehicles.vehicles) ? fetchedVehicles.vehicles : []
+      );
+      await fetchTrackingDevices();
+    } catch (error) {
+      setVehicles([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchTrackingDevices = async () => {
+    if (!userId) return;
+
+    try {
+      const response = await getDevicesByUser(userId);
+      if (response.success && Array.isArray(response.data)) {
+        setTrackingDevices(response.data || []);
+
+        const formattedDevices: DeviceData[] = response.data.map(
+          (device: any) => ({
             id: device.id.toString(),
-            type: `${
+            type:
               device.type.charAt(0).toUpperCase() +
-              device.type.slice(1).toLowerCase()
-            } Tracker`,
-            vehicle: "Unassigned",
+              device.type.slice(1).toLowerCase() +
+              " Tracker",
+            vehicle: device.vehicle
+              ? `${device.vehicle.plateNumber} (${device.vehicle.vehicleModel})`
+              : "Unassigned",
             date: new Date(
               device.createdAt || "2023-01-01"
             ).toLocaleDateString(),
-            status: device.isActive ? "online" : "offline",
-            lastPing: "N/A",
-          }));
-        setDevices(extractedDevices);
-
-        const fetchedVehicles = await getVehiclesForUser(userId);
-        console.log(
-          "Fetched vehicles data:::::::::::::::: ",
-          fetchedVehicles.vehicles
+            status: device.status === "active" ? "online" : "offline",
+            lastPing: device.lastPing
+              ? new Date(device.lastPing).toLocaleString()
+              : "N/A",
+            serialNumber: device.serialNumber,
+            model: device.model
+          })
         );
 
-        setVehicles(
-          Array.isArray(fetchedVehicles.vehicles)
-            ? fetchedVehicles.vehicles
-            : []
-        );
-      } catch (error) {
-        console.error("Error fetching client data:", error);
-        toast("Error fetching client data");
-        setVehicles([]);
-      } finally {
-        setLoading(false);
+        setDevices(formattedDevices);
+      } else {
+        setTrackingDevices([]);
+        setDevices([]);
       }
-    };
+    } catch (error) {
+      console.error("Error fetching tracking devices:", error);
+      toast("Error fetching tracking devices");
+      setTrackingDevices([]);
+      setDevices([]);
+    }
+  };
+  const handleCloseDeviceModal = () => {
+    setIsDeviceModalOpen(false);
+    setSelectedDeviceId(null);
+  };
 
+  useEffect(() => {
     fetchClientData();
   }, [userId]);
 
   const handleDeviceAdded = () => {
-    toast("The device has been successfully added to the vehicle.");
-    // I want to refetch the devices data here
+    // toast("The device has been successfully added to the vehicle.");
+    fetchClientData();
   };
 
   const handleVehicleAdded = () => {
-    toast("The vehicle has been successfully added to this client.");
-    // I want to refetch the vehicles data here
+
+    // toast("The vehicle has been successfully added to this client.");
+    fetchClientData();
   };
 
   if (loading) {
@@ -189,8 +228,7 @@ export default function ClientDetails() {
           </h1>
           <Badge
             variant="outline"
-            className="ml-2 bg-emerald-100 text-emerald-800 border-emerald-200"
-          >
+            className="ml-2 bg-emerald-100 text-emerald-800 border-emerald-200">
             {userId}
           </Badge>
         </div>
@@ -200,17 +238,14 @@ export default function ClientDetails() {
             <Mail className="mr-2 h-4 w-4" />
             Contact
           </Button>
-          <Button variant="outline" size="sm">
-            <Edit className="mr-2 h-4 w-4" />
-            Edit
-          </Button>
           <Button
-            variant="default"
+            variant="outline"
             size="sm"
-            className="bg-emerald-600 hover:bg-emerald-700"
-          >
-            <Download className="mr-2 h-4 w-4" />
-            Export Data
+            onClick={() => setIsEditUserDrawerOpen(true)}>
+            <Edit className="mr-2 h-4 w-4" />
+            Edit user
+            <Edit className="mr-2 h-4 w-4" />
+            Edit user
           </Button>
         </div>
       </header>
@@ -240,8 +275,7 @@ export default function ClientDetails() {
                     client?.status === "active"
                       ? "bg-green-100 text-green-700"
                       : "bg-gray-100 text-sms"
-                  }
-                >
+                  }>
                   {client?.status.toUpperCase()}
                 </Badge>
                 <p className="text-sm text-muted-foreground mt-1">
@@ -268,8 +302,7 @@ export default function ClientDetails() {
                 <h4 className="text-sm font-medium mb-2">Subscription</h4>
                 <Badge
                   variant="outline"
-                  className="bg-blue-50 text-blue-700 border-blue-200"
-                >
+                  className="bg-blue-50 text-blue-700 border-blue-200">
                   {client?.subscription}
                 </Badge>
               </div>
@@ -391,44 +424,6 @@ export default function ClientDetails() {
                   </div>
                 </div>
               </div>
-
-              <div className="mt-6">
-                <h4 className="text-sm font-medium mb-2">
-                  Billing Information
-                </h4>
-                <div className="rounded-lg border p-3 space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Plan:</span>
-                    <span className="text-sm font-medium">
-                      {client?.billingInfo.plan}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">
-                      Next Billing:
-                    </span>
-                    <span className="text-sm font-medium">
-                      {client?.billingInfo.nextBilling}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">
-                      Amount:
-                    </span>
-                    <span className="text-sm font-medium">
-                      {client?.billingInfo.amount}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">
-                      Payment Method:
-                    </span>
-                    <span className="text-sm font-medium">
-                      {client?.billingInfo.paymentMethod}
-                    </span>
-                  </div>
-                </div>
-              </div>
             </CardContent>
           </Card>
         </div>
@@ -437,8 +432,7 @@ export default function ClientDetails() {
         <Tabs
           defaultValue="vehicles"
           className="space-y-6"
-          onValueChange={setSelectedTab}
-        >
+          onValueChange={setSelectedTab}>
           <TabsList className="bg-muted/50">
             <TabsTrigger value="vehicles">Vehicles</TabsTrigger>
             <TabsTrigger value="devices">Devices</TabsTrigger>
@@ -448,10 +442,14 @@ export default function ClientDetails() {
           <TabsContent value="vehicles" className="space-y-6">
             <VehicleTable
               userId={userId}
-              onAddVehicle={() => setIsAddVehicleModalOpen(true)}
+              onAddVehicle={() => {
+                setIsAddVehicleModalOpen(true);
+                handleVehicleAdded();
+              }}
               onAddDevice={(vehicleId) => {
                 setSelectedVehicleId(vehicleId.toString());
                 setIsAddDeviceModalOpen(true);
+                handleDeviceAdded();
               }}
             />
           </TabsContent>
@@ -463,18 +461,15 @@ export default function ClientDetails() {
               <Button
                 className="bg-emerald-600 hover:bg-emerald-700"
                 onClick={() => {
-                  // If no vehicle is selected, you might want to show a message or handle differently
                   if (vehicles.length === 0) {
                     toast("Please add a vehicle first before adding devices.");
                   }
-                  // Alternatively, you could pre-select the first vehicle
-                  // setSelectedVehicleId(vehicles[0]?.id || "");
+
                   setIsAddDeviceModalOpen(true);
-                }}
-              >
+                }}>
                 <Plus className="mr-2 h-4 w-4" />
                 Add Device
-              </Button>
+              </Button> 
             </div>
 
             <Card>
@@ -484,47 +479,54 @@ export default function ClientDetails() {
                     <thead>
                       <tr className="border-b bg-muted/50 text-left">
                         <th className="p-4 font-medium">Device ID</th>
+                        <th className="p-4 font-medium">Serial Number</th>
+                        <th className="p-4 font-medium">Model</th>
                         <th className="p-4 font-medium">Type</th>
                         <th className="p-4 font-medium">Vehicle</th>
-                        <th className="p-4 font-medium">Installation Date</th>
                         <th className="p-4 font-medium">Status</th>
                         <th className="p-4 font-medium">Last Ping</th>
                         <th className="p-4 font-medium text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {devices.map((device, i) => (
-                        <tr key={i} className="border-b">
-                          <td className="p-4">{device.id}</td>
+                      {trackingDevices.map((device, index) => (
+                        <tr key={index} className="border-b">
+                          <td className="p-4">{index + 1}</td>
+                          <td className="p-4">{device.serialNumber}</td>
+                          <td className="p-4">{device.model}</td>
                           <td className="p-4">
                             <div className="flex items-center gap-2">
-                              {device.type === "GPS Tracker" && (
-                                <MapPin className="h-4 w-4 text-blue-500" />
-                              )}
-                              {device.type === "Fuel Sensor" && (
+                              {device.type === "FUEL" && (
                                 <Fuel className="h-4 w-4 text-amber-500" />
                               )}
-                              {device.type === "Emissions Monitor" && (
+                              {device.type === "EMISSION" && (
                                 <Router className="h-4 w-4 text-green-500" />
                               )}
-                              <span>{device.type}</span>
+                              {device.type === "GPS" && (
+                                <MapPin className="h-4 w-4 text-blue-500" />
+                              )}
+                              <span>{device.type} Tracker</span>
                             </div>
                           </td>
-                          <td className="p-4 font-medium">{device.vehicle}</td>
-                          <td className="p-4">{device.date}</td>
+                          <td className="p-4 font-medium">
+                            {device.vehicle
+                              ? `${device.vehicle.plateNumber} (${device.vehicle.vehicleModel})`
+                              : "Unassigned"}
+                          </td>
                           <td className="p-4">
                             <Badge
                               className={
-                                device.status === "online"
+                                device.status === "active"
                                   ? "bg-green-100 text-green-700"
                                   : "bg-gray-100 text-sms"
-                              }
-                            >
+                              }>
                               {device.status}
                             </Badge>
                           </td>
                           <td className="p-4 text-muted-foreground">
-                            {device.lastPing}
+                            {device.lastPing
+                              ? new Date(device.lastPing).toLocaleString()
+                              : "N/A"}
                           </td>
                           <td className="p-4 text-right">
                             <DropdownMenu>
@@ -532,19 +534,17 @@ export default function ClientDetails() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-8 w-8"
-                                >
+                                  className="h-8 w-8">
                                   <MoreHorizontal className="h-4 w-4" />
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem>
-                                  View Details
+                                <DropdownMenuItem asChild>
+                                  <DeviceDetailsModal deviceId={device.id} />
+
+                                  {/* View Details */}
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>Edit Device</DropdownMenuItem>
-                                <DropdownMenuItem>
-                                  Reassign Device
-                                </DropdownMenuItem>
+                                <DropdownMenuItem>Edit Deviceeee</DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem className="text-red-500">
                                   <Trash className="mr-2 h-4 w-4" />
@@ -561,17 +561,17 @@ export default function ClientDetails() {
               </CardContent>
               <CardFooter className="flex items-center justify-between border-t px-6 py-3">
                 <div className="text-sm text-muted-foreground">
-                  Showing {devices.length} of{" "}
-                  {parseInt(String(client?.GPSDevices ?? 0)) +
-                    parseInt(String(client?.fuelDevices ?? 0)) +
-                    parseInt(String(client?.emissionsDevices ?? 0))}
+                  Showing {trackingDevices.length} of {trackingDevices.length}{" "}
                   devices
                 </div>
                 <div className="flex items-center gap-2">
                   <Button variant="outline" size="sm" disabled>
                     Previous
                   </Button>
-                  <Button variant="outline" size="sm">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={trackingDevices.length <= 10}>
                     Next
                   </Button>
                 </div>
@@ -581,29 +581,13 @@ export default function ClientDetails() {
         </Tabs>
       </main>
 
-      {/* Add Vehicle Modal */}
-      {/* <AddVehicleModal
-        isOpen={isAddVehicleModalOpen}
-        onClose={() => {
-          setIsAddVehicleModalOpen(false);
-        }}
-        userId={client?.id || ""}
-        onSuccess={handleVehicleAdded}
-      /> */}
-
-      {/* Add Device Modal */}
-      <AddDeviceModal
-        isOpen={isAddDeviceModalOpen}
-        onClose={() => setIsAddDeviceModalOpen(false)}
-        vehicleId={selectedVehicleId || ""}
-        availableVehicles={
-          Array.isArray(vehicles)
-            ? vehicles.map((v) => ({
-                id: v.id?.toString() || "",
-                plate: v.plateNumber || "",
-              }))
-            : []
-        }
+      {/* Add Device Modal */} 
+    
+      <EditUserDrawer
+        open={isEditUserDrawerOpen}
+        onOpenChange={setIsEditUserDrawerOpen}
+        user={userData}
+        refetchUsers={fetchClientData}
       />
     </div>
   );

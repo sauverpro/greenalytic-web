@@ -31,6 +31,23 @@ export interface Vehicle {
   deletedAt?: Date;
   trackingDevice?: TrackingDevice;
 }
+export interface IUpdateVehicle {
+  id?: number;
+  plateNumber?: string;
+  chassisNumber?: string;
+  vehicleType?: string;
+  vehicleModel?: string;
+  yearOfManufacture?: number;
+  usage?: string;
+  userId?: number;
+  emissionDatas?: EmissionData[];
+  gpsDatas?: GPSData[];
+  fuelDatas?: FuelData[];
+  createdAt?: Date;
+  updatedAt?: Date;
+  deletedAt?: Date;
+  trackingDevice?: TrackingDevice;
+}
 
 export interface TrackingDevice {
   id: number;
@@ -160,3 +177,4 @@ export interface DeviceData {
   status: string;
   lastPing: string;
 }
+

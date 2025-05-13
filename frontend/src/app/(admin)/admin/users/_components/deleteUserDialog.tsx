@@ -12,7 +12,8 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { deleteUser } from "../../../../services/userService";
+import { deleteUser } from "@/services/userService";
+
 // Assuming this service is imported
 
 export function DeleteUserDialog({

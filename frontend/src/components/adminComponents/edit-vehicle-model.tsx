@@ -1,12 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Car } from "lucide-react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -15,6 +11,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
@@ -23,7 +21,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -31,9 +28,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { addVehicleToUser } from "../../services/vehicleService";
+import { updateVehicle } from "@/services/vehicleService";
 import { toast } from "sonner";
+import { IUpdateVehicle } from "@/app/(admin)/admin/vehicles/ExportUtils";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 
+interface EditVehicleModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  vehicle: IUpdateVehicle | null;
+  onSuccess: () => void;
+}
 
 // Define the form schema with validation
 const vehicleFormSchema = z.object({
@@ -55,19 +62,12 @@ const vehicleFormSchema = z.object({
 
 type VehicleFormValues = z.infer<typeof vehicleFormSchema>;
 
-interface AddVehicleModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  userId: string;
-  onSuccess?: () => void;
-}
-
-export function AddVehicleModal({
+export function EditVehicleModal({
   isOpen,
   onClose,
-  userId,
+  vehicle,
   onSuccess,
-}: AddVehicleModalProps) {
+}: EditVehicleModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<VehicleFormValues>({
@@ -82,45 +82,59 @@ export function AddVehicleModal({
     },
   });
 
-async function onSubmit(data: VehicleFormValues) {
-  setIsSubmitting(true);
-  try {
-    const response = await addVehicleToUser(userId, data);
-    if (response?.success==true) {
- 
-      toast.success(response.message);
-    } else {
-      toast.success("Vehicle added successfully???");
+  useEffect(() => {
+    if (vehicle) {
+      // Map from UI model to form model
+      form.reset({
+        plateNumber: vehicle.licensePlate || "",
+        chassisNumber: vehicle.chassisNumber || "",
+        vehicleType: vehicle.vehicleType || "",
+        vehicleModel: vehicle.model || "",
+        yearOfManufacture: vehicle.year || new Date().getFullYear(),
+        usage: vehicle.usage || "",
+      });
+      console.log("Loaded vehicle data:", vehicle);
     }
-    form.reset();
-    onSuccess?.();
-    onClose();
-  } catch (error: any) {
-    console.error("Failed to add vehicle:", error);
-    const errorMessage =
-      error?.response?.data?.message ||
-      error?.message ||
-      "Failed to add vehicle";
-    toast.error(errorMessage);
-  } finally {
-    setIsSubmitting(false);
-  }
-}
+  }, [vehicle, form]);
 
+  async function onSubmit(data: VehicleFormValues) {
+    if (!vehicle) return;
+
+    setIsSubmitting(true);
+    try {
+      console.log("Submitting data:", data);
+      if (vehicle.id) {
+        await updateVehicle(vehicle.id.toString(), data);
+        toast.success("Vehicle updated successfully");
+        onSuccess();
+        onClose();
+      } else {
+        console.error("Vehicle ID is undefined");
+        toast.error("Vehicle ID is missing");
+      }
+    } catch (error: any) {
+      console.error("Error updating vehicle:", error);
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to update vehicle";
+      toast.error(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <div className="flex items-center gap-2">
-            <div className="rounded-full bg-emerald-100 p-2">
-              <Car className="h-5 w-5 text-emerald-700" />
+            <div className="rounded-full bg-blue-100 p-2">
+              <Car className="h-5 w-5 text-blue-700" />
             </div>
-            <DialogTitle>Add New Vehicle</DialogTitle>
+            <DialogTitle>Edit Vehicle</DialogTitle>
           </div>
-          <DialogDescription>
-            Add a new vehicle to this client's account.
-          </DialogDescription>
+          <DialogDescription>Update the vehicle information.</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -162,10 +176,7 @@ async function onSubmit(data: VehicleFormValues) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Vehicle Type</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select vehicle type" />
@@ -224,10 +235,7 @@ async function onSubmit(data: VehicleFormValues) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Usage</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select usage type" />
@@ -259,10 +267,10 @@ async function onSubmit(data: VehicleFormValues) {
               </Button>
               <Button
                 type="submit"
-                className="bg-emerald-600 hover:bg-emerald-700"
+                className="bg-blue-600 hover:bg-blue-700"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? "Adding..." : "Add Vehicle"}
+                {isSubmitting ? "Saving..." : "Save Changes"}
               </Button>
             </DialogFooter>
           </form>

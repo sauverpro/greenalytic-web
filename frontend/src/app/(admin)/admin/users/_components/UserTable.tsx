@@ -14,12 +14,12 @@ import {
 } from "@/components/ui/card";
 import { Search, Plus, Users } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { getAllUsers } from "../../../../services/userService";
+
 import { User } from "@/types/types";
 
 import AddUserDrawer from "./AddUserDrawer";
-import EditUserDrawer from "./EditUserDrawer";
-import AddVehicleDrawer from "./AddVehicleDrawer";
+// import EditUserDrawer from "./EditUserDrawer";
+
 import { exportToExcel, exportToPDF } from "./ExportUtils";
 import { getDataGridColumns } from "./UserTableColumns";
 import SearchAndFilter from "./SearchAndFilter";
@@ -27,8 +27,12 @@ import BulkActions from "./BulkActions";
 import PaginationControls from "./PaginationControls";
 import TableToolbar from "./TableToolbar";
 import ViewUserDrawer from "./ViewUserDrawer";
+import { getAllUsers } from "@/services/userService";
+import AddVehicleDrawer from "./AddVehicleDrawer";
+import EditUserDrawer from "./EditUserDrawer";
 
-const UserTable = () => {
+
+const UsersTable = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -331,7 +335,8 @@ const UserTable = () => {
         // onOpenChange={setOpenViewUserDialog}
         onOpenChange={setOpenViewUserDialog}
         user={selectedUser}
-      />
+          />
+     
       <EditUserDrawer
         open={openEditUserDrawer}
         onOpenChange={setOpenEditUserDrawer}
@@ -344,4 +349,4 @@ const UserTable = () => {
   );
 };
 
-export default UserTable;
+export default UsersTable;

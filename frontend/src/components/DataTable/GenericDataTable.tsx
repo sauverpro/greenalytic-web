@@ -20,11 +20,12 @@ import {
 } from "@/components/ui/card";
 import { Plus } from "lucide-react";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import SearchAndFilter from "@/app/(admin)/admin/users/SearchAndFilter";
-import PaginationControls from "@/app/(admin)/admin/users/PaginationControls";
-import TableToolbar from "@/app/(admin)/admin/users/TableToolbar";
+import PaginationControls from "@/app/(admin)/admin/users/_components/PaginationControls";
+import TableToolbar from "@/app/(admin)/admin/users/_components/TableToolbar";
+import TableActions, { type ActionItem } from "./TableActions";
+import SearchAndFilter from "@/app/(admin)/admin/users/_components/SearchAndFilter";
 
-// MUI theme for consistent styling
+ 
 const muiTheme = createTheme({
   palette: {
     primary: {
@@ -57,7 +58,7 @@ const muiTheme = createTheme({
   },
 });
 
-interface Pagination {
+export interface Pagination {
   currentPage: number;
   totalPages: number;
   totalItems: number;
@@ -69,79 +70,71 @@ interface DataTableProps<T> {
   description: string;
   icon: React.ReactNode;
   columns: GridColDef[];
-  fetchData: (
-    page: number,
-    limit: number
-  ) => Promise<{ data: T[]; pagination: Pagination }>;
+  data: T[];
+  pagination: Pagination;
+  loading?: boolean;
+  onPageChange: (page: number, limit: number) => void;
   addButtonLabel?: string;
   onAddItem?: () => void;
   searchPlaceholder?: string;
   searchFields?: string[];
   handleExportPDF?: (selectedItems: T[]) => void;
   handleExportExcel?: (selectedItems: T[]) => void;
+  handlePrint?: (selectedItems: T[]) => void;
   bulkActionsComponent?: React.ReactNode;
+  getRowActions?: (item: T) => ActionItem[];
 }
 
-// Import the User type from the types file
-import type { User } from "@/types/types";
-
-function DataTable<T extends User>({
+function DataTable<T extends { id: string | number }>({
   title,
   description,
   icon,
   columns,
-  fetchData,
-  addButtonLabel = "Add Item",
+  data,
+  pagination,
+  loading = false,
+  onPageChange,
+  addButtonLabel = "",
   onAddItem,
   searchPlaceholder = "Search...",
   searchFields = [],
   handleExportPDF,
   handleExportExcel,
+  handlePrint,
   bulkActionsComponent,
-  
+  getRowActions,
 }: DataTableProps<T>) {
-  const [items, setItems] = useState<T[]>([]);
-  const [filteredItems, setFilteredItems] = useState<T[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectionModel, setSelectionModel] = useState<GridRowSelectionModel>(
-    []
-  );
+  const [filteredItems, setFilteredItems] = useState<T[]>(data);
+  const [selectionModel, setSelectionModel] = useState<GridRowSelectionModel>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [pagination, setPagination] = useState<Pagination>({
-    currentPage: 1,
-    totalPages: 1,
-    totalItems: 0,
-    limit: 10,
-  });
 
-  // Fetch data with pagination
-  const loadData = async (page = 1, limit = 10) => {
-    try {
-      setLoading(true);
-      const response = await fetchData(page, limit);
-      setItems(response.data);
-      setFilteredItems(response.data);
-      setPagination(response.pagination);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+   
+  const columnsWithActions = getRowActions
+    ? [
+        ...columns,
+        {
+          field: "actions",
+          headerName: "Actions",
+          width: 100,
+          sortable: false,
+          filterable: false,
+          renderCell: (params: any) => {
+            const item = params.row as T;
+            const actions = getRowActions(item);
+            return <TableActions actions={actions} />;
+          },
+        },
+      ]
+    : columns;
 
-  // Initialize data on component mount
-  useEffect(() => {
-    loadData(pagination.currentPage, pagination.limit);
-  }, [pagination.currentPage, pagination.limit]);
-
-  // Apply search filter
+   
   useEffect(() => {
     if (!searchQuery.trim() || searchFields.length === 0) {
-      setFilteredItems(items);
+      setFilteredItems(data);
       return;
     }
 
-    const filtered = items.filter((item) => {
+    const filtered = data.filter((item) => {
       return searchFields.some((field) => {
         const value = (item as any)[field];
         return (
@@ -152,54 +145,55 @@ function DataTable<T extends User>({
     });
 
     setFilteredItems(filtered);
-  }, [searchQuery, items, searchFields]);
+  }, [searchQuery, data, searchFields]);
 
-  // Custom pagination limit handling
+   
   const handlePaginationLimitChange = (newLimit: number | string) => {
     if (typeof newLimit === "number") {
-      setPagination((prev) => ({ ...prev, limit: newLimit, currentPage: 1 }));
-      loadData(1, newLimit);
+      onPageChange(1, newLimit);
     } else if (newLimit === "all") {
-      fetchAllRecords();
+       
+      onPageChange(1, 999999);
     }
   };
 
-  // Function to fetch all records
-  const fetchAllRecords = async () => {
-    try {
-      setLoading(true);
-      const response = await fetchData(1, 999999);
-      setItems(response.data);
-      setFilteredItems(response.data);
-      setPagination((prev) => ({
-        ...prev,
-        limit: response.data.length,
-        currentPage: 1,
-        totalItems: response.data.length,
-      }));
-    } catch (error) {
-      console.error("Failed to fetch all records", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Handle PDF export
+   
   const handleExportPDFWrapper = () => {
     if (selectionModel.length === 0 || !handleExportPDF) return;
-    const selectedItems = items.filter((item) =>
-      selectionModel.includes(item.id)
-    );
-    handleExportPDF(selectedItems as T[]);
+    try {
+      const selectedItems = data.filter((item) =>
+        selectionModel.includes(item.id as never)
+      );
+      handleExportPDF(selectedItems as T[]);
+    } catch (error) {
+      console.error("Error in PDF export wrapper:", error);
+    }
   };
 
-  // Handle Excel export
+   
   const handleExportExcelWrapper = () => {
     if (selectionModel.length === 0 || !handleExportExcel) return;
-    const selectedItems = items.filter((item) =>
-      selectionModel.includes(item.id)
-    );
-    handleExportExcel(selectedItems as T[]);
+    try {
+      const selectedItems = data.filter((item) =>
+        selectionModel.includes(item.id as never)
+      );
+      handleExportExcel(selectedItems as T[]);
+    } catch (error) {
+      console.error("Error in Excel export wrapper:", error);
+    }
+  };
+
+   
+  const handlePrintWrapper = () => {
+    if (selectionModel.length === 0 || !handlePrint) return;
+    try {
+      const selectedItems = data.filter((item) =>
+        selectionModel.includes(item.id as never)
+      );
+      handlePrint(selectedItems as T[]);
+    } catch (error) {
+      console.error("Error in print wrapper:", error);
+    }
   };
 
   return (
@@ -264,7 +258,7 @@ function DataTable<T extends User>({
               )}
               <DataGrid
                 rows={filteredItems}
-                columns={columns}
+                columns={columnsWithActions}
                 pageSizeOptions={[pagination.limit]}
                 paginationMode="server"
                 rowCount={pagination.totalItems}
@@ -279,19 +273,17 @@ function DataTable<T extends User>({
                   page: pagination.currentPage - 1,
                   pageSize: pagination.limit,
                 }}
-                onPaginationModelChange={(newPaginationModel) =>
-                  setPagination((prev) => ({
-                    ...prev,
-                    currentPage: newPaginationModel.page + 1,
-                  }))
+                onPaginationModelChange={(newPaginationModel) => 
+                  onPageChange(newPaginationModel.page + 1, newPaginationModel.pageSize)
                 }
                 slots={{
                   toolbar: (props) => (
                     <TableToolbar
                       selectedRows={selectionModel}
-                      data={items as User[]}
+                      data={data as any[]}
                       handleExportPDF={handleExportPDFWrapper}
                       handleExportExcel={handleExportExcelWrapper}
+                      handlePrint={handlePrint ? handlePrintWrapper : undefined}
                     />
                   ),
                 }}

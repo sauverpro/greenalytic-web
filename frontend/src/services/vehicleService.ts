@@ -51,17 +51,17 @@ export const getVehicleById = async (vehicleId: string) => {
   }
 };
 
-// export const updateVehicle = async (
-//   vehicleId: string,
-//   updatedData: Partial<Vehicle>
-// ) => {
-//   try {
-//     const response = await client.patch(`/vehicles/${vehicleId}`, updatedData);
-//     return response.data;
-//   } catch (error) {
-//     throw new Error(`Failed to update vehicle: ${error}`);
-//   }
-// };
+export const updateVehicle = async (
+  vehicleId: string,
+  updatedData: Partial<Vehicle>
+) => {
+  try {
+    const response = await client.patch(`/vehicles/${vehicleId}`, updatedData);
+    return response.data;
+  } catch (error) {
+    throw new Error(`Failed to update vehicle: ${error}`);
+  }
+};
 
 export const deleteVehicle = async (vehicleId: number) => {
   try {

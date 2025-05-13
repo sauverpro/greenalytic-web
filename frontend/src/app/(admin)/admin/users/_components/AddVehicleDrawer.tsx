@@ -11,7 +11,8 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import { addVehicleToUser } from "../../../../services/vehicleService";
+import { addVehicleToUser } from "@/services/vehicleService";
+
 
 export default function AddVehicleDrawer({
   open,
