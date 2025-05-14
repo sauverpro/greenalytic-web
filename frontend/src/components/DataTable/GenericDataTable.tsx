@@ -25,7 +25,6 @@ import TableToolbar from "@/app/(admin)/admin/users/_components/TableToolbar";
 import TableActions, { type ActionItem } from "./TableActions";
 import SearchAndFilter from "@/app/(admin)/admin/users/_components/SearchAndFilter";
 
- 
 const muiTheme = createTheme({
   palette: {
     primary: {
@@ -107,8 +106,6 @@ function DataTable<T extends { id: string | number }>({
   const [filteredItems, setFilteredItems] = useState<T[]>(data);
   const [selectionModel, setSelectionModel] = useState<GridRowSelectionModel>([]);
   const [searchQuery, setSearchQuery] = useState("");
-
-   
   const columnsWithActions = getRowActions
     ? [
         ...columns,
@@ -221,10 +218,8 @@ function DataTable<T extends { id: string | number }>({
               )}
             </div>
           </CardHeader>
-
           <CardContent className="p-6">
             <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              {/* Search and filter component */}
               <SearchAndFilter
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
@@ -232,10 +227,8 @@ function DataTable<T extends { id: string | number }>({
               />
 
               <div className="flex flex-wrap items-center gap-3">
-                {/* Bulk actions component */}
                 {selectionModel.length > 0 && bulkActionsComponent}
 
-                {/* Pagination controls component */}
                 <PaginationControls
                   limit={pagination.limit}
                   onLimitChange={handlePaginationLimitChange}

@@ -1,6 +1,6 @@
 "use client";
 
-import { Car, Eye, Edit, Trash, HardDrive, AlertTriangle } from "lucide-react";
+import { Car, Eye, Edit, Trash, HardDrive, AlertTriangle, Plus } from "lucide-react";
 import type { GridColDef } from "@mui/x-data-grid";
 import DataTable, { Pagination } from "@/components/DataTable/GenericDataTable";
 import { Button } from "@/components/ui/button";
@@ -36,8 +36,8 @@ export default function VehicleTable({
 }: VehicleTableProps) {
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [isAddDeviceModalOpen, setIsAddDeviceModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false); // New state for edit modal
-  const [vehicleToEdit, setVehicleToEdit] = useState<Vehicle | null>(null); // New state for vehicle to edit
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [vehicleToEdit, setVehicleToEdit] = useState<Vehicle | null>(null);
   const [vehicleToDelete, setVehicleToDelete] = useState<Vehicle | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const isComponentMounted = useRef(true);
@@ -62,8 +62,8 @@ export default function VehicleTable({
   };
 
   const handleEdit = (vehicle: Vehicle) => {
-    setVehicleToEdit(vehicle); // Set the vehicle to edit
-    setIsEditModalOpen(true); // Open the edit modal
+    setVehicleToEdit(vehicle);
+    setIsEditModalOpen(true);
     console.log("Editing vehicle:", vehicle);
   };
 
@@ -163,16 +163,16 @@ export default function VehicleTable({
     },
     {
       field: "actions",
-      width: 300,
       headerName: "Actions",
-      flex: 1,
+      width: 150, 
+      minWidth: 100, 
       sortable: false,
       filterable: false,
       renderCell: (params) => {
         const vehicle = params.row;
 
         return (
-          <div className="flex gap-2 w-full overflow-x-auto justify-end">
+          <div className="flex gap-2 items-center">
             <button
               onClick={() => handleView(vehicle)}
               title="View"
@@ -195,7 +195,7 @@ export default function VehicleTable({
               title="Add Device"
               className="p-1 hover:bg-gray-100 rounded"
             >
-              <HardDrive className="w-4 h-4" />
+              <Plus className="w-4 h-4" />
             </button>
             <button
               onClick={() => handleDelete(vehicle)}

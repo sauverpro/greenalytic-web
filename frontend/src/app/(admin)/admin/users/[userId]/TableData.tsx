@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Table,
   TableBody,
@@ -10,20 +10,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
-  MoreHorizontal,
-  Trash,
-  Edit,
   RefreshCw,
   Plus,
   Fuel,
@@ -31,13 +21,15 @@ import {
   Router,
   AlertTriangle,
   Eye,
+  Edit,
+  Trash,
 } from "lucide-react";
 import { deleteVehicle, getVehiclesForUser } from "@/services/vehicleService";
 import { AddVehicleModal } from "@/components/adminComponents/add-vehicle-modal";
 import { getDevicesForVehicle } from "@/services/deviceServices";
 import { AddDeviceModal } from "@/components/adminComponents/add-device-modal";
 
-// Define types for our component
+
 interface VehicleData {
   id: number;
   plateNumber: string;
@@ -85,6 +77,7 @@ export function VehicleTable({
   onAddVehicle,
   onAddDevice,
 }: VehicleTableProps) {
+  
   const [vehicles, setVehicles] = useState<VehicleData[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingDevices, setLoadingDevices] = useState<number | null>(null);
@@ -97,8 +90,21 @@ export function VehicleTable({
   const [selectedVehicle, setSelectedVehicle] = useState<VehicleData | null>(
     null
   );
+  
   const isComponentMounted = useRef(true);
 
+  
+  useEffect(() => {
+    
+    isComponentMounted.current = true;
+
+    return () => {
+      
+      isComponentMounted.current = false;
+    };
+  }, []);
+
+  
   useEffect(() => {
     if (userId) {
       fetchVehicles(userId);
@@ -126,7 +132,7 @@ export function VehicleTable({
       const response = await getDevicesForVehicle(vehicleId.toString());
 
       if (response && response.data) {
-        // Update the vehicles state with the new device data without triggering rerender of other components
+        
         setVehicles((prevVehicles) =>
           prevVehicles.map((vehicle) => {
             if (vehicle.id === vehicleId) {
@@ -139,7 +145,7 @@ export function VehicleTable({
           })
         );
 
-        // Only show success toast when explicitly refreshing devices, not after adding
+        
         if (!isAddDeviceModalOpen) {
           toast.success(`Loaded ${response.count} devices for vehicle`);
         }
@@ -152,7 +158,7 @@ export function VehicleTable({
     }
   };
 
-  // Handle add vehicle with proper error handling
+  
   const handleAddVehicle = () => {
     try {
       setIsAddVehicleModalOpen(true);
@@ -162,15 +168,23 @@ export function VehicleTable({
     }
   };
 
-  // Handle add device with proper error handling and open modal directly
+  
   const handleAddDevice = (vehicle: VehicleData) => {
     try {
-      // Store the vehicle data in state without triggering the parent handler
-      setSelectedVehicle(vehicle);
-      setIsAddDeviceModalOpen(true);
+      
+      setIsAddDeviceModalOpen(false);
 
-      // We don't call onAddDevice here anymore, as it triggers page reload
-      // Instead we'll handle everything internally for a smoother experience
+      
+      setSelectedVehicle(vehicle);
+
+      
+      requestAnimationFrame(() => {
+        if (isComponentMounted.current) {
+          
+          setIsAddDeviceModalOpen(true);
+          console.log("Opening add device modal for vehicle:", vehicle.id);
+        }
+      });
     } catch (error) {
       console.error("Error in add device:", error);
       if (isComponentMounted.current) {
@@ -179,32 +193,58 @@ export function VehicleTable({
     }
   };
 
-  // Handle closing device modal
+  
+  const [isModalActionPending, setIsModalActionPending] = useState(false);
+
+  
   const handleDeviceModalClose = () => {
-    // Close the modal first
+    
+    if (isModalActionPending) return;
+
+    setIsModalActionPending(true);
+
+    
     setIsAddDeviceModalOpen(false);
 
-    // Then clear the selected vehicle with a slight delay to prevent UI flicker
+    
     setTimeout(() => {
       if (isComponentMounted.current) {
         setSelectedVehicle(null);
+        setIsModalActionPending(false);
       }
-    }, 100);
+    }, 300);
   };
 
-  // Handle successful device addition
+  
   const handleDeviceAdded = () => {
-    if (selectedVehicle) {
-      // Just fetch devices for this specific vehicle without triggering parent reload
-      fetchVehicleDevices(selectedVehicle.id);
+    if (!selectedVehicle || isModalActionPending) return;
 
-      // Don't call onAddDevice here as it causes page reload
-      // We'll still notify parent that a device was added through a modified approach
-      toast.success(`Device added to ${selectedVehicle.plateNumber}`);
-    }
+    setIsModalActionPending(true);
+
+    
+    setIsAddDeviceModalOpen(false);
+
+    
+    const vehicleId = selectedVehicle.id;
+    const plateNumber = selectedVehicle.plateNumber;
+
+    
+    setTimeout(() => {
+      if (isComponentMounted.current) {
+        
+        setSelectedVehicle(null);
+
+        
+        fetchVehicleDevices(vehicleId);
+        
+
+        
+        setIsModalActionPending(false);
+      }
+    }, 300);
   };
 
-  // Handle edit vehicle
+  
   const handleEditVehicle = (vehicle: VehicleData) => {
     try {
       console.log("Edit vehicle:", vehicle);
@@ -218,19 +258,21 @@ export function VehicleTable({
       }
     }
   };
-  // Open delete confirmation
+
+  
   const openDeleteConfirm = (vehicle: VehicleData) => {
     if (isComponentMounted.current) {
-      setVehicleToDelete({ ...vehicle }); // Create a copy to ensure complete data retention
+      setVehicleToDelete({ ...vehicle }); 
       setShowDeleteConfirm(true);
     }
   };
-  // Close delete confirmation
+
+  
   const closeDeleteConfirm = () => {
     if (isComponentMounted.current) {
       setShowDeleteConfirm(false);
 
-      // Use a timeout to ensure the UI updates before resetting state
+      
       setTimeout(() => {
         if (isComponentMounted.current) {
           setVehicleToDelete(null);
@@ -238,7 +280,8 @@ export function VehicleTable({
       }, 300);
     }
   };
-  // Confirm and execute delete
+
+  
   const confirmDelete = async () => {
     if (!vehicleToDelete) return;
     try {
@@ -257,13 +300,15 @@ export function VehicleTable({
       closeDeleteConfirm();
     }
   };
-  // Get device types for a vehicle
+
+  
   const getDeviceTypes = (devices: TrackingDevice[]) => {
     if (!Array.isArray(devices)) return [];
     const deviceTypes = devices.map((device) => device.type);
     return [...new Set(deviceTypes)];
   };
-  // Render device badges
+
+  
   const renderDeviceBadges = (devices: TrackingDevice[]) => {
     if (!Array.isArray(devices) || devices.length === 0) {
       return <span className="text-muted-foreground text-sm">No devices</span>;
@@ -326,6 +371,7 @@ export function VehicleTable({
           <Button
             className="bg-emerald-600 hover:bg-emerald-700 text-white"
             onClick={() => setIsAddVehicleModalOpen(true)}
+            disabled={isModalActionPending}
           >
             <Plus className="mr-2 h-4 w-4" />
             Add Vehicle
@@ -400,46 +446,53 @@ export function VehicleTable({
                           className="h-6 w-6 p-0"
                           onClick={() => fetchVehicleDevices(vehicle.id)}
                           title="Refresh devices"
-                        ></Button>
+                        >
+                          <RefreshCw className="h-3 w-3" />
+                        </Button>
                       </div>
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuItem
-                          onClick={() => fetchVehicleDevices(vehicle.id)}
-                        >
-                          <Eye className="mr-2 h-4 w-4" />
-                          View Devices
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleAddDevice(vehicle)}
-                        >
-                          <Plus className="mr-2 h-4 w-4" />
-                          Add Device
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleEditVehicle(vehicle)}
-                        >
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit Vehicle
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => openDeleteConfirm(vehicle)}
-                          className="text-red-500 focus:text-red-500"
-                        >
-                          <Trash className="mr-2 h-4 w-4" />
-                          Delete Vehicle
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    {/* Replaced dropdown with regular buttons */}
+                    <div className="flex justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 px-2"
+                        onClick={() => fetchVehicleDevices(vehicle.id)}
+                        title="View Devices"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 px-2"
+                        onClick={() => handleAddDevice(vehicle)}
+                        title="Add Device"
+                        disabled={isModalActionPending}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 px-2"
+                        onClick={() => handleEditVehicle(vehicle)}
+                        title="Edit Vehicle"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 px-2 text-red-500 hover:text-red-700"
+                        onClick={() => openDeleteConfirm(vehicle)}
+                        title="Delete Vehicle"
+                      >
+                        <Trash className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
@@ -495,20 +548,14 @@ export function VehicleTable({
         }}
       />
 
-      {/* Add Device Modal */}
-      {selectedVehicle && (
-        <AddDeviceModal
-          isOpen={isAddDeviceModalOpen}
-          onClose={() => setIsAddDeviceModalOpen(false)}
-          vehicleId={selectedVehicle.id.toString()}
-          plateNumber={selectedVehicle.plateNumber}
-          onSuccess={() => {
-            handleDeviceAdded();
-            // setIsAddDeviceModalOpen(false);
-            setTimeout(() => handleDeviceModalClose(), 300);
-          }}
-        />
-      )}
+      {/* Add Device Modal - Only render when needed and with proper cleanup */}
+      <AddDeviceModal
+        isOpen={isAddDeviceModalOpen}
+        onClose={handleDeviceModalClose}
+        vehicleId={selectedVehicle?.id?.toString() || ""}
+        plateNumber={selectedVehicle?.plateNumber || ""}
+        onSuccess={handleDeviceAdded}
+      />
     </div>
   );
 }
