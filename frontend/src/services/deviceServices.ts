@@ -1,6 +1,6 @@
 import API from "@/api/api";
 import useAxiosClient from "@/hooks/axiosClient";
-import { TrackingDevice } from "@/types/types";
+import { IUpdateTrackingDevice, TrackingDevice } from "@/types/types";
 const client = useAxiosClient();
 
 export const addDeviceToVehicle = async (
@@ -56,3 +56,18 @@ export const viewDevice = async (deviceId: string) => {
   }
 };
 
+
+export const updateTrackingDevice = async (
+  deviceId: string,
+  deviceData: IUpdateTrackingDevice
+) => {
+  try {
+    const response = await client.post(
+      `/trackingDevices/${deviceId}`,
+      deviceData
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(`Failed to add vehicle to user: ${error}`);
+  }
+};

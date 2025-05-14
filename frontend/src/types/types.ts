@@ -69,6 +69,18 @@ export interface TrackingDevice {
   deletedAt?: Date;
 }
 
+export interface IUpdateTrackingDevice {
+  id: number; 
+  serialNumber?: string;
+  model?: string;
+  type?: string;
+  plateNumber?: string;
+  isActive?: boolean;
+  status?: string;
+}
+
+
+
 export interface FuelData {
   id: number;
   timestamp: Date;
