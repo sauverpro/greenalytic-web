@@ -12,12 +12,59 @@ enum UserRole {
   USER
   TECHNICIAN 
   MANAGER
+  FLEET_MANAGER
+  ANALYST
+  SUPPORT_AGENT
 }
-enum deviceStatus {
+enum DeviceStatus {
   ACTIVE
   INACTIVE
   PENDING
   DISCONNECTED
+  MAINTENANCE
+}
+
+enum VehicleStatus {
+  NORMAL_EMISSION
+  TOP_POLLUTING
+  INACTIVE_DISCONNECTED
+  UNDER_MAINTENANCE
+}
+
+enum FuelType {
+  PETROL
+  DIESEL
+  ELECTRIC
+  HYBRID
+}
+
+enum DeviceCategory {
+  GPS_TRACKER
+  FUEL_MONITOR
+  EMISSION_SENSOR
+  OBD_DEVICE
+  MULTI_SENSOR
+  }
+
+enum CommunicationProtocol {
+  MQTT
+  HTTP
+  SMS
+}
+
+enum UserStatus {
+  ACTIVE
+  PENDING_APPROVAL
+  SUSPENDED
+  DEACTIVATED
+}
+
+enum NotificationType {
+  HIGH_EMISSION_ALERT
+  DIAGNOSTIC_FAULT_NOTIFICATION
+  FUEL_ANOMALY_ALERT
+  DEVICE_OFFLINE_WARNING
+  SPEED_VIOLATION_ALERT
 }
 
 model User {
@@ -26,46 +73,73 @@ model User {
   email        String    @unique
   image        String    @default("https://st3.depositphotos.com/15648834/17930/v/450/depositphotos_179308454-stock-illustration-unknown-person-silhouette-glasses-profile.jpg")
   password     String
+
+  fullName     String?
+  nationalId   String?
   gender       String?
+  phoneNumber  String?
+
+  companyName   String?
+  companyRegistrationNumber String?
+  businessSector String?
+  fleetSize    Int?
+
+  language     String?   @default("English")
+  notificationPreference String? @default("Email") // JSON string for preferences
+
   role         UserRole  @default(USER)
+  status       UserStatus @default(ACTIVE)
+
   otpExpiresAt DateTime?
   otp          String?
   token        String?
   verified     Boolean   @default(false)
-  phoneNumber  String?
   deletedAt    DateTime?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
   vehicles        Vehicle[]
   trackingDevices TrackingDevice[]
+  alerts           Alert[]
+  reports          Report[]
 
   @@index([email])
   @@index([phoneNumber])
+  @@index([status])
 }
 
 model Vehicle {
   id                Int     @id @default(autoincrement())
   plateNumber       String  @unique
+  registrationNumber String?
   chassisNumber     String?
   vehicleType       String
   vehicleModel      String
   yearOfManufacture Int
   usage             String
+  fuelType         FuelType?
+  status            VehicleStatus @default(NORMAL_EMISSION)
+  lastMaintenanceDate DateTime?
+
   user              User    @relation(fields: [userId], references: [id])
   userId            Int
 
   emissionDatas EmissionData[]
   gpsDatas      GPSData[]
   fuelDatas     FuelData[]
+  obdDatas    OBDData[]
   trackingDevices    TrackingDevice[]
+  alerts           Alert[]
+  maintenanceRecords MaintenanceRecord[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
+
   @@index([userId]) 
   @@index([deletedAt])  
   @@index([vehicleType])  
+  @@index([status])
 }
 
 model TrackingDevice {
@@ -74,13 +148,27 @@ model TrackingDevice {
   model        String
   type         String
   plateNumber  String
-  isActive     Boolean   @default(true)
-  status      String    @default("active")
-  lastPing     DateTime?
+
+  deviceCategory DeviceCategory
+  firmwareVersion String?
+  simCardNumber String?
+  installationDate DateTime?
+  communicationProtocol CommunicationProtocol @default(MQTT)
+  dataTransmissionInterval String?
+
+  enableOBDMonitoring Boolean @default(true)
+  enableGPSTracking Boolean @default(true)
+  enableEmissionMonitoring Boolean @default(true)
+
+  isActive      Boolean   @default(true)
+  status        DeviceStatus @default(ACTIVE)
+  lastPing      DateTime?
+
   gpsDatas      GPSData[]
   fuelDatas     FuelData[]
   emissionDatas EmissionData[]
-
+  obdDatas      OBDData[]
+  
   user   User? @relation(fields: [userId], references: [id])
   userId Int?
 
@@ -90,6 +178,10 @@ model TrackingDevice {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
+
+  @@index([serialNumber])
+  @@index([status])
+  @@index([deviceCategory])
 }
 
 model FuelData {
@@ -106,6 +198,9 @@ model FuelData {
   vehicleId Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([vehicleId, timestamp])
+  @@index([trackingDeviceId])
 }
 
 model EmissionData {
@@ -115,6 +210,10 @@ model EmissionData {
   coPercentage  Float
   o2Percentage  Float
   hcPPM         Int
+
+  noxPPM        Float?
+  pm25Level     Float?
+
   vehicle       Vehicle  @relation(fields: [vehicleId], references: [id])
   vehicleId     Int
   plateNumber   String
@@ -151,10 +250,96 @@ model GPSData {
   @@index([vehicleId, timestamp])
   @@index([trackingDeviceId])
 }
+
+model OBDData {
+  id               Int      @id @default(autoincrement())
+  timestamp        DateTime @default(now())
+  rpm              Int?
+  throttlePosition Float
+  engineTemperature Float?
+  engineStatus    String?
+  faultCodes       String[]
+  vehicle         Vehicle  @relation(fields: [vehicleId], references: [id])
+  vehicleId       Int
+
+  createdAt        DateTime @default(now())
+
+  trackingDevice   TrackingDevice @relation(fields: [trackingDeviceId], references: [id], onDelete: Cascade)
+  trackingDeviceId Int
+
+  @@index([vehicleId])
+  @@index([timestamp])
+  @@index([trackingDeviceId])
+}
+
+model Alert {
+  id          Int      @id @default(autoincrement())
+  type        NotificationType
+  title       String
+  message     String
+  isRead      Boolean   @default(false)
+
+  triggerValue String? // Value that triggered the alert, e.g., "High CO2 Level"
+  triggerThreshold String? // Threshold that triggered the alert, e.g., "CO2 > 0.5%"
+
+  vehicleId   Int
+  vehicle     Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  userId      Int?
+  user        User?    @relation(fields: [userId], references: [id])
+
+  createdAt   DateTime  @default(now())
+
+  @@index([vehicleId])
+  @@index([userId])
+  @@index([type])
+  @@index([isRead])
+}
 model ConnectionState {
   id          Int      @id @default(autoincrement())
   vehicleId   String   @unique
   socketId    String
   status      String   // CONNECTED, DISCONNECTED
   lastUpdated DateTime
+}
+
+model Report {
+  id          Int      @id @default(autoincrement())
+  title       String
+  type        String   // "Top Polluting Vehicles", "OBD Fault Summary", etc.
+  format      String   // PDF, Excel, CSV
+  filePath    String?  // Path to generated report file
+
+  dateFrom    DateTime?
+  dateTo      DateTime?
+  vehicleIds  Int[]    // Array of vehicle IDs included
+  status      String?  // Filter by emission status
+  
+  generatedBy User     @relation(fields: [userId], references: [id])
+  userId      Int
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+model MaintenanceRecord {
+  id                Int      @id @default(autoincrement())
+  type              String   // "Preventive", "Corrective", "Emergency"
+  description       String
+  recommendedAction String? 
+  cost              Float?
+  performedAt       DateTime
+  nextDueDate       DateTime?
+  
+  vehicle           Vehicle  @relation(fields: [vehicleId], references: [id])
+  vehicleId         Int
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@index([vehicleId])
+  @@index([performedAt])
+  @@index([nextDueDate])
 }
