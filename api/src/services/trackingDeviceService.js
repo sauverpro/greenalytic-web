@@ -216,21 +216,21 @@ class TrackingDeviceService {
               status: true,
             },
           },
-          gpsDatas: {
+          gpsData: {
             take: 5,
             orderBy: { timestamp: "desc" },
           },
     
-          obdDatas: {
+          obdData: {
             take: 5,
             orderBy: { timestamp: "desc" },
           },
           _count: {
             select: {
-              gpsDatas: true,
-              fuelDatas: true,
-              emissionDatas: true,
-              obdDatas: true,
+              gpsData: true,
+              fuelData: true,
+              emissionData: true,
+              obdData: true,
             },
           },
         },
@@ -560,10 +560,10 @@ class TrackingDeviceService {
           },
           _count: {
             select: {
-              gpsDatas: true,
-              fuelDatas: true,
-              emissionDatas: true,
-              obdDatas: true,
+              gpsData: true,
+              fuelData: true,
+              emissionData: true,
+              obdData: true,
             },
           },
         },

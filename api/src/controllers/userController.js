@@ -14,7 +14,7 @@ export const signup = catchAsync(async (req, res, next) => {
     businessSector,
     fleetSize,
     language,
-    notificationPreferences
+    notificationPreference
   } = req.body
 
   // Validate required fields
@@ -57,9 +57,9 @@ export const signup = catchAsync(async (req, res, next) => {
   }
 
   // Validate notification preferences if provided
-  if (notificationPreferences) {
+  if (notificationPreference) {
     const validPreferences = ['Email', 'SMS', 'WhatsApp']
-    if (!validPreferences.includes(notificationPreferences)) {
+    if (!validPreferences.includes(notificationPreference)) {
       return res.status(400).json({
         success: false,
         message: `Invalid notification preference. Must be one of: ${validPreferences.join(', ')}`
@@ -87,7 +87,7 @@ export const signup = catchAsync(async (req, res, next) => {
   }
 
   // Respond with success and user data (including new schema fields)
-  res.status(201).json({
+  return res.status(201).json({
     success: true,
     message: 'User registered successfully',
     userInformation: {
@@ -102,7 +102,7 @@ export const signup = catchAsync(async (req, res, next) => {
       businessSector: result.user.businessSector,
       fleetSize: result.user.fleetSize,
       language: result.user.language,
-      notificationPreferences: result.user.notificationPreferences,
+      notificationPreference: result.user.notificationPreference,
       verified: result.user.verified
     }
   })
@@ -152,7 +152,7 @@ export const getAllUsers = catchAsync(async (req, res) => {
 
   const usersData = await userService.getAllUsersService(page, limit, filters)
 
-  res.status(200).json({
+  return res.status(200).json({
     success: true,
     message: 'Users retrieved successfully',
     data: usersData.users,
@@ -179,7 +179,7 @@ export const getUserById = catchAsync(async (req, res) => {
     return res.status(404).json(result)
   }
 
-  res.status(200).json({
+  return res.status(200).json({
     success: true,
     message: 'User retrieved successfully',
     data: result.user
@@ -237,9 +237,9 @@ export const updateUser = catchAsync(async (req, res) => {
   }
 
   // Validate notification preferences if being updated
-  if (safeUpdateData.notificationPreferences) {
+  if (safeUpdateData.notificationPreference) {
     const validPreferences = ['Email', 'SMS', 'WhatsApp']
-    if (!validPreferences.includes(safeUpdateData.notificationPreferences)) {
+    if (!validPreferences.includes(safeUpdateData.notificationPreference)) {
       return res.status(400).json({
         success: false,
         message: `Invalid notification preference. Must be one of: ${validPreferences.join(', ')}`
@@ -265,7 +265,7 @@ export const updateUser = catchAsync(async (req, res) => {
     return res.status(400).json(result)
   }
 
-  res.status(200).json({
+  return res.status(200).json({
     success: true,
     message: 'User updated successfully',
     data: result.user
@@ -291,7 +291,7 @@ export const deleteUser = catchAsync(async (req, res) => {
     return res.status(404).json(result)
   }
 
-  res.status(200).json({
+  return res.status(200).json({
     success: true,
     message: 'User deleted successfully (soft delete)'
   })
@@ -326,7 +326,7 @@ export const approveUser = catchAsync(async (req, res) => {
     return res.status(400).json(result)
   }
 
-  res.status(200).json({
+  return res.status(200).json({
     success: true,
     message: 'User approved successfully',
     data: result.user
@@ -353,7 +353,7 @@ export const suspendUser = catchAsync(async (req, res) => {
     return res.status(400).json(result)
   }
 
-  res.status(200).json({
+  return res.status(200).json({
     success: true,
     message: 'User suspended successfully',
     data: result.user
@@ -379,7 +379,7 @@ export const getUsersByRole = catchAsync(async (req, res) => {
     return res.status(400).json(result)
   }
 
-  res.status(200).json({
+  return res.status(200).json({
     success: true,
     message: `${role} users retrieved successfully`,
     data: result.users

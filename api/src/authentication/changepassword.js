@@ -4,7 +4,7 @@ import { passComparer, passHashing } from '../utils/passwordfunctions.js'
 
 export const changepassword = async (req, res, next) => {
   try {
-    const { currentpassword, newpassword } = req.body
+    const { currentPassword, newPassword } = req.body
     const { userId, userEmail } = req // Extract userId and userEmail from request (e.g., from JWT or session)
 
     // Fetch user from the database using Prisma
@@ -22,7 +22,7 @@ export const changepassword = async (req, res, next) => {
     }
 
     // Compare the current password with the stored password using passComparer
-    let isPasswordCorrect = await passComparer(currentpassword, user.password)
+    let isPasswordCorrect = await passComparer(currentPassword, user.password)
     if (!isPasswordCorrect) {
       return res.status(401).json({
         message: 'The current password is wrong'
@@ -30,7 +30,7 @@ export const changepassword = async (req, res, next) => {
     }
 
     // Hash the new password
-    let hashedPassword = await passHashing(newpassword)
+    let hashedPassword = await passHashing(newPassword)
 
     // Update the password in the database
     await prisma.user.update({

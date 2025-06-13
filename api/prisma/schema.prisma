@@ -124,10 +124,10 @@ model Vehicle {
   user              User    @relation(fields: [userId], references: [id])
   userId            Int
 
-  emissionDatas EmissionData[]
-  gpsDatas      GPSData[]
-  fuelDatas     FuelData[]
-  obdDatas    OBDData[]
+  emissionData EmissionData[]
+  gpsData      GPSData[]
+  fuelData     FuelData[]
+  obdData    OBDData[]
   trackingDevices    TrackingDevice[]
   alerts           Alert[]
   maintenanceRecords MaintenanceRecord[]
@@ -148,6 +148,8 @@ model TrackingDevice {
   model        String
   type         String
   plateNumber  String
+  batteryLevel  Float?
+  signalStrength Int?
 
   deviceCategory DeviceCategory
   firmwareVersion String?
@@ -164,10 +166,10 @@ model TrackingDevice {
   status        DeviceStatus @default(ACTIVE)
   lastPing      DateTime?
 
-  gpsDatas      GPSData[]
-  fuelDatas     FuelData[]
-  emissionDatas EmissionData[]
-  obdDatas      OBDData[]
+  gpsData      GPSData[]
+  fuelData     FuelData[]
+  emissionData EmissionData[]
+  obdData      OBDData[]
   
   user   User? @relation(fields: [userId], references: [id])
   userId Int?

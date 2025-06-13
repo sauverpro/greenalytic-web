@@ -26,7 +26,7 @@ export const createUserService = async (userData) => {
         password: hashedPassword,
         status: userData.role === 'ADMIN' ? 'ACTIVE' : 'PENDING_APPROVAL',
         language: userData.language || 'English',
-        notificationPreferences: userData.notificationPreferences || 'Email',
+        notificationPreference: userData.notificationPreference || 'Email',
       },
     });
 
@@ -184,7 +184,7 @@ export const getUserByIdService = async (id) => {
         businessSector: true,
         fleetSize: true,
         language: true,
-        notificationPreferences: true,
+        notificationPreference: true,
         createdAt: true,
         updatedAt: true,
         vehicles: {
@@ -200,10 +200,10 @@ export const getUserByIdService = async (id) => {
             lastMaintenanceDate: true,
             _count: {
               select: {
-                emissionDatas: true,
-                fuelDatas: true,
-                gpsDatas: true,
-                obdDatas: true,
+                emissionData: true,
+                fuelData: true,
+                gpsData: true,
+                obdData: true,
                 alerts: {
                   where: { isRead: false }
                 },
@@ -230,10 +230,10 @@ export const getUserByIdService = async (id) => {
             enableEmissionMonitoring: true,
             _count: {
               select: {
-                emissionDatas: true,
-                fuelDatas: true,
-                gpsDatas: true,
-                obdDatas: true,
+                emissionData: true,
+                fuelData: true,
+                gpsData: true,
+                obdData: true,
               },
             },
           },
@@ -320,10 +320,10 @@ export const getUserByIdService = async (id) => {
     };
 
     user.trackingDevices.forEach((device) => {
-      totalEmissions += device._count.emissionDatas;
-      totalFuelData += device._count.fuelDatas;
-      totalGpsData += device._count.gpsDatas;
-      totalOBDData += device._count.obdDatas;
+      totalEmissions += device._count.emissionData;
+      totalFuelData += device._count.fuelData;
+      totalGpsData += device._count.gpsData;
+      totalOBDData += device._count.obdData;
 
       const category = device.deviceCategory.toLowerCase();
       if (deviceCounts.hasOwnProperty(category)) {
@@ -344,10 +344,10 @@ export const getUserByIdService = async (id) => {
     });
 
     user.vehicles.forEach((vehicle) => {
-      totalEmissions += vehicle._count.emissionDatas;
-      totalFuelData += vehicle._count.fuelDatas;
-      totalGpsData += vehicle._count.gpsDatas;
-      totalOBDData += vehicle._count.obdDatas;
+      totalEmissions += vehicle._count.emissionData;
+      totalFuelData += vehicle._count.fuelData;
+      totalGpsData += vehicle._count.gpsData;
+      totalOBDData += vehicle._count.obdData;
     });
 
     const vehicleStatusCounts = {
@@ -421,7 +421,7 @@ export const updateUserService = async (id, updateData) => {
         businessSector: true,
         fleetSize: true,
         language: true,
-        notificationPreferences: true,
+        notificationPreference: true,
         verified: true,
         updatedAt: true,
       },

@@ -88,11 +88,11 @@ export const verifyOTPAndUpdatePassword = async (req, res) => {
     // Validate OTP
     let validotp = isOTPValid(storedOTP, receivedOTP, user.otpExpiresAt, res);
     if (validotp) {
-      const newpassword = req.body.newpassword;
+      const newPassword = req.body.newPassword;
       console.log("The new requested password:", req.body);
 
       // Hash the new password
-      const hashedPassword = await passHashing(newpassword);
+      const hashedPassword = await passHashing(newPassword);
 
       // Update user password
       await prisma.user.update({

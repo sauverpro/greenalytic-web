@@ -8,11 +8,11 @@ export class AppError extends Error {
   }
 }
 
-export const catchAsync = fn => {
-  return (req, res, next) => {
-    fn(req, res, next).catch(next);
-  };
+//Proper catchAsync function that handles both Promise and non-Promise returns
+export const catchAsync = fn => (req, res, next) => {
+  Promise.resolve(fn(req, res, next)).catch(next);
 };
+
 
 export const handleNotFoundRoutes = (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
@@ -69,7 +69,7 @@ const handleValidationError = (err) => {
       fuelType: { name: 'Fuel Type', values: ['PETROL', 'DIESEL', 'ELECTRIC', 'HYBRID'] },
       deviceCategory: { name: 'Device Category', values: ['MOTORCYCLE', 'CAR', 'TRUCK', 'TRICYCLE', 'OTHER'] },
       language: { name: 'Language', values: ['English', 'French', 'Kinyarwanda'] },
-      notificationPreferences: { name: 'Notification Preference', values: ['Email', 'SMS', 'WhatsApp'] }
+      notificationPreference: { name: 'Notification Preference', values: ['Email', 'SMS', 'WhatsApp'] }
     };
     
     const mapping = fieldMappings[field];
@@ -149,6 +149,12 @@ const handleFileUploadError = (err) => {
 
 // Enhanced development error response
 const sendErrorDev = (err, res) => {
+  // Check if headers were already sent
+  if (res.headersSent) {
+    console.error('Cannot send error response - headers already sent:', err);
+    return;
+  }
+
   res.status(err.statusCode).json({
     success: false,
     status: err.status,
@@ -161,6 +167,12 @@ const sendErrorDev = (err, res) => {
 
 // Enhanced production error response
 const sendErrorProd = (err, res) => {
+  // Check if headers were already sent
+  if (res.headersSent) {
+    console.error('Cannot send error response - headers already sent:', err);
+    return;
+  }
+
   // Only send operational errors to client
   if (err.isOperational) {
     res.status(err.statusCode).json({
@@ -185,10 +197,25 @@ const sendErrorProd = (err, res) => {
   }
 };
 
-// Main global error handling middleware
+//Main global error handling middleware with headers check
 export const globalErrorHandler = (err, req, res, next) => {
+  // Set default values
   err.statusCode = err.statusCode || 500;
   err.status = err.status || "error";
+
+  // Log the error for debugging
+  console.error('ERROR 💥:', {
+    name: err.name || 'Unknown Error',
+    message: err.message || 'An unexpected error occurred',
+    stack: err.stack,
+    timestamp: new Date().toISOString()
+  });
+
+  // Check if response has already been sent
+  if (res.headersSent) {
+    console.log('Headers already sent, cannot send error response');
+    return next(err);
+  }
 
   if (process.env.NODE_ENV === 'development') {
     sendErrorDev(err, res);
@@ -230,6 +257,11 @@ export const globalErrorHandler = (err, req, res, next) => {
 
 // Enhanced 404 handler for API routes
 export const handleApiNotFound = (req, res, next) => {
+  // Check if response has already been sent
+  if (res.headersSent) {
+    return;
+  }
+
   res.status(404).json({
     success: false,
     message: `API endpoint ${req.originalUrl} not found`,
@@ -239,7 +271,7 @@ export const handleApiNotFound = (req, res, next) => {
       vehicles: '/api/vehicles',
       emissions: '/api/emissions',
       tracking: '/api/tracking-devices',
-      dashboard: '/api/dashboard'
+      dashboard: '/api/dashboard',
     }
   });
 };

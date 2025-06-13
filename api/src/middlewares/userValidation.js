@@ -1,4 +1,4 @@
-import { AppError } from './globalErrorsHandling.js';
+import { AppError } from './globaleerorshandling.js';
 
 // Enhanced user signup validation middleware
 export const validateUserSignup = (req, res, next) => {

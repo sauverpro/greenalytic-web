@@ -1,4 +1,4 @@
-import { AppError } from './globalErrorsHandling.js';
+import { AppError } from './globaleerorshandling.js';
 
 // Configuration constants
 const PAGINATION_CONFIG = {

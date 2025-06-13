@@ -1,6 +1,6 @@
 // Import Prisma client and error handling
 import prisma from "../../prismaClient.js";
-import { AppError, catchAsync } from "./globalErrorsHandling.js";
+import { AppError, catchAsync } from "./globaleerorshandling.js";
 
 // Enhanced isAdmin middleware - specifically for admin access only
 export const isAdmin = catchAsync(async (req, res, next) => {
