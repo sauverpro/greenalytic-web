@@ -38,6 +38,7 @@ export const updateVehicleById = async (req, res) => {
   try {
     const { vehicleId } = req.params;
     const vehicleData = req.body;
+    console.log('Updating vehicle with ID:', vehicleId, 'Data:', vehicleData);
 
     const parsedVehicleId = parseInt(vehicleId, 10);
 

@@ -130,7 +130,11 @@ const validateIds = (req, res, next) => {
 // User ownership validation middleware
 const validateUserAccess = catchAsync(async (req, res, next) => {
   const { userId } = req.params;
-  const requestingUserId = req.userId; // From auth middleware
+  console.log('Validating user access for userId:', userId);
+
+
+  const requestingUserId = req.userId // From auth middleware
+  console.log('Requesting user ID:', requestingUserId);
 
   // Allow access if user is accessing their own data or if they're admin
   if (parseInt(userId) === parseInt(requestingUserId) || req.adminUser) {

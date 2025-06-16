@@ -84,7 +84,7 @@ const validateVehicleData = (req, res, next) => {
 
   // Validate status
   if (status) {
-    const validStatuses = ['NORMAL_EMISSION', 'TOP_POLLUTING', 'ACTIVE', 'INACTIVE', 'MAINTENANCE'];
+    const validStatuses = ['NORMAL_EMISSION', 'TOP_POLLUTING', 'INACTIVE_DISCONNECTED', 'UNDER_MAINTENANCE'];
     if (!validStatuses.includes(status)) {
       return next(new AppError(
         `Invalid status. Must be one of: ${validStatuses.join(', ')}`,
@@ -95,7 +95,7 @@ const validateVehicleData = (req, res, next) => {
 
   // Validate emission status
   if (emissionStatus) {
-    const validEmissionStatuses = ['NORMAL_EMISSION', 'TOP_POLLUTING'];
+    const validEmissionStatuses = ['LOW', 'NORMAL', 'HIGH'];
     if (!validEmissionStatuses.includes(emissionStatus)) {
       return next(new AppError(
         `Invalid emission status. Must be one of: ${validEmissionStatuses.join(', ')}`,
@@ -152,7 +152,8 @@ const validateIds = (req, res, next) => {
 // User access validation middleware
 const validateUserAccess = catchAsync(async (req, res, next) => {
   const { userId } = req.params;
-  const requestingUserId = req.userId; // From verifyingtoken middleware
+  const requestingUserId = req.userId; // From verifying token middleware
+  
 
   // Allow access if user is accessing their own data or if they're admin
   if (parseInt(userId) === parseInt(requestingUserId) || req.adminUser) {
@@ -197,8 +198,8 @@ VehicleRouter.get('/config/enums', (req, res) => {
     data: {
       vehicleTypes: ['CAR', 'TRUCK', 'BUS', 'MOTORCYCLE', 'OTHER'],
       fuelTypes: ['PETROL', 'DIESEL', 'ELECTRIC', 'HYBRID'],
-      statuses: ['NORMAL_EMISSION', 'TOP_POLLUTING', 'ACTIVE', 'INACTIVE', 'MAINTENANCE'],
-      emissionStatuses: ['NORMAL_EMISSION', 'TOP_POLLUTING']
+      statuses: ['NORMAL_EMISSION', 'TOP_POLLUTING', 'INACTIVE_DISCONNECTED', 'UNDER_MAINTENANCE'],
+      emissionStatuses: ['LOW', 'NORMAL', 'HIGH'],
     }
   });
 });
@@ -332,7 +333,7 @@ VehicleRouter.patch(
       return next(new AppError('Status is required', 400));
     }
     
-    const validStatuses = ['NORMAL_EMISSION', 'TOP_POLLUTING', 'ACTIVE', 'INACTIVE', 'MAINTENANCE'];
+    const validStatuses = ['NORMAL_EMISSION', 'TOP_POLLUTING', 'INACTIVE_DISCONNECTED', 'UNDER_MAINTENANCE'];
     if (!validStatuses.includes(status)) {
       return next(new AppError(
         `Invalid status. Must be one of: ${validStatuses.join(', ')}`,
@@ -357,7 +358,7 @@ VehicleRouter.patch(
       return next(new AppError('Emission status is required', 400));
     }
     
-    const validEmissionStatuses = ['NORMAL_EMISSION', 'TOP_POLLUTING'];
+    const validEmissionStatuses = ['LOW', 'NORMAL', 'HIGH'];
     if (!validEmissionStatuses.includes(emissionStatus)) {
       return next(new AppError(
         `Invalid emission status. Must be one of: ${validEmissionStatuses.join(', ')}`,
@@ -376,7 +377,9 @@ VehicleRouter.patch(
   validateIds,
   catchAsync(isAdmin),
   catchAsync((req, res, next) => {
-    req.body = { deletedAt: new Date() };
+    req.body = { deletedAt: new Date(),
+      status: 'INACTIVE_DISCONNECTED'  //
+     };
     next();
   }),
   catchAsync(updateVehicleById)

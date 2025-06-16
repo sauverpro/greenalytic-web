@@ -321,11 +321,11 @@ class TrackingDeviceService {
 
       // GPS Data (if enabled)
       if (device.enableGPSTracking) {
-        counts.gpsData = await prisma.gPSData.count({
+        counts.gpsData = await prisma.gpsData.count({
           where: { trackingDeviceId: parsedDeviceId, ...dateFilter },
         });
 
-        deviceData.gpsData = await prisma.gPSData.findMany({
+        deviceData.gpsData = await prisma.gpsData.findMany({
           where: { trackingDeviceId: parsedDeviceId, ...dateFilter },
           orderBy: { timestamp: "desc" },
           skip,
@@ -745,6 +745,39 @@ class TrackingDeviceService {
       return devices;
     } catch (error) {
       throw new Error(`Failed to retrieve tracking devices for user: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get tracking device status by ID
+   */
+
+  static async getTrackingDeviceStatus(deviceId) {
+    try {
+      const device = await prisma.trackingDevice.findUnique({
+        where: { id: deviceId },
+        select: {
+          id: true,
+          serialNumber: true,
+          status: true,
+          isActive: true,
+          lastPing: true,
+        },
+      });
+
+      if (!device) {
+        throw new Error("Tracking device not found");
+      }
+
+      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+      const isOnline = device.lastPing && new Date(device.lastPing) > fiveMinutesAgo;
+
+      return {
+        ...device,
+        connectivityStatus: isOnline ? 'ONLINE' : 'OFFLINE',
+      };
+    } catch (error) {
+      throw new Error(`Error retrieving device status: ${error.message}`);
     }
   }
 }

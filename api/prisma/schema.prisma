@@ -30,6 +30,11 @@ enum VehicleStatus {
   INACTIVE_DISCONNECTED
   UNDER_MAINTENANCE
 }
+enum emissionStatus {
+  LOW
+  NORMAL
+  HIGH
+}
 
 enum FuelType {
   PETROL
@@ -39,11 +44,11 @@ enum FuelType {
 }
 
 enum DeviceCategory {
-  GPS_TRACKER
-  FUEL_MONITOR
-  EMISSION_SENSOR
-  OBD_DEVICE
-  MULTI_SENSOR
+  MOTORCYCLE
+  CAR
+  TRUCK
+  TRICYCLE
+  OTHER
   }
 
 enum CommunicationProtocol {
@@ -119,13 +124,14 @@ model Vehicle {
   usage             String
   fuelType         FuelType?
   status            VehicleStatus @default(NORMAL_EMISSION)
+  emissionStatus   emissionStatus @default(LOW)
   lastMaintenanceDate DateTime?
 
   user              User    @relation(fields: [userId], references: [id])
   userId            Int
 
   emissionData EmissionData[]
-  gpsData      GPSData[]
+  gpsData      GpsData[]
   fuelData     FuelData[]
   obdData    OBDData[]
   trackingDevices    TrackingDevice[]
@@ -166,7 +172,7 @@ model TrackingDevice {
   status        DeviceStatus @default(ACTIVE)
   lastPing      DateTime?
 
-  gpsData      GPSData[]
+  gpsData      GpsData[]
   fuelData     FuelData[]
   emissionData EmissionData[]
   obdData      OBDData[]
@@ -231,7 +237,7 @@ model EmissionData {
   @@index([trackingDeviceId])
 }
 
-model GPSData {
+model GpsData {
   id        Int      @id @default(autoincrement())
   latitude  Float
   longitude Float

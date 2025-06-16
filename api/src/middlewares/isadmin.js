@@ -56,7 +56,7 @@ export const isAdmin = catchAsync(async (req, res, next) => {
   next();
 });
 
-// Optional: Super admin check (if you have multiple admin levels)
+
 export const isSuperAdmin = catchAsync(async (req, res, next) => {
   const { userId } = req;
 

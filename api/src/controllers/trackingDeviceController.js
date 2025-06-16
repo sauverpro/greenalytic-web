@@ -31,7 +31,7 @@ export const addTrackingDeviceToVehicle = async (req, res) => {
     }
 
     // Validate device category enum
-    const validDeviceCategories = ["GPS_TRACKER", "FUEL_MONITOR", "EMISSION_SENSOR", "OBD_DEVICE", "MULTI_SENSOR"];
+    const validDeviceCategories = ["MOTORCYCLE", "CAR", "TRUCK",  "TRICYCLE", "OTHER"];
     if (!deviceCategory || !validDeviceCategories.includes(deviceCategory)) {
       return res.status(400).json({
         success: false,
@@ -100,7 +100,7 @@ export const getTrackingDevicesByVehicleId = async (req, res) => {
 
     // Validate and add device category filter
     if (deviceCategory) {
-      const validDeviceCategories = ["GPS_TRACKER", "FUEL_MONITOR", "EMISSION_SENSOR", "OBD_DEVICE", "MULTI_SENSOR"];
+      const validDeviceCategories = ["MOTORCYCLE", "CAR", "TRUCK",  "TRICYCLE", "OTHER"];
       if (!validDeviceCategories.includes(deviceCategory)) {
         return res.status(400).json({
           success: false,
@@ -138,8 +138,9 @@ export const getTrackingDevicesByVehicleId = async (req, res) => {
       pagination,
       filters
     );
+    
 
-    if (!result.data || result.data.length === 0) {
+    if (!result || result.length === 0) {
       return res.status(404).json({
         success: false,
         message: "No tracking devices found for this vehicle",
@@ -149,8 +150,13 @@ export const getTrackingDevicesByVehicleId = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Tracking devices retrieved successfully",
-      data: result.data,
-      meta: result.meta
+      data: result,
+      meta: {
+        totalCount: result.length,
+        page: pagination.page || 1,
+        pageSize: pagination.pageSize || 10,
+        totalPages: Math.ceil(result.length / (pagination.pageSize || 10))
+      }
     });
   } catch (error) {
     console.error("Error retrieving tracking devices:", error);
@@ -250,7 +256,7 @@ export const getAllTrackingDevices = async (req, res) => {
 
     // Validate and add device category filter
     if (deviceCategory) {
-      const validDeviceCategories = ["GPS_TRACKER", "FUEL_MONITOR", "EMISSION_SENSOR", "OBD_DEVICE", "MULTI_SENSOR"];
+      const validDeviceCategories = ["MOTORCYCLE", "CAR", "TRUCK",  "TRICYCLE", "OTHER"];
       if (!validDeviceCategories.includes(deviceCategory)) {
         return res.status(400).json({
           success: false,
@@ -355,7 +361,7 @@ export const getTrackingDevicesByUser = async (req, res) => {
 
     // Validate and add device category filter
     if (deviceCategory) {
-      const validDeviceCategories = ["GPS_TRACKER", "FUEL_MONITOR", "EMISSION_SENSOR", "OBD_DEVICE", "MULTI_SENSOR"];
+      const validDeviceCategories = ["MOTORCYCLE", "CAR", "TRUCK",  "TRICYCLE", "OTHER"];
       if (!validDeviceCategories.includes(deviceCategory)) {
         return res.status(400).json({
           success: false,
@@ -513,7 +519,7 @@ export const updateTrackingDeviceById = async (req, res) => {
 
     // Validate device category if provided
     if (deviceData.deviceCategory) {
-      const validDeviceCategories = ["GPS_TRACKER", "FUEL_MONITOR", "EMISSION_SENSOR", "OBD_DEVICE", "MULTI_SENSOR"];
+      const validDeviceCategories = ["MOTORCYCLE", "CAR", "TRUCK",  "TRICYCLE", "OTHER"];
       if (!validDeviceCategories.includes(deviceData.deviceCategory)) {
         return res.status(400).json({
           success: false,

@@ -516,6 +516,26 @@ export const deleteUserService = async (id) => {
   }
 };
 
+export const hardDeleteUserService = async (id) => {
+  try {
+    const deletedUser = await prisma.user.delete({
+      where: { id: Number(id) },
+    });
+
+    return {
+      success: true,
+      message: "User hard deleted successfully",
+      user: deletedUser,
+    };
+  } catch (error) {
+    console.error("Error hard deleting user:", error);
+    return {
+      success: false,
+      message: "Error hard deleting user, please try again.",
+    };
+  }
+}
+
 export const getUsersByRoleService = async (role) => {
   try {
     const users = await prisma.user.findMany({
@@ -547,6 +567,108 @@ export const getUsersByRoleService = async (role) => {
     return {
       success: false,
       message: "Error retrieving users by role, please try again.",
+    };
+  }
+};
+
+// Get users vehicles service
+export const getUserVehiclesService = async (userId, page, limit) => {
+  try {
+    const totalItems = await prisma.vehicle.count({
+      where: {
+        userId: Number(userId),
+        deletedAt: null,
+      },
+    });
+
+    const totalPages = Math.ceil(totalItems / limit);
+
+    const vehicles = await prisma.vehicle.findMany({
+      where: {
+        userId: Number(userId),
+        deletedAt: null,
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+      select: {
+        id: true,
+        plateNumber: true,
+        vehicleModel: true,
+        vehicleType: true,
+        fuelType: true,
+        status: true,
+        yearOfManufacture: true,
+        lastMaintenanceDate: true,
+      },
+    });
+
+    return {
+      success: true,
+      vehicles,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        remainingItems: Math.max(0, totalItems - page * limit),
+        totalItems,
+        limit,
+      },
+    };
+  } catch (error) {
+    console.error("Error retrieving user vehicles:", error);
+    return {
+      success: false,
+      message: "Error retrieving user vehicles, please try again.",
+    };
+  }
+};
+
+// Get users tracking devices service
+export const getUserDevicesService = async (userId, page, limit) => {
+  try {
+    const totalItems = await prisma.trackingDevice.count({
+      where: {
+        userId: Number(userId),
+        deletedAt: null,
+      },
+    });
+
+    const totalPages = Math.ceil(totalItems / limit);
+
+    const trackingDevices = await prisma.trackingDevice.findMany({
+      where: {
+        userId: Number(userId),
+        deletedAt: null,
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+      select: {
+        id: true,
+        serialNumber: true,
+        model: true,
+        type: true,
+        deviceCategory: true,
+        status: true,
+        isActive: true,
+        installationDate: true,
+      },
+    });
+
+    return {
+      success: true,
+      trackingDevices,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        remainingItems: Math.max(0, totalItems - page * limit),
+        totalItems,
+        limit,
+      },
+    };
+  } catch (error) {
+    console.error("Error retrieving user tracking devices:", error);
+    return {
+      success: false,
+      message: "Error retrieving user tracking devices, please try again.",
     };
   }
 };

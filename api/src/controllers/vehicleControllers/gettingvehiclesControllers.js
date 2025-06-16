@@ -10,10 +10,10 @@ export const getAllVehiclesController = async (req, res) => {
     
     // Validate and add status filter
     if (status) {
-      if (!['ACTIVE', 'INACTIVE', 'MAINTENANCE'].includes(status)) {
+      if (!['NORMAL_EMISSION', 'TOP_POLLUTING', 'INACTIVE_DISCONNECTED', 'UNDER_MAINTENANCE'].includes(status)) {
         return res.status(400).json({
           success: false,
-          message: "Invalid status. Must be one of: ACTIVE, INACTIVE, MAINTENANCE",
+          message: "Invalid status. Must be one of: NORMAL_EMISSION, TOP_POLLUTING, INACTIVE_DISCONNECTED, UNDER_MAINTENANCE",
           timestamp: new Date().toISOString()
         });
       }
@@ -46,10 +46,10 @@ export const getAllVehiclesController = async (req, res) => {
 
     // Validate and add emission status filter
     if (emissionStatus) {
-      if (!['NORMAL_EMISSION', 'TOP_POLLUTING'].includes(emissionStatus)) {
+      if (!["LOW","NORMAL","HIGH"].includes(emissionStatus)) {
         return res.status(400).json({
           success: false,
-          message: "Invalid emission status. Must be one of: NORMAL_EMISSION, TOP_POLLUTING",
+          message: "Invalid emission status. Must be one of: LOW,NORMAL,HIGH",
           timestamp: new Date().toISOString()
         });
       }
@@ -189,10 +189,10 @@ export const getVehiclesByUserIdController = async (req, res) => {
 
     // Validate and add emission status filter
     if (emissionStatus) {
-      if (!['NORMAL_EMISSION', 'TOP_POLLUTING'].includes(emissionStatus)) {
+      if (!["LOW","NORMAL","HIGH"].includes(emissionStatus)) {
         return res.status(400).json({
           success: false,
-          message: "Invalid emission status. Must be one of: NORMAL_EMISSION, TOP_POLLUTING",
+          message: "Invalid emission status. Must be one of: LOW, NORMAL, HIGH",
           timestamp: new Date().toISOString()
         });
       }

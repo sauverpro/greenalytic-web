@@ -26,7 +26,7 @@ export class vehicleDataController {
 
       // Validate and add status filter
       if (status) {
-        const validStatuses = ['NORMAL_EMISSION', 'TOP_POLLUTING', 'ACTIVE', 'INACTIVE', 'MAINTENANCE'];
+        const validStatuses = [ 'NORMAL_EMISSION', 'TOP_POLLUTING', 'INACTIVE_DISCONNECTED', 'UNDER_MAINTENANCE'];
         if (!validStatuses.includes(status)) {
           return res.status(400).json({
             success: false,
@@ -62,7 +62,7 @@ export class vehicleDataController {
 
       // Validate and add emission status filter
       if (emissionStatus) {
-        const validEmissionStatuses = ['NORMAL_EMISSION', 'TOP_POLLUTING'];
+        const validEmissionStatuses = ['LOW', 'NORMAL', 'HIGH'];
         if (!validEmissionStatuses.includes(emissionStatus)) {
           return res.status(400).json({
             success: false,
@@ -438,8 +438,8 @@ export class vehicleDataController {
       }
 
       const [totalItems, result] = await Promise.all([
-        prisma.gPSData.count({ where: whereClause }),
-        prisma.gPSData.findMany({
+        prisma.gpsData.count({ where: whereClause }),
+        prisma.gpsData.findMany({
           where: whereClause,
           orderBy: { timestamp: "asc" },
           skip: pagination.skip,
@@ -494,7 +494,7 @@ export class vehicleDataController {
       };
 
       if (vehicleStatus) {
-        const validStatuses = ['NORMAL_EMISSION', 'TOP_POLLUTING', 'ACTIVE', 'INACTIVE', 'MAINTENANCE'];
+        const validStatuses = ['NORMAL_EMISSION', 'TOP_POLLUTING', 'INACTIVE_DISCONNECTED', 'UNDER_MAINTENANCE'];
         if (!validStatuses.includes(vehicleStatus)) {
           return res.status(400).json({
             success: false,
@@ -659,7 +659,7 @@ export class vehicleDataController {
         prisma.alert.count({
           where: {
             ...dateFilter,
-            acknowledged: false
+            isRead: false
           }
         })
       ]);

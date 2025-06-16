@@ -176,7 +176,7 @@ userRouters.delete(
     req.hardDelete = true;
     next();
   }),
-  catchAsync(userController.deleteUser)
+  catchAsync(userController.deleteUserPermanent)
 );
 
 // USER RELATION ROUTES

@@ -166,8 +166,8 @@ export class VehicleService {
             take: 5 // Latest 5 fuel readings
           },
           alerts: {
-            where: { acknowledged: false },
-            orderBy: { timestamp: 'desc' },
+            where: { isRead: false },
+            orderBy: { createdAt: 'desc' },
             take: 10 // Latest unacknowledged alerts
           },
           _count: {
@@ -212,8 +212,8 @@ export class VehicleService {
         data: {
           ...vehicleData,
           userId: userId,
-          status: vehicleData.status || 'ACTIVE',
-          emissionStatus: vehicleData.emissionStatus || 'NORMAL_EMISSION'
+          status: vehicleData.status || 'NORMAL_EMISSION',
+          emissionStatus: vehicleData.emissionStatus || 'NORMAL'
         },
         include: {
           user: {

@@ -297,6 +297,32 @@ export const deleteUser = catchAsync(async (req, res) => {
   })
 })
 
+// Delete User (Hard Delete) - Uncomment if needed
+export const deleteUserPermanent = catchAsync(async (req, res) => {
+  const { id } = req.params
+
+  // Validate user ID
+  const parsedUserId = parseInt(id, 10)
+  if (isNaN(parsedUserId)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid user ID'
+    })
+  }
+
+  const result = await userService.hardDeleteUserService(parsedUserId)
+
+  if (!result.success) {
+    return res.status(404).json(result)
+  }
+
+  return res.status(200).json({
+    success: true,
+    message: 'User deleted successfully (hard delete)'
+  })
+})
+
+
 // **6️⃣ Approve User** - Admin approval workflow
 export const approveUser = catchAsync(async (req, res) => {
   const { id } = req.params
@@ -383,5 +409,59 @@ export const getUsersByRole = catchAsync(async (req, res) => {
     success: true,
     message: `${role} users retrieved successfully`,
     data: result.users
+  })
+})
+
+// **9️⃣ Get User vehicles** - Retrieve user vehicles
+export const getUserVehicles = catchAsync(async (req, res) => {
+  const { id } = req.params
+
+  // Validate user ID
+  const parsedUserId = parseInt(id, 10)
+  if (isNaN(parsedUserId)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid user ID'
+    })
+  }
+
+  const { page, limit } = req.pagination
+  const result = await userService.getUserVehiclesService(parsedUserId, page, limit)
+  
+  if (!result.success) {
+    return res.status(404).json(result)
+  }
+
+  return res.status(200).json({
+    success: true,
+    message: 'User vehicles retrieved successfully',
+    data: result.vehicles
+  })
+})
+
+// **🔟 Get User devices** - Retrieve devices
+export const getUserDevices = catchAsync(async (req, res) => {
+  const { id } = req.params
+
+  // Validate user ID
+  const parsedUserId = parseInt(id, 10)
+  if (isNaN(parsedUserId)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid user ID'
+    })
+  }
+
+  const { page, limit } = req.pagination
+  const result = await userService.getUserDevicesService(parsedUserId, page, limit)
+  
+  if (!result.success) {
+    return res.status(404).json(result)
+  }
+
+  return res.status(200).json({
+    success: true,
+    message: 'User devices retrieved successfully',
+    data: result.devices
   })
 })
