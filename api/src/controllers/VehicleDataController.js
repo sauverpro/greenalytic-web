@@ -509,7 +509,7 @@ export class vehicleDataController {
       });
 
       // Get the latest GPS data using proper Prisma query instead of raw SQL
-      const latestGpsData = await prisma.gPSData.findMany({
+      const latestGpsData = await prisma.gpsData.findMany({
         distinct: ['vehicleId'],
         orderBy: {
           timestamp: 'desc'
@@ -640,7 +640,7 @@ export class vehicleDataController {
         prisma.trackingDevice.count({
           where: { deletedAt: null }
         }),
-        prisma.gPSData.count({
+        prisma.gpsData.count({
           where: dateFilter
         }),
         prisma.fuelData.count({
@@ -703,7 +703,7 @@ export class vehicleDataController {
   };
 
   static calculateGPSAnalytics = async (dateFilter) => {
-    const gpsData = await prisma.gPSData.findMany({
+    const gpsData = await prisma.gpsData.findMany({
       where: dateFilter,
       orderBy: { timestamp: "desc" },
       take: 1000,

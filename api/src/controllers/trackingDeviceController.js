@@ -249,6 +249,8 @@ export const getTrackingDeviceStatus = async (req, res) => {
 export const getAllTrackingDevices = async (req, res) => {
   try {
     const pagination = req.pagination;
+    const page = pagination.page || 1;
+    const limit = pagination.limit || 10;
     const { deviceCategory, status, enableEmissionMonitoring, isActive } = req.query;
 
     // Build filters
@@ -301,15 +303,23 @@ export const getAllTrackingDevices = async (req, res) => {
     }
 
     const result = await TrackingDeviceService.getAllTrackingDevices(
-      pagination,
+      page,
+      limit,
       filters
     );
+
+    console.log("Fetched tracking devices:", result.length);
 
     return res.status(200).json({
       success: true,
       message: 'All tracking devices fetched successfully',
-      data: result.data,
-      meta: result.meta
+      data: result,
+       meta: {
+        totalCount: result.length,
+        page: pagination.page || 1,
+        pageSize: pagination.pageSize || 10,
+        totalPages: Math.ceil(result.length / (pagination.pageSize || 10))
+      }
     });
   } catch (error) {
     return res.status(400).json({ success: false, message: error.message });
@@ -400,7 +410,7 @@ export const getTrackingDevicesByUser = async (req, res) => {
       filters
     );
 
-    if (!result.data || result.data.length === 0) {
+    if (!result || result.length === 0) {
       return res.status(404).json({
         success: false,
         message: "No tracking devices found for this user",
@@ -410,8 +420,13 @@ export const getTrackingDevicesByUser = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "User tracking devices retrieved successfully",
-      data: result.data,
-      meta: result.meta
+      data: result,
+      meta: {
+        totalCount: result.length,
+        page: pagination.page || 1,
+        pageSize: pagination.pageSize || 10,
+        totalPages: Math.ceil(result.length / (pagination.pageSize || 10))
+      }
     });
   } catch (error) {
     console.error("Error retrieving tracking devices for user:", error);
@@ -567,5 +582,155 @@ export const updateTrackingDeviceById = async (req, res) => {
     });
   } catch (error) {
     return res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+export const getDeviceStatistics = async (req, res) => {
+  try {
+    const { deviceId, interval } = req.query;
+    const { startTime, endTime } = req.pagination;
+
+    if (!deviceId) {
+      return res.status(400).json({ success: false, message: 'deviceId is required' });
+    }
+
+    const parsedDeviceId = parseInt(deviceId, 10);
+    if (isNaN(parsedDeviceId)) {
+      return res.status(400).json({ success: false, message: 'Invalid deviceId' });
+    }
+
+    let whereClause = { deviceId: parsedDeviceId };
+
+    // Handle date filtering
+    let intervalStartTime;
+    if (interval) {
+      const now = new Date();
+      switch (interval) {
+        case 'day':
+          intervalStartTime = new Date(now);
+          intervalStartTime.setDate(now.getDate() - 1);
+          break;
+        case 'week':
+          intervalStartTime = new Date(now);
+          intervalStartTime.setDate(now.getDate() - 7);
+          break;
+        case 'month':
+          intervalStartTime = new Date(now);
+          intervalStartTime.setMonth(now.getMonth() - 1);
+          break;
+        default:
+          return res.status(400).json({ success: false, message: 'Invalid interval. Use day, week, or month' });
+      }
+      whereClause.timestamp = { gte: intervalStartTime };
+    } else if (startTime && endTime) {
+      whereClause.timestamp = { gte: startTime, lte: endTime };
+    } else if (startTime) {
+      whereClause.timestamp = { gte: startTime };
+    } else if (endTime) {
+      whereClause.timestamp = { lte: endTime };
+    }
+
+    // Fetch device data (assuming emissionData is the relevant table for device statistics)
+    const deviceData = await prisma.emissionData.findMany({
+      where: whereClause,
+      orderBy: { timestamp: 'asc' },
+      include: {
+        device: {
+          select: {
+            serialNumber: true,
+            model: true,
+            status: true,
+            deviceCategory: true,
+            vehicleId: true
+          }
+        }
+      }
+    });
+
+    if (!deviceData || deviceData.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: 'No device data found for the specified criteria',
+        data: {
+          averages: { co2: 0, co: 0, o2: 0, hc: 0, nox: 0, pm25: 0 },
+          totals: { records: 0, exceedsThresholds: 0 },
+          thresholdAnalysis: { normal: 0, high: 0, critical: 0 }
+        }
+      });
+    }
+
+    // Calculate statistics
+    const stats = deviceData.reduce((acc, curr) => {
+      const exceedsThreshold =
+        curr.co2Percentage >= EMISSION_THRESHOLDS.co2.warning ||
+        curr.coPercentage >= EMISSION_THRESHOLDS.co.warning ||
+        curr.hcPPM >= EMISSION_THRESHOLDS.hc.warning ||
+        (curr.noxPPM && curr.noxPPM >= EMISSION_THRESHOLDS.nox.warning) ||
+        (curr.pm25Level && curr.pm25Level >= EMISSION_THRESHOLDS.pm25.warning);
+
+      const isCritical =
+        curr.co2Percentage >= EMISSION_THRESHOLDS.co2.critical ||
+        curr.coPercentage >= EMISSION_THRESHOLDS.co.critical ||
+        curr.hcPPM >= EMISSION_THRESHOLDS.hc.critical ||
+        (curr.noxPPM && curr.noxPPM >= EMISSION_THRESHOLDS.nox.critical) ||
+        (curr.pm25Level && curr.pm25Level >= EMISSION_THRESHOLDS.pm25.critical);
+
+      return {
+        co2Sum: acc.co2Sum + curr.co2Percentage,
+        coSum: acc.coSum + curr.coPercentage,
+        o2Sum: acc.o2Sum + curr.o2Percentage,
+        hcSum: acc.hcSum + curr.hcPPM,
+        noxSum: acc.noxSum + (curr.noxPPM || 0),
+        noxCount: acc.noxCount + (curr.noxPPM ? 1 : 0),
+        pm25Sum: acc.pm25Sum + (curr.pm25Level || 0),
+        pm25Count: acc.pm25Count + (curr.pm25Level ? 1 : 0),
+        count: acc.count + 1,
+        exceedsThresholdCount: acc.exceedsThresholdCount + (exceedsThreshold ? 1 : 0),
+        criticalCount: acc.criticalCount + (isCritical ? 1 : 0),
+        highCount: acc.highCount + (exceedsThreshold && !isCritical ? 1 : 0),
+      };
+    }, {
+      co2Sum: 0, coSum: 0, o2Sum: 0, hcSum: 0, noxSum: 0, noxCount: 0,
+      pm25Sum: 0, pm25Count: 0, count: 0, exceedsThresholdCount: 0,
+      criticalCount: 0, highCount: 0
+    });
+
+    const normalCount = stats.count - stats.exceedsThresholdCount;
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        averages: {
+          co2: (stats.co2Sum / stats.count).toFixed(3),
+          co: (stats.coSum / stats.count).toFixed(3),
+          o2: (stats.o2Sum / stats.count).toFixed(3),
+          hc: (stats.hcSum / stats.count).toFixed(1),
+          nox: stats.noxCount > 0 ? (stats.noxSum / stats.noxCount).toFixed(3) : null,
+          pm25: stats.pm25Count > 0 ? (stats.pm25Sum / stats.pm25Count).toFixed(3) : null,
+        },
+        totals: {
+          records: stats.count,
+          exceedsThresholds: stats.exceedsThresholdCount,
+          exceedsPercentage: ((stats.exceedsThresholdCount / stats.count) * 100).toFixed(1),
+        },
+        thresholdAnalysis: {
+          normal: normalCount,
+          high: stats.highCount,
+          critical: stats.criticalCount,
+          normalPercentage: ((normalCount / stats.count) * 100).toFixed(1),
+          highPercentage: ((stats.highCount / stats.count) * 100).toFixed(1),
+          criticalPercentage: ((stats.criticalCount / stats.count) * 100).toFixed(1),
+        },
+        thresholds: EMISSION_THRESHOLDS,
+        timeRange: interval ? { interval } : {
+          from: startTime || 'beginning',
+          to: endTime || 'now'
+        },
+        device: deviceData[0]?.device || null
+      }
+    });
+  } catch (error) {
+    console.error('Error calculating device statistics:', error);
+    return res.status(500).json({ success: false, message: 'Failed to calculate device statistics' });
   }
 };

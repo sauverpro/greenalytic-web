@@ -1,7 +1,9 @@
 import express from 'express';
 import { paginationMiddleware } from '../middlewares/paginationMiddleware.js';
 import { isAdmin } from '../middlewares/isadmin.js';
+import { isAuthenticated } from '../middlewares/isAuthenticated.js';
 import { catchAsync, AppError } from '../middlewares/globaleerorshandling.js';
+import { validateUserAccess } from '../middlewares/validateuserAccess.js';
 import {
   removeTrackingDevice,
   deleteVehicleAndTrackingDevice,
@@ -12,7 +14,8 @@ import {
   addTrackingDeviceToVehicle,
   getTrackingDevicesByUser,
   getDeviceDetails,
-  updateTrackingDeviceById
+  updateTrackingDeviceById,
+  getDeviceStatistics
 } from '../controllers/trackingDeviceController.js';
 
 const deviceRouter = express.Router();
@@ -127,28 +130,12 @@ const validateIds = (req, res, next) => {
   next();
 };
 
-// User ownership validation middleware
-const validateUserAccess = catchAsync(async (req, res, next) => {
-  const { userId } = req.params;
-  console.log('Validating user access for userId:', userId);
-
-
-  const requestingUserId = req.userId // From auth middleware
-  console.log('Requesting user ID:', requestingUserId);
-
-  // Allow access if user is accessing their own data or if they're admin
-  if (parseInt(userId) === parseInt(requestingUserId) || req.adminUser) {
-    return next();
-  }
-
-  return next(new AppError('Access denied. You can only access your own devices.', 403));
-});
-
 // Apply pagination to routes that return multiple items
 const paginatedRoutes = [
   '/all',
   '/:userId/devices',
-  '/vehicle/:vehicleId/devices'
+  '/vehicle/:vehicleId/devices',
+  '/analytics/statistics'
 ];
 
 deviceRouter.use(paginatedRoutes, paginationMiddleware);
@@ -166,6 +153,7 @@ deviceRouter.post(
 // Get all tracking devices - Admin only
 deviceRouter.get(
   '/all',
+  catchAsync(isAuthenticated),
   catchAsync(isAdmin),
   catchAsync(getAllTrackingDevices)
 );
@@ -180,6 +168,7 @@ deviceRouter.get(
 // Get tracking devices by user ID - User themselves or Admin
 deviceRouter.get(
   '/:userId/devices',
+  catchAsync(isAuthenticated),
   catchAsync(validateIds),
   catchAsync(validateUserAccess),
   catchAsync(getTrackingDevicesByUser)
@@ -191,6 +180,16 @@ deviceRouter.get(
   catchAsync(validateIds),
   catchAsync(getDeviceDetails)
 );
+
+// Health check for tracking device service
+deviceRouter.get('/health', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Tracking device service is healthy',
+    timestamp: new Date().toISOString(),
+    service: 'tracking-device-api'
+  });
+});
 
 // Get tracking device by ID - Device owner or Admin
 deviceRouter.get(
@@ -251,6 +250,7 @@ deviceRouter.delete(
 deviceRouter.delete(
   '/vehicle-with-devices/:vehicleId',
   catchAsync(validateIds),
+  catchAsync(isAuthenticated),
   catchAsync(isAdmin),
   catchAsync(deleteVehicleAndTrackingDevice)
 );
@@ -259,6 +259,7 @@ deviceRouter.delete(
 deviceRouter.patch(
   '/:deviceId/deactivate',
   catchAsync(validateIds),
+  catchAsync(isAuthenticated),
   catchAsync(isAdmin),
   catchAsync((req, res, next) => {
     req.body = { deletedAt: new Date() };
@@ -268,15 +269,6 @@ deviceRouter.patch(
 );
 
 // UTILITY ROUTES
-// Health check for tracking device service
-deviceRouter.get('/health', (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'Tracking device service is healthy',
-    timestamp: new Date().toISOString(),
-    service: 'tracking-device-api'
-  });
-});
 
 // Get device categories
 deviceRouter.get('/config/categories', (req, res) => {
@@ -285,23 +277,19 @@ deviceRouter.get('/config/categories', (req, res) => {
     message: 'Device categories retrieved successfully',
     data: {
       categories: ['MOTORCYCLE', 'CAR', 'TRUCK', 'TRICYCLE', 'OTHER'],
-      statuses: ['ACTIVE', 'INACTIVE', 'MAINTENANCE', 'LOST']
+      statuses: [
+        'ACTIVE', 'INACTIVE', 'PENDING', 'DISCONNECTED', 'MAINTENANCE'
+      ]
     }
   });
 });
 
 // Get device statistics - Admin only
-deviceRouter.get(
-  '/analytics/statistics',
-  catchAsync(isAdmin),
-  catchAsync((req, res) => {
-    // This would integrate with your analytics controller
-    res.status(200).json({
-      success: true,
-      message: 'Device statistics endpoint - integrate with analytics controller',
-      timestamp: new Date().toISOString()
-    });
-  })
-);
+// deviceRouter.get(
+//   '/analytics/statistics',
+//   catchAsync(isAuthenticated),
+//   catchAsync(isAdmin),
+//   catchAsync(getDeviceStatistics)
+// );
 
 export default deviceRouter;

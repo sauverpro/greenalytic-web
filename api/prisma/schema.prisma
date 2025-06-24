@@ -224,11 +224,12 @@ model EmissionData {
 
   vehicle       Vehicle  @relation(fields: [vehicleId], references: [id])
   vehicleId     Int
-  plateNumber   String
+  plateNumber   String?
 
   trackingDevice   TrackingDevice @relation(fields: [trackingDeviceId], references: [id], onDelete: Cascade)
   trackingDeviceId Int
   createdAt        DateTime       @default(now())
+  deletedAt        DateTime?      // Soft delete field
 
   @@index([vehicleId])
   @@index([timestamp])

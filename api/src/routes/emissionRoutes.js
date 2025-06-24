@@ -2,6 +2,7 @@
 import express from 'express';
 import { paginationMiddleware } from '../middlewares/paginationMiddleware.js';
 import { isAdmin } from '../middlewares/isadmin.js';
+import { isAuthenticated } from '../middlewares/isAuthenticated.js';
 import { catchAsync } from '../middlewares/globaleerorshandling.js';
 import {
   createEmissionData,
@@ -86,7 +87,7 @@ const paginatedRoutes = [
 emissionRouter.use(paginatedRoutes, paginationMiddleware);
 
 // CREATE ROUTES
-// Create emission data - Admin or Fleet Manager only
+// Create emission data
 emissionRouter.post(
   '/',
   catchAsync(validateEmissionData),
@@ -97,13 +98,34 @@ emissionRouter.post(
 // Get all emission data - Admin only
 emissionRouter.get(
   '/',
+  catchAsync(isAuthenticated),
   catchAsync(isAdmin),
   catchAsync(getAllEmissionData)
 );
 
+// Get emission statistics - Admin or Analyst
+emissionRouter.get(
+  '/statistics',
+  paginationMiddleware,
+  catchAsync(isAuthenticated),
+  catchAsync(isAdmin),
+  catchAsync(getEmissionStatistics)
+);
+
+// Health check for emission service
+emissionRouter.get('/health', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Emission service is healthy',
+    timestamp: new Date().toISOString(),
+    service: 'emission-api'
+  });
+});
+
 // Get emission data by ID - Authenticated users
 emissionRouter.get(
   '/:id',
+  catchAsync(isAuthenticated),
   catchAsync(getEmissionDataById)
 );
 
@@ -129,22 +151,18 @@ emissionRouter.get(
 // Get emission data by plate number - Admin only
 emissionRouter.get(
   '/plate/:plateNumber',
+  catchAsync(isAuthenticated),
   catchAsync(isAdmin),
   catchAsync(getEmissionDataByPlateNumber)
 );
 
-// Get emission statistics - Admin or Analyst
-emissionRouter.get(
-  '/statistics',
-  paginationMiddleware,
-  catchAsync(isAdmin), // Change to role-based when you have role middleware
-  catchAsync(getEmissionStatistics)
-);
+
 
 // UPDATE ROUTES
 // Update emission data - Admin only
 emissionRouter.put(
   '/:id',
+  catchAsync(isAuthenticated),
   catchAsync(isAdmin),
   catchAsync(validateEmissionData),
   catchAsync(updateEmissionData)
@@ -153,6 +171,7 @@ emissionRouter.put(
 // Patch emission data - Admin only
 emissionRouter.patch(
   '/:id',
+  catchAsync(isAuthenticated),
   catchAsync(isAdmin),
   catchAsync(updateEmissionData)
 );
@@ -161,6 +180,7 @@ emissionRouter.patch(
 // Delete emission data - Admin only
 emissionRouter.delete(
   '/:id',
+  catchAsync(isAuthenticated),
   catchAsync(isAdmin),
   catchAsync(deleteEmissionData)
 );
@@ -168,6 +188,7 @@ emissionRouter.delete(
 // Soft delete emission data - Admin only
 emissionRouter.patch(
   '/:id/deactivate',
+  catchAsync(isAuthenticated),
   catchAsync(isAdmin),
   catchAsync((req, res, next) => {
     req.body = { deletedAt: new Date() };
@@ -177,23 +198,16 @@ emissionRouter.patch(
 );
 
 // ENHANCED ROUTES using vehicleDataController
-// Get dashboard emission analytics
+// Get dashboard emission analytics - Admin only
 emissionRouter.get(
   '/analytics/dashboard',
+  catchAsync(isAuthenticated),
   catchAsync(isAdmin),
   catchAsync(vehicleDataController.getDashboardCounts)
 );
 
 // UTILITY ROUTES
-// Health check for emission service
-emissionRouter.get('/health', (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'Emission service is healthy',
-    timestamp: new Date().toISOString(),
-    service: 'emission-api'
-  });
-});
+
 
 // Get emission thresholds
 emissionRouter.get('/config/thresholds', (req, res) => {

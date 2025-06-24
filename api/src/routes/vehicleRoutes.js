@@ -1,8 +1,10 @@
 import express from 'express';
 import { verifyingtoken } from "../utils/jwtfunctions.js";
 import { isAdmin } from '../middlewares/isadmin.js';
+import { isAuthenticated } from '../middlewares/isAuthenticated.js';
 import paginationMiddleware from '../middlewares/paginationMiddleware.js';
 import { catchAsync, AppError } from '../middlewares/globaleerorshandling.js';
+import { validateVehicleAccess } from '../middlewares/validateVehicleAccess.js';
 import { addVehicleToUser, deleteVehicle, updateVehicleById } from '../controllers/vehicleControllers/addVehicleToUserController.js';
 import {
   getVehicleByIdController,
@@ -11,6 +13,7 @@ import {
 } from "../controllers/vehicleControllers/gettingvehiclesControllers.js";
 import { getVehicleHistoryController } from '../controllers/vehicleControllers/vehicleHistory.js';
 import { vehicleDataController } from '../controllers/VehicleDataController.js';
+import { validateUserAccess } from '../middlewares/validateuserAccess.js';
 
 const VehicleRouter = express.Router();
 
@@ -149,36 +152,6 @@ const validateIds = (req, res, next) => {
   next();
 };
 
-// User access validation middleware
-const validateUserAccess = catchAsync(async (req, res, next) => {
-  const { userId } = req.params;
-  const requestingUserId = req.userId; // From verifying token middleware
-  
-
-  // Allow access if user is accessing their own data or if they're admin
-  if (parseInt(userId) === parseInt(requestingUserId) || req.adminUser) {
-    return next();
-  }
-
-  return next(new AppError('Access denied. You can only access your own vehicles.', 403));
-});
-
-// Vehicle ownership validation
-const validateVehicleOwnership = catchAsync(async (req, res, next) => {
-  const { vehicleId } = req.params;
-  const requestingUserId = req.userId;
-
-  // Admin can access any vehicle
-  if (req.adminUser) {
-    return next();
-  }
-
-  // For regular users, validate ownership through your vehicle service
-  // This would need to be implemented in your vehicle controller
-  // For now, we'll allow the controller to handle this validation
-  next();
-});
-
 // PUBLIC ROUTES (No authentication required)
 // Health check
 VehicleRouter.get('/health', (req, res) => {
@@ -262,7 +235,7 @@ VehicleRouter.post(
 VehicleRouter.get(
   '/:id',
   validateIds,
-  catchAsync(validateVehicleOwnership),
+  catchAsync(validateVehicleAccess),
   catchAsync(getVehicleByIdController)
 );
 
@@ -270,7 +243,7 @@ VehicleRouter.get(
 VehicleRouter.patch(
   "/:vehicleId",
   validateIds,
-  catchAsync(validateVehicleOwnership),
+  catchAsync(validateVehicleAccess),
   catchAsync(validateVehicleData),
   catchAsync(updateVehicleById)
 );
@@ -279,7 +252,7 @@ VehicleRouter.patch(
 VehicleRouter.delete(
   '/:vehicleId',
   validateIds,
-  catchAsync(validateVehicleOwnership),
+  catchAsync(validateVehicleAccess),
   catchAsync(deleteVehicle)
 );
 
@@ -288,7 +261,7 @@ VehicleRouter.delete(
 VehicleRouter.get(
   '/:vehicleId/history',
   validateIds,
-  catchAsync(validateVehicleOwnership),
+  catchAsync(validateVehicleAccess),
   paginationMiddleware,
   catchAsync(getVehicleHistoryController)
 );
@@ -297,7 +270,7 @@ VehicleRouter.get(
 VehicleRouter.get(
   '/:vehicleId/emissions/range',
   validateIds,
-  catchAsync(validateVehicleOwnership),
+  catchAsync(validateVehicleAccess),
   paginationMiddleware,
   catchAsync(vehicleDataController.getEmissionsDataByTimeRange)
 );
@@ -306,7 +279,7 @@ VehicleRouter.get(
 VehicleRouter.get(
   '/:vehicleId/fuels/range',
   validateIds,
-  catchAsync(validateVehicleOwnership),
+  catchAsync(validateVehicleAccess),
   paginationMiddleware,
   catchAsync(vehicleDataController.getFuelsDataByTimeRange)
 );
@@ -315,17 +288,17 @@ VehicleRouter.get(
 VehicleRouter.get(
   '/:vehicleId/gps/range',
   validateIds,
-  catchAsync(validateVehicleOwnership),
+  catchAsync(validateVehicleAccess),
   paginationMiddleware,
   catchAsync(vehicleDataController.getGPSDataByTimeRange)
 );
 
 // VEHICLE STATUS MANAGEMENT
-// Update vehicle status - Admin or Fleet Manager only
+// Update vehicle status - Admin only
 VehicleRouter.patch(
   '/:vehicleId/status',
   validateIds,
-  catchAsync(isAdmin), // Change to role-based when you have role middleware
+  catchAsync(validateVehicleAccess),
   catchAsync((req, res, next) => {
     const { status } = req.body;
     

@@ -780,6 +780,40 @@ class TrackingDeviceService {
       throw new Error(`Error retrieving device status: ${error.message}`);
     }
   }
+  static async deleteVehicleAndTrackingDevice(vehicleId) {
+    try {
+      // Check if vehicle exists
+      const vehicle = await prisma.vehicle.findUnique({
+        where: { id: vehicleId },
+      });
+
+      if (!vehicle) {
+        throw new Error("Vehicle not found");
+      }
+
+      // Delete associated tracking devices
+      await prisma.trackingDevice.updateMany({
+        where: { vehicleId: vehicleId },
+        data: {
+          deletedAt: new Date(),
+          status: 'INACTIVE',
+          isActive: false,
+        },
+      });
+
+      // Delete the vehicle
+      await prisma.vehicle.delete({
+        where: { id: vehicleId },
+      });
+
+      return {
+        success: true,
+        message: "Vehicle and associated tracking devices deleted successfully",
+      };
+    } catch (error) {
+      throw new Error(`Error deleting vehicle and tracking devices: ${error.message}`);
+    }
+  }
 }
 
 export default TrackingDeviceService;

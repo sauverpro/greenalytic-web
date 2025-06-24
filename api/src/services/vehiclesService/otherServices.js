@@ -34,10 +34,10 @@ export const getAllVehiclesService = async (filters, pagination) => {
 }
 
 // ✅ 3️⃣ Get Vehicle by ID
-export const getVehicleByIdService = async vehicleId => {
+export const getVehicleByIdService = async id => {
   try {
     return await prisma.vehicle.findUnique({
-      where: { id: parseInt(vehicleId) }
+      where: { id: parseInt(id) }
     })
   } catch (error) {
     throw error
@@ -121,7 +121,7 @@ export const filterVehiclesService = async filters => {
 
 // ✅ 1️⃣4️⃣ Get Vehicle History (GPS, Fuel, Emission) in a Time Range
 export const getVehicleHistoryService = async (
-  vehicleId,
+  id,
   startTime,
   endTime,
   pagination
@@ -131,7 +131,7 @@ export const getVehicleHistoryService = async (
 
     // ✅ Step 1: Check if the vehicle exists
     const vehicle = await prisma.vehicle.findUnique({
-      where: { id: parseInt(vehicleId) },
+      where: { id: parseInt(id) },
       select: { id: true } // Select only the ID to reduce query load
     })
 
@@ -150,7 +150,7 @@ export const getVehicleHistoryService = async (
     ] = await prisma.$transaction([
       prisma.emissionData.findMany({
         where: {
-          vehicleId: parseInt(vehicleId),
+          vehicleId: parseInt(id),
           timestamp: { gte: new Date(startTime), lte: new Date(endTime) }
         },
         select: {
@@ -168,7 +168,7 @@ export const getVehicleHistoryService = async (
 
       prisma.gpsData.findMany({
         where: {
-          vehicleId: parseInt(vehicleId),
+          vehicleId: parseInt(id),
           timestamp: { gte: new Date(startTime), lte: new Date(endTime) }
         },
         select: {
@@ -186,7 +186,7 @@ export const getVehicleHistoryService = async (
 
       prisma.fuelData.findMany({
         where: {
-          vehicleId: parseInt(vehicleId),
+          vehicleId: parseInt(id),
           timestamp: { gte: new Date(startTime), lte: new Date(endTime) }
         },
         select: {
@@ -204,19 +204,19 @@ export const getVehicleHistoryService = async (
   
       prisma.emissionData.count({
         where: {
-          vehicleId: parseInt(vehicleId),
+          vehicleId: parseInt(id),
           timestamp: { gte: new Date(startTime), lte: new Date(endTime) }
         }
       }),
       prisma.gpsData.count({
         where: {
-          vehicleId: parseInt(vehicleId),
+          vehicleId: parseInt(id),
           timestamp: { gte: new Date(startTime), lte: new Date(endTime) }
         }
       }),
       prisma.fuelData.count({
         where: {
-          vehicleId: parseInt(vehicleId),
+          vehicleId: parseInt(id),
           timestamp: { gte: new Date(startTime), lte: new Date(endTime) }
         }
       })

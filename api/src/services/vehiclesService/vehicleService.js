@@ -244,13 +244,19 @@ export class VehicleService {
    */
   static async updateVehicle(vehicleId, updateData, userId = null) {
     try {
-      // Verify vehicle exists and belongs to user if userId provided
-      if (userId) {
-        const exists = await this.vehicleExistsAndBelongsToUser(vehicleId, userId);
-        if (!exists) {
-          throw new AppError('Vehicle not found or access denied', 404);
-        }
-      }
+      // Verify vehicle exists and belongs to user if userId provided or if user is not admin
+      // if (userId) {
+
+      //   const user = await prisma.user.findUnique({
+      //   where: { id: userId, deletedAt: null },
+      //   select: { role: true }
+      // });
+      //   const isUserAdmin = user && user.role === 'ADMIN';
+      //   const exists = await this.vehicleExistsAndBelongsToUser(vehicleId, userId);
+      //   if (!exists && !isUserAdmin) {
+      //     throw new AppError('Vehicle not found or access denied', 404);
+      //   }
+      // }
 
       // Check for duplicate plate number if updating plate number
       if (updateData.plateNumber) {

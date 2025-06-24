@@ -7,29 +7,18 @@ import { changepassword } from "../authentication/changepassword.js";
 import { isAdmin } from "../middlewares/isadmin.js"; // Fixed import path
 import sanitizeUserMiddleware from "../middlewares/sanitizeUserMiddleware.js";
 import { catchAsync, AppError } from "../middlewares/globaleerorshandling.js";
+import { validateUserAccess } from "../middlewares/validateuserAccess.js";
 import {
   generateAndSendOTP,
   verifyOTPAndUpdatePassword,
 } from "../authentication/forgetpassword.js";
 import { verifyingtoken } from "../utils/jwtfunctions.js";
+import { isAuthenticated } from "../middlewares/isAuthenticated.js";
 
 const userRouters = express.Router();
 
 // Apply sanitization to all user routes since they deal with user data
 userRouters.use(sanitizeUserMiddleware);
-
-// User access validation middleware - ensures users can only access their own data
-const validateUserAccess = catchAsync(async (req, res, next) => {
-  const { id } = req.params;
-  const requestingUserId = req.userId; // From verifyingtoken middleware
-
-  // Allow access if user is accessing their own data or if they're admin
-  if (parseInt(id) === parseInt(requestingUserId) || req.adminUser) {
-    return next();
-  }
-
-  return next(new AppError('Access denied. You can only access your own profile.', 403));
-});
 
 // ID validation middleware
 const validateUserId = (req, res, next) => {

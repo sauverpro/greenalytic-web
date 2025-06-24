@@ -220,7 +220,8 @@ export const createEmissionData = async (req, res) => {
     const vehicleStatus = await updateVehicleEmissionStatus(parseInt(vehicleId), emissionData)
 
     return res.status(201).json({
-      emissionData,
+      message: 'Emission data created successfully',
+      data: emissionData,
       vehicleStatus,
       alertsGenerated: alerts.length,
       alerts: alerts.map(alert => ({
@@ -236,7 +237,6 @@ export const createEmissionData = async (req, res) => {
 }
 
 // Enhanced statistics with basic analytics
-
 export const getAllEmissionData = async (req, res) => {
   try {
     const { skip, take, startTime, endTime } = req.pagination
@@ -678,7 +678,8 @@ export const updateEmissionData = async (req, res) => {
       vehicleId,
       plateNumber,
       trackingDeviceId,
-      timestamp
+      timestamp,
+      deletedAt
     } = req.body
 
     const existingRecord = await prisma.emissionData.findUnique({
@@ -727,6 +728,9 @@ export const updateEmissionData = async (req, res) => {
     if (plateNumber !== undefined) updateData.plateNumber = plateNumber
     if (trackingDeviceId !== undefined) updateData.trackingDeviceId = parseInt(trackingDeviceId)
     if (timestamp !== undefined) updateData.timestamp = new Date(timestamp)
+    if (deletedAt !== undefined) {
+      updateData.deletedAt = deletedAt ? new Date(deletedAt) : null
+    }
 
     const updatedEmissionData = await prisma.emissionData.update({
       where: { id: parseInt(id) },
@@ -761,8 +765,8 @@ export const updateEmissionData = async (req, res) => {
     }
 
     return res.status(200).json({
-      data: updatedEmissionData,
-      message: 'Emission data updated successfully'
+      message: 'Emission data updated successfully',
+      data: updatedEmissionData
     })
   } catch (error) {
     console.error('Error updating emission data:', error)

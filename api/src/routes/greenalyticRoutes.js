@@ -180,28 +180,6 @@ allRoutes.get('/docs', (req, res) => {
   });
 });
 
-// Metrics endpoint for monitoring (basic)
-allRoutes.get('/metrics', (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'API Metrics',
-    data: {
-      requests: {
-        total: 'N/A', // Implement request counter
-        successful: 'N/A',
-        failed: 'N/A'
-      },
-      response_times: {
-        average: 'N/A', // Implement response time tracking
-        p95: 'N/A',
-        p99: 'N/A'
-      },
-      active_connections: 'N/A',
-      timestamp: new Date().toISOString()
-    }
-  });
-});
-
 // Handle 404 for unmatched API routes
 allRoutes.use('*', handleApiNotFound);
 
