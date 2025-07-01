@@ -164,10 +164,10 @@ model TrackingDevice {
   communicationProtocol CommunicationProtocol @default(MQTT)
   dataTransmissionInterval String?
 
-  enableOBDMonitoring Boolean @default(true)
-  enableGPSTracking Boolean @default(true)
-  enableEmissionMonitoring Boolean @default(true)
-
+  enableOBDMonitoring Boolean @default(false)
+  enableGPSTracking Boolean @default(false)
+  enableEmissionMonitoring Boolean @default(false)
+  enebleFuelMonitoring Boolean @default(false)
   isActive      Boolean   @default(true)
   status        DeviceStatus @default(ACTIVE)
   lastPing      DateTime?
@@ -264,6 +264,7 @@ model OBDData {
   id               Int      @id @default(autoincrement())
   timestamp        DateTime @default(now())
   rpm              Int?
+  plateNumber String
   throttlePosition Float
   engineTemperature Float?
   engineStatus    String?

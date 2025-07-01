@@ -15,13 +15,13 @@ const ResetPassword: React.FC = () => {
   const [formData, setFormData] = useState({
     email: "",
     otp: "",
-    newpassword: "",
+    newPassword: "",
     confirmPassword: "",
   });
   const [errors, setErrors] = useState({
     email: "",
     otp: "",
-    newpassword: "",
+    newPassword: "",
     confirmPassword: "",
   });
   const client = useAxiosClient();
@@ -31,7 +31,7 @@ const ResetPassword: React.FC = () => {
     const newErrors = {
       email: "",
       otp: "",
-      newpassword: "",
+      newPassword: "",
       confirmPassword: "",
     };
 
@@ -48,18 +48,18 @@ const ResetPassword: React.FC = () => {
       valid = false;
     }
 
-    if (!formData.newpassword) {
-      newErrors.newpassword = "New password is required";
+    if (!formData.newPassword) {
+      newErrors.newPassword = "New password is required";
       valid = false;
-    } else if (formData.newpassword.length < 6) {
-      newErrors.newpassword = "New password must be at least 6 characters";
+    } else if (formData.newPassword.length < 6) {
+      newErrors.newPassword = "New password must be at least 6 characters";
       valid = false;
     }
 
     if (!formData.confirmPassword) {
       newErrors.confirmPassword = "Confirm password is required";
       valid = false;
-    } else if (formData.confirmPassword !== formData.newpassword) {
+    } else if (formData.confirmPassword !== formData.newPassword) {
       newErrors.confirmPassword = "Passwords do not match";
       valid = false;
     }
@@ -142,16 +142,16 @@ const ResetPassword: React.FC = () => {
               <TextInput
                 type="password"
                 placeholder="Enter new password"
-                value={formData.newpassword}
+                value={formData.newPassword}
                 onChange={(e) =>
-                  setFormData({ ...formData, newpassword: e.target.value })
+                  setFormData({ ...formData, newPassword: e.target.value })
                 }
                 icon={<FaLock className="mr-2 text-sms" />}
-                error={errors.newpassword}
+                error={errors.newPassword}
               />
               <div className="pl-4 mb-1 text-left">
-                {errors.newpassword && (
-                  <small className="text-red-600">{errors.newpassword}</small>
+                {errors.newPassword && (
+                  <small className="text-red-600">{errors.newPassword}</small>
                 )}
               </div>
 

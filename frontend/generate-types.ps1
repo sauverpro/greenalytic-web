@@ -47,9 +47,9 @@ class Vehicle {
   [int]$yearOfManufacture
   [string]$usage
   [int]$userId
-  [EmissionData[]]$emissionDatas
-  [GPSData[]]$gpsDatas
-  [FuelData[]]$fuelDatas
+  [EmissionData[]]$emissionData
+  [GPSData[]]$gpsData
+  [FuelData[]]$fuelData
   [DateTime]$createdAt
   [DateTime]$updatedAt
   [DateTime]$deletedAt
@@ -64,9 +64,9 @@ class TrackingDevice {
   [string]$plateNumber
   [bool]$isActive
   [DateTime]$lastPing
-  [GPSData[]]$gpsDatas
-  [FuelData[]]$fuelDatas
-  [EmissionData[]]$emissionDatas
+  [GPSData[]]$gpsData
+  [FuelData[]]$fuelData
+  [EmissionData[]]$emissionData
   [int]$userId
   [int]$vehicleId
   [DateTime]$createdAt
@@ -103,9 +103,9 @@ export interface Vehicle {
   yearOfManufacture: number;
   usage: string;
   userId: number;
-  emissionDatas: EmissionData[];
-  gpsDatas: GPSData[];
-  fuelDatas: FuelData[];
+  emissionData: EmissionData[];
+  gpsData: GPSData[];
+  fuelData: FuelData[];
   createdAt: Date;
   updatedAt: Date;
   deletedAt?: Date;
@@ -120,9 +120,9 @@ export interface TrackingDevice {
   plateNumber: string;
   isActive: boolean;
   lastPing?: Date;
-  gpsDatas: GPSData[];
-  fuelDatas: FuelData[];
-  emissionDatas: EmissionData[];
+  gpsData: GPSData[];
+  fuelData: FuelData[];
+  emissionData: EmissionData[];
   userId?: number;
   vehicleId: number;
   createdAt: Date;

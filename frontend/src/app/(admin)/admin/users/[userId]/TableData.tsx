@@ -63,7 +63,7 @@ interface TrackingDevice {
     username: string;
     email: string;
   };
-  gpsDatas?: any[];
+  gpsData?: any[];
 }
 
 interface VehicleTableProps {
