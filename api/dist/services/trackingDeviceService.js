@@ -119,7 +119,7 @@ var TrackingDeviceService = /*#__PURE__*/function () {
                   user: {
                     select: {
                       id: true,
-                      fullName: true,
+                      
                       email: true,
                       role: true
                     }
@@ -293,7 +293,7 @@ var TrackingDeviceService = /*#__PURE__*/function () {
                     select: {
                       id: true,
                       username: true,
-                      fullName: true,
+                      
                       email: true,
                       image: true,
                       role: true
@@ -409,7 +409,7 @@ var TrackingDeviceService = /*#__PURE__*/function () {
                       user: {
                         select: {
                           id: true,
-                          fullName: true,
+                          
                           email: true,
                           companyName: true,
                           role: true
@@ -421,7 +421,7 @@ var TrackingDeviceService = /*#__PURE__*/function () {
                     select: {
                       id: true,
                       username: true,
-                      fullName: true,
+                      
                       email: true,
                       phoneNumber: true,
                       role: true,
@@ -693,7 +693,7 @@ var TrackingDeviceService = /*#__PURE__*/function () {
                   user: {
                     select: {
                       id: true,
-                      fullName: true,
+                      
                       email: true
                     }
                   }
@@ -792,7 +792,7 @@ var TrackingDeviceService = /*#__PURE__*/function () {
                     select: {
                       id: true,
                       username: true,
-                      fullName: true,
+                      
                       email: true,
                       image: true,
                       companyName: true
@@ -1036,7 +1036,7 @@ var TrackingDeviceService = /*#__PURE__*/function () {
                     select: {
                       id: true,
                       username: true,
-                      fullName: true,
+                      
                       email: true,
                       phoneNumber: true,
                       role: true,
@@ -1089,7 +1089,7 @@ var TrackingDeviceService = /*#__PURE__*/function () {
                     select: {
                       id: true,
                       username: true,
-                      fullName: true,
+                      
                       email: true,
                       phoneNumber: true,
                       role: true,

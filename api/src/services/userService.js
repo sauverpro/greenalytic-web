@@ -83,7 +83,7 @@ export const getAllUsersService = async (page, limit, filters = {}) => {
         username: true,
         email: true,
         image: true,
-        fullName: true,
+        
         role: true,
         status: true,
         phoneNumber: true,
@@ -172,7 +172,7 @@ export const getUserByIdService = async (id) => {
         username: true,
         email: true,
         image: true,
-        fullName: true,
+        
         nationalId: true,
         gender: true,
         role: true,
@@ -413,7 +413,7 @@ export const updateUserService = async (id, updateData) => {
         id: true,
         username: true,
         email: true,
-        fullName: true,
+        
         role: true,
         status: true,
         phoneNumber: true,
@@ -545,7 +545,7 @@ export const getUsersByRoleService = async (role) => {
       },
       select: {
         id: true,
-        fullName: true,
+        
         email: true,
         status: true,
         companyName: true,

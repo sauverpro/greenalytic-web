@@ -393,7 +393,7 @@ export const getEmissionDataById = async (req, res) => {
             status: true,
             user: {
               select: {
-                fullName: true,
+                
                 companyName: true,
               }
             }

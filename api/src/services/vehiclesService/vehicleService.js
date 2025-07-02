@@ -144,7 +144,7 @@ export class VehicleService {
               id: true,
               username: true,
               email: true,
-              fullName: true,
+              
               phoneNumber: true
             }
           },
@@ -389,7 +389,7 @@ export class VehicleService {
               id: true,
               username: true,
               email: true,
-              fullName: true,
+              
               phoneNumber: true
             }
           },

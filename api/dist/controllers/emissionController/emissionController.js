@@ -543,7 +543,7 @@ var getEmissionDataById = exports.getEmissionDataById = /*#__PURE__*/function ()
                   status: true,
                   user: {
                     select: {
-                      fullName: true,
+                      
                       companyName: true
                     }
                   }

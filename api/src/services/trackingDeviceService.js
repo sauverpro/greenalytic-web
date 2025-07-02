@@ -97,7 +97,7 @@ class TrackingDeviceService {
           user: {
             select: {
               id: true,
-              fullName: true,
+              
               email: true,
               role: true,
             },
@@ -277,7 +277,7 @@ class TrackingDeviceService {
               user: {
                 select: {
                   id: true,
-                  fullName: true,
+                  
                   email: true,
                   companyName: true,
                   role: true,
@@ -289,7 +289,7 @@ class TrackingDeviceService {
             select: {
               id: true,
               username: true,
-              fullName: true,
+              
               email: true,
               phoneNumber: true,
               role: true,
@@ -477,7 +477,7 @@ class TrackingDeviceService {
           user: {
             select: {
               id: true,
-              fullName: true,
+              
               email: true,
             },
           },
@@ -543,7 +543,7 @@ class TrackingDeviceService {
             select: { 
               id: true, 
               username: true, 
-              fullName: true, 
+               
               email: true, 
               image: true,
               companyName: true,
@@ -688,7 +688,7 @@ class TrackingDeviceService {
             select: {
               id: true,
               username: true,
-              fullName: true,
+              
               email: true,
               phoneNumber: true,
               role: true,
@@ -720,7 +720,7 @@ class TrackingDeviceService {
             select: {
               id: true,
               username: true,
-              fullName: true,
+              
               email: true,
               phoneNumber: true,
               role: true,

@@ -236,7 +236,7 @@ var VehicleService = exports.VehicleService = /*#__PURE__*/function () {
                       id: true,
                       username: true,
                       email: true,
-                      fullName: true,
+                      
                       phoneNumber: true
                     }
                   },
@@ -628,7 +628,7 @@ var VehicleService = exports.VehicleService = /*#__PURE__*/function () {
                       id: true,
                       username: true,
                       email: true,
-                      fullName: true,
+                      
                       phoneNumber: true
                     }
                   },

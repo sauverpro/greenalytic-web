@@ -129,7 +129,7 @@ var getAllUsersService = exports.getAllUsersService = /*#__PURE__*/function () {
               username: true,
               email: true,
               image: true,
-              fullName: true,
+              
               role: true,
               status: true,
               phoneNumber: true,
@@ -239,7 +239,7 @@ var getUserByIdService = exports.getUserByIdService = /*#__PURE__*/function () {
               username: true,
               email: true,
               image: true,
-              fullName: true,
+              
               nationalId: true,
               gender: true,
               role: true,
@@ -479,7 +479,7 @@ var updateUserService = exports.updateUserService = /*#__PURE__*/function () {
               id: true,
               username: true,
               email: true,
-              fullName: true,
+              
               role: true,
               status: true,
               phoneNumber: true,
@@ -701,7 +701,7 @@ var getUsersByRoleService = exports.getUsersByRoleService = /*#__PURE__*/functio
             },
             select: {
               id: true,
-              fullName: true,
+              
               email: true,
               status: true,
               companyName: true,
