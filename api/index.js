@@ -10,8 +10,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import { dirname } from 'path'
 import allRoutes from './src/routes/greenalyticRoutes.js'
-import { createAdapter } from '@socket.io/redis-adapter'
-io.adapter(createAdapter(pubClient, subClient))
+import TrackingDeviceService from './src/services/trackingDeviceService.js'
 
 dotenv.config()
 
@@ -58,7 +57,7 @@ io.on('connection', socket => {
         socket.emit('error', 'Missing trackingDeviceId')
         return socket.disconnect(true)
       }
-      console.log('Tracking Devices:',  await prisma.trackingDevice.findMany())
+      console.log('Tracking Devices:', TrackingDeviceService.getAllTrackingDevices())
       const device = await prisma.trackingDevice.findUnique({
         where: { id: trackingDeviceId },
         include: { vehicle: true },
@@ -232,7 +231,9 @@ console.log('GPS Data saved:', gps)
 
 // Start the server
 const expressPort = process.env.EXPRESS_SERVER_PORT || 5000
-server.listen(expressPort, () => {
+server.listen(expressPort, async () => {
+  const devices=await TrackingDeviceService.getAllTrackingDevices()
+  console.log('Tracking Devices:',devices)
   console.log(`Server running on http://localhost:${expressPort}/api-docs`)
 })
 

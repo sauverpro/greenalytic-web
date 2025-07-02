@@ -83,7 +83,7 @@ model User {
   nationalId   String?
   gender       String?
   phoneNumber  String?
-
+location      String?
   companyName   String?
   companyRegistrationNumber String?
   businessSector String?

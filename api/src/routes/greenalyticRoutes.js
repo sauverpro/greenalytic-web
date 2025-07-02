@@ -101,7 +101,7 @@ allRoutes.get('/info', (req, res) => {
         trackingDevices: '/api/v1/trackingDevices',
         emissions: '/api/v1/emissions'
       },
-      documentation: '/api/v1/docs', // Future API docs endpoint
+      documentation: '/api/v1/docs', 
       support: {
         email: process.env.SUPPORT_EMAIL || 'support@greenanalytics.com',
         documentation: 'https://docs.greenanalytics.com'
