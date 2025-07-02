@@ -1,6 +1,7 @@
 import { io } from 'socket.io-client'
 
-const socket = io('http://localhost:5000', {
+// const socket = io('http://localhost:5000', {
+const socket = io('https://greenalytic-vehicle-monitoring-1.onrender.com', {
   transports: ['websocket'],
   reconnectionAttempts: 5,
   reconnectionDelay: 1000,
@@ -10,7 +11,7 @@ const socket = io('http://localhost:5000', {
 
 console.log('Connecting to server...')
 
-const TRACKING_DEVICE_ID = 2 // Make sure this exists in your DB and is assigned to a vehicle
+const TRACKING_DEVICE_ID = 1 // Make sure this exists and is assigned
 
 socket.on('connect', () => {
   console.log('✅ Connected to server as:', socket.id)
@@ -18,76 +19,75 @@ socket.on('connect', () => {
   // IDENTIFY the device
   socket.emit('identify', { trackingDeviceId: TRACKING_DEVICE_ID })
 
-  // Simulate sending real-time data (you can remove this after testing)
-  socket.emit('gpsData', {
-    trackingDeviceId: TRACKING_DEVICE_ID,
-    latitude: -1.95,
-    longitude: 30.06,
-    speed: 55,
-    accuracy: 5.0,
-    plateNumber: 'RAC101A'
-  })
+  // Send changing mock data every 5 seconds
+  setInterval(() => {
+    const latitude = -1.95 + Math.random() * 0.01
+    const longitude = 30.037 + Math.random() * 0.01
+    const speed = Math.floor(Math.random() * 120)
+    const fuelLevel = Math.random() * 100
+    const fuelConsumption = Math.random() * 10
+    const rpm = Math.floor(Math.random() * 3000)
+    const throttlePosition = Math.random() * 100
+    const engineTemperature = 70 + Math.random() * 30
+    const co2Percentage = Math.random() * 0.1
+    const coPercentage = Math.random() * 0.05
+    const o2Percentage = 20 + Math.random()
+    const hcPPM = Math.floor(Math.random() * 300)
+    const noxPPM = Math.random() * 0.05
+    const pm25Level = Math.random() * 0.05
 
-  socket.emit('fuelData', {
-    trackingDeviceId: TRACKING_DEVICE_ID,
-    fuelLevel: 78.5,
-    fuelConsumption: 4.2,
-    plateNumber: 'RAC101A'
-  })
+    socket.emit('gpsData', {
+      trackingDeviceId: TRACKING_DEVICE_ID,
+      latitude,
+      longitude,
+      speed,
+      accuracy: 5.0,
+      plateNumber: 'RAC101A'
+    })
 
-  socket.emit('emissionData', {
-    trackingDeviceId: TRACKING_DEVICE_ID,
-    co2Percentage: 0.06,
-    coPercentage: 0.01,
-    o2Percentage: 20.9,
-    hcPPM: 160,
-    noxPPM: 0.04,
-    pm25Level: 0.01,
-    plateNumber: 'RAC101A'
-  })
+    socket.emit('fuelData', {
+      trackingDeviceId: TRACKING_DEVICE_ID,
+      fuelLevel,
+      fuelConsumption,
+      plateNumber: 'RAC101A'
+    })
 
-  socket.emit('obdData', {
-    trackingDeviceId: TRACKING_DEVICE_ID,
-    rpm: 2100,
-    throttlePosition: 40.5,
-    engineTemperature: 88,
-    engineStatus: 'Running',
-    faultCodes: ['P0171'],
-    plateNumber: 'RAC101A'
-  })
+    socket.emit('emissionData', {
+      trackingDeviceId: TRACKING_DEVICE_ID,
+      co2Percentage,
+      coPercentage,
+      o2Percentage,
+      hcPPM,
+      noxPPM,
+      pm25Level,
+      plateNumber: 'RAC101A'
+    })
+
+    socket.emit('obdData', {
+      trackingDeviceId: TRACKING_DEVICE_ID,
+      rpm,
+      throttlePosition,
+      engineTemperature,
+      engineStatus: 'Running',
+      faultCodes: ['P0171'],
+      plateNumber: 'RAC101A'
+    })
+  }, 5) // Every 5 milliseconds
 })
 
-// ✅ Server acknowledgment after identification
+// ✅ Server acknowledgment
 socket.on('connected', msg => {
   console.log('✅ Server acknowledgment:', msg)
 })
 
-// 📍 GPS Update
-socket.on('gpsUpdate', data => {
-  console.log('📍 GPS Update:', data)
-})
+// Listen to updates from server
+socket.on('gpsUpdate', data => console.log('📍 GPS Update:', data))
+socket.on('fuelUpdate', data => console.log('⛽ Fuel Update:', data))
+socket.on('emissionUpdate', data => console.log('💨 Emission Update:', data))
+socket.on('obdUpdate', data => console.log('🔧 OBD Update:', data))
 
-// ⛽ Fuel Update
-socket.on('fuelUpdate', data => {
-  console.log('⛽ Fuel Update:', data)
-})
+// ❌ Errors
+socket.on('error', msg => console.error('❌ Server error:', msg))
 
-// 💨 Emission Update
-socket.on('emissionUpdate', data => {
-  console.log('💨 Emission Update:', data)
-})
-
-// 🔧 OBD Update
-socket.on('obdUpdate', data => {
-  console.log('🔧 OBD Update:', data)
-})
-
-// ❌ Error
-socket.on('error', msg => {
-  console.error('❌ Server error:', msg)
-})
-
-// 🔌 Disconnect
-socket.on('disconnect', reason => {
-  console.log('❌ Disconnected from server:', reason)
-})
+// 🔌 Disconnected
+socket.on('disconnect', reason => console.log('❌ Disconnected:', reason))

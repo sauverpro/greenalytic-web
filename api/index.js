@@ -51,6 +51,11 @@ io.on('connection', socket => {
   // IDENTIFY DEVICE
   socket.on('identify', async ({ trackingDeviceId }) => {
     try {
+      console.log(`Identifying device: ${trackingDeviceId}`)
+      if (!trackingDeviceId) {
+        socket.emit('error', 'Missing trackingDeviceId')
+        return socket.disconnect(true)
+      }
       const device = await prisma.trackingDevice.findUnique({
         where: { id: trackingDeviceId },
         include: { vehicle: true },

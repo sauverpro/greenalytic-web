@@ -11,6 +11,9 @@
     "seed": "node prisma/seed.js",
     "clean:db": "node prisma/cleanDb.js"
   },
+  "prisma": {
+  "seed": "node prisma/seed.js"
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
