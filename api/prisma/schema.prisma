@@ -16,6 +16,10 @@ enum UserRole {
   ANALYST
   SUPPORT_AGENT
 }
+enum ConnectionStatus {
+  CONNECTED
+  DISCONNECTED
+}
 enum DeviceStatus {
   ACTIVE
   INACTIVE
@@ -305,7 +309,7 @@ model ConnectionState {
   id          Int      @id @default(autoincrement())
   vehicleId   String   @unique
   socketId    String
-  status      String  
+  status      ConnectionStatus 
   lastUpdated DateTime
 }
 
