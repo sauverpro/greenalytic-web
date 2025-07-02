@@ -60,7 +60,7 @@ io.on('connection', socket => {
         where: { id: trackingDeviceId },
         include: { vehicle: true },
       })
-
+console.log('Device found:------------------------->', device)
       if (!device) {
         socket.emit('error', 'Unauthorized device')
         return socket.disconnect(true)
@@ -102,7 +102,7 @@ io.on('connection', socket => {
 
   // GPS DATA
   socket.on('gpsData', async data => {
-    console.log('📡 Received GPS data:', data)
+
     try {
       const device = await prisma.trackingDevice.findUnique({
         where: { id: data.trackingDeviceId },
@@ -121,7 +121,7 @@ io.on('connection', socket => {
           vehicleId: device.vehicle.id
         }
       })
-
+console.log('GPS Data saved:', gps)
       io.to(`trackingDevice:${data.trackingDeviceId}`).emit('gpsUpdate', gps)
     } catch (err) {
       console.error('GPS Error:', err)
