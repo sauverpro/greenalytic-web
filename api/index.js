@@ -232,7 +232,8 @@ console.log('GPS Data saved:', gps)
 // Start the server
 const expressPort = process.env.EXPRESS_SERVER_PORT || 5000
 server.listen(expressPort, async () => {
-
+  const devices = await TrackingDeviceService.getAllTrackingDevices()
+  console.log('Tracking Devices:', devices)
   console.log(`Server running on http://localhost:${expressPort}/api-docs`)
 })
 

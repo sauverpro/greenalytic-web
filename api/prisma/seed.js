@@ -1,8 +1,7 @@
-import { PrismaClient } from '@prisma/client'
+
+import prisma from '../prismaClient.js'
 import { passHashing } from '../src/utils/passwordfunctions.js'
 
-
-const prisma = new PrismaClient()
 
 async function seed () {
   console.log('🧹 Clearing existing records...')
