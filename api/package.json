@@ -12,8 +12,8 @@
     "clean:db": "node prisma/cleanDb.js"
   },
   "prisma": {
-  "seed": "node prisma/seed.js"
-},
+    "seed": "node prisma/seed.js"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -37,6 +37,7 @@
     "redis": "^4.7.0",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
+    "socket.io-redis": "^6.1.1",
     "swagger-ui-express": "^5.0.1",
     "ws": "^8.18.0",
     "xlsx": "^0.18.5",

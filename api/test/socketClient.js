@@ -1,7 +1,9 @@
 import { io } from 'socket.io-client'
+import { createAdapter } from '@socket.io/redis-adapter'
+io.adapter(createAdapter(pubClient, subClient))
 
-// const socket = io('http://localhost:5000', {
-const socket = io('https://greenalytic-vehicle-monitoring-1.onrender.com', {
+const socket = io('http://localhost:5000', {
+  // const socket = io('https://greenalytic-vehicle-monitoring-1.onrender.com', {
   transports: ['websocket'],
   reconnectionAttempts: 5,
   reconnectionDelay: 1000,
@@ -11,7 +13,7 @@ const socket = io('https://greenalytic-vehicle-monitoring-1.onrender.com', {
 
 console.log('Connecting to server...')
 
-const TRACKING_DEVICE_ID = 1 // Make sure this exists and is assigned
+const TRACKING_DEVICE_ID = 7 // Make sure this exists and is assigned
 
 socket.on('connect', () => {
   console.log('✅ Connected to server as:', socket.id)
@@ -72,7 +74,7 @@ socket.on('connect', () => {
       faultCodes: ['P0171'],
       plateNumber: 'RAC101A'
     })
-  }, 5) // Every 5 milliseconds
+  }, 50000) // Every 5 milliseconds
 })
 
 // ✅ Server acknowledgment
