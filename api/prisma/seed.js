@@ -1,118 +1,278 @@
-import { faker } from "@faker-js/faker";
-import { PrismaClient } from "@prisma/client";
-const prisma = new PrismaClient();
+import { PrismaClient } from '@prisma/client'
+import { passHashing } from '../src/utils/passwordfunctions.js'
 
-async function main() {
-  let vehicleId = 63;
-  let plateNumber = "Up123";
-  let gpsId = 55;
-  let fuelId = 61;
-  let emId = 56;
 
-  const endDate = new Date();
-  const startDate = new Date();
-  startDate.setDate(endDate.getDate() - 30); 
+const prisma = new PrismaClient()
 
-  const emissionsData = [];
-  const gpsData = [];
-  const fuelData = [];
+async function seed () {
+  console.log('🧹 Clearing existing records...')
 
-  for (let i = 0; i < 120; i++) {
-    const timestamp = faker.date.between({ from: startDate, to: endDate });
+  // Delete in order: child -> parent
+  await prisma.alert.deleteMany()
+  await prisma.fuelData.deleteMany()
+  await prisma.gpsData.deleteMany()
+  await prisma.emissionData.deleteMany()
+  await prisma.oBDData.deleteMany()
+  await prisma.maintenanceRecord.deleteMany()
+  await prisma.trackingDevice.deleteMany()
+  await prisma.vehicle.deleteMany()
+  await prisma.user.deleteMany()
+  await prisma.connectionState.deleteMany()
+  await prisma.report.deleteMany()
 
-    emissionsData.push({
-      vehicleId: vehicleId,
-      timestamp: new Date(timestamp),
-      co2Percentage: faker.number.float({ min: 80, max: 140, precision: 0.1 }),
-      coPercentage: faker.number.float({ min: 0.8, max: 2.4, precision: 0.01 }),
-      o2Percentage: faker.number.float({ min: 0.3, max: 0.9, precision: 0.01 }),
-      hcPPM: faker.number.int({ min: 15, max: 40 }),
-      plateNumber: plateNumber,
-      trackingDeviceId: emId,
-    });
+  console.log('🌱 Seeding data...')
 
-    const baseLat = -1.9403;
-    const baseLong = 30.0596;
-
-    const latVariance = faker.number.float({
-      min: -0.03,
-      max: 0.03,
-      precision: 0.0001,
-    });
-    const longVariance = faker.number.float({
-      min: -0.03,
-      max: 0.03,
-      precision: 0.0001,
-    });
-
-    gpsData.push({
-      vehicleId: vehicleId,
-      timestamp: new Date(timestamp),
-      latitude: baseLat + latVariance,
-      longitude: baseLong + longVariance,
-      speed: faker.number.float({ min: 0, max: 120, precision: 0.1 }),
-      plateNumber: plateNumber,
-      trackingDeviceId: gpsId,
-    });
-
-    fuelData.push({
-      vehicleId: vehicleId,
-      timestamp: new Date(timestamp),
-      fuelLevel: faker.number.float({ min: 5, max: 95, precision: 0.1 }),
-      fuelConsumption: faker.number.float({ min: 8, max: 25, precision: 0.1 }),
-      plateNumber: plateNumber,
-      trackingDeviceId: fuelId,
-    });
-  }
-
-  emissionsData.sort((a, b) => a.timestamp - b.timestamp);
-  gpsData.sort((a, b) => a.timestamp - b.timestamp);
-  fuelData.sort((a, b) => a.timestamp - b.timestamp);
-
-  let currentFuelLevel = 80;
-  fuelData.forEach((item, index) => {
-    if (index > 0) {
-      const consumption = faker.number.float({
-        min: 0.5,
-        max: 3,
-        precision: 0.1,
-      });
-      currentFuelLevel -= consumption;
-
-      if (currentFuelLevel < 15) {
-        currentFuelLevel = faker.number.float({
-          min: 75,
-          max: 95,
-          precision: 0.1,
-        });
-      }
+  // Create users
+  const user1 = await prisma.user.create({
+    data: {
+      email: 'admin@example.com',
+      password: await passHashing('admin123'),
+      fullName: 'Admin One',
+      role: 'ADMIN'
     }
+  })
+  const user2 = await prisma.user.create({
+    data: {
+      email: 'tech@example.com',
+      password: await passHashing('tech123'),
+      fullName: 'Technician Two',
+      role: 'TECHNICIAN'
+    }
+  })
+  const user3 = await prisma.user.create({
+    data: {
+      email: 'user@example.com',
+      password: await passHashing('user123'),
+      fullName: 'Fleet User',
+      role: 'FLEET_MANAGER'
+    }
+  })
 
-    item.fuelLevel = Math.max(0, currentFuelLevel);
-  });
+  // Create vehicles
+  const vehicle1 = await prisma.vehicle.create({
+    data: {
+      plateNumber: 'RAC101A',
+      vehicleType: 'Car',
+      vehicleModel: 'Toyota Corolla',
+      yearOfManufacture: 2015,
+      usage: 'Private',
+      userId: user1.id
+    }
+  })
+  const vehicle2 = await prisma.vehicle.create({
+    data: {
+      plateNumber: 'RAD202B',
+      vehicleType: 'Truck',
+      vehicleModel: 'Isuzu D-MAX',
+      yearOfManufacture: 2018,
+      usage: 'Commercial',
+      userId: user2.id
+    }
+  })
+  const vehicle3 = await prisma.vehicle.create({
+    data: {
+      plateNumber: 'RAE303C',
+      vehicleType: 'Motorcycle',
+      vehicleModel: 'TVS XL100',
+      yearOfManufacture: 2020,
+      usage: 'Delivery',
+      userId: user3.id
+    }
+  })
 
-  await prisma.emissionData.createMany({
-    data: emissionsData,
-  });
+  // Create tracking devices
+  const device1 = await prisma.trackingDevice.create({
+    data: {
+      serialNumber: 'TD1001',
+      model: 'TrackPro v1',
+      type: 'OBD',
+      plateNumber: 'RAC101A',
+      deviceCategory: 'CAR',
+      vehicleId: vehicle1.id,
+      userId: user1.id
+    }
+  })
+  const device2 = await prisma.trackingDevice.create({
+    data: {
+      serialNumber: 'TD1002',
+      model: 'TrackLite v2',
+      type: 'GPS',
+      plateNumber: 'RAD202B',
+      deviceCategory: 'TRUCK',
+      vehicleId: vehicle2.id,
+      userId: user2.id
+    }
+  })
+  const device3 = await prisma.trackingDevice.create({
+    data: {
+      serialNumber: 'TD1003',
+      model: 'EcoTracker',
+      type: 'Hybrid',
+      plateNumber: 'RAE303C',
+      deviceCategory: 'MOTORCYCLE',
+      vehicleId: vehicle3.id,
+      userId: user3.id
+    }
+  })
 
-  await prisma.gPSData.createMany({
-    data: gpsData,
-  });
+  // GPS Data
+  await prisma.gpsData.createMany({
+    data: [
+      {
+        latitude: -1.95,
+        longitude: 30.06,
+        speed: 40,
+        plateNumber: 'RAC101A',
+        vehicleId: vehicle1.id,
+        trackingDeviceId: device1.id
+      },
+      {
+        latitude: -1.96,
+        longitude: 30.07,
+        speed: 60,
+        plateNumber: 'RAD202B',
+        vehicleId: vehicle2.id,
+        trackingDeviceId: device2.id
+      },
+      {
+        latitude: -1.97,
+        longitude: 30.08,
+        speed: 50,
+        plateNumber: 'RAE303C',
+        vehicleId: vehicle3.id,
+        trackingDeviceId: device3.id
+      }
+    ]
+  })
 
+  // Fuel Data
   await prisma.fuelData.createMany({
-    data: fuelData,
-  });
+    data: [
+      {
+        fuelLevel: 60,
+        fuelConsumption: 6.2,
+        plateNumber: 'RAC101A',
+        vehicleId: vehicle1.id,
+        trackingDeviceId: device1.id
+      },
+      {
+        fuelLevel: 45,
+        fuelConsumption: 7.5,
+        plateNumber: 'RAD202B',
+        vehicleId: vehicle2.id,
+        trackingDeviceId: device2.id
+      },
+      {
+        fuelLevel: 80,
+        fuelConsumption: 3.1,
+        plateNumber: 'RAE303C',
+        vehicleId: vehicle3.id,
+        trackingDeviceId: device3.id
+      }
+    ]
+  })
 
-  console.log(
-    `Data saved successfully: ${emissionsData.length} emission records, ${gpsData.length} GPS records, ${fuelData.length} fuel records`
-  );
+  // Emission Data
+  await prisma.emissionData.createMany({
+    data: [
+      {
+        co2Percentage: 0.05,
+        coPercentage: 0.01,
+        o2Percentage: 20.8,
+        hcPPM: 180,
+        vehicleId: vehicle1.id,
+        plateNumber: 'RAC101A',
+        trackingDeviceId: device1.id
+      },
+      {
+        co2Percentage: 0.07,
+        coPercentage: 0.02,
+        o2Percentage: 20.7,
+        hcPPM: 190,
+        vehicleId: vehicle2.id,
+        plateNumber: 'RAD202B',
+        trackingDeviceId: device2.id
+      },
+      {
+        co2Percentage: 0.04,
+        coPercentage: 0.01,
+        o2Percentage: 20.9,
+        hcPPM: 170,
+        vehicleId: vehicle3.id,
+        plateNumber: 'RAE303C',
+        trackingDeviceId: device3.id
+      }
+    ]
+  })
+
+  // OBD Data
+  await prisma.oBDData.createMany({
+    data: [
+      {
+        rpm: 2200,
+        throttlePosition: 45,
+        engineTemperature: 90,
+        engineStatus: 'Running',
+        faultCodes: ['P0133'],
+        plateNumber: 'RAC101A',
+        vehicleId: vehicle1.id,
+        trackingDeviceId: device1.id
+      },
+      {
+        rpm: 1800,
+        throttlePosition: 35,
+        engineTemperature: 85,
+        engineStatus: 'Running',
+        faultCodes: [],
+        plateNumber: 'RAD202B',
+        vehicleId: vehicle2.id,
+        trackingDeviceId: device2.id
+      },
+      {
+        rpm: 2500,
+        throttlePosition: 50,
+        engineTemperature: 95,
+        engineStatus: 'Running',
+        faultCodes: ['P0420'],
+        plateNumber: 'RAE303C',
+        vehicleId: vehicle3.id,
+        trackingDeviceId: device3.id
+      }
+    ]
+  })
+
+  // Alerts
+  await prisma.alert.createMany({
+    data: [
+      {
+        type: 'HIGH_EMISSION_ALERT',
+        title: 'CO2 Too High',
+        message: 'CO2 exceeds threshold',
+        vehicleId: vehicle1.id
+      },
+      {
+        type: 'FUEL_ANOMALY_ALERT',
+        title: 'Fuel Drop Detected',
+        message: 'Unexpected fuel drop',
+        vehicleId: vehicle2.id
+      },
+      {
+        type: 'DIAGNOSTIC_FAULT_NOTIFICATION',
+        title: 'Engine Fault Code',
+        message: 'P0420 detected',
+        vehicleId: vehicle3.id
+      }
+    ]
+  })
+
+  console.log('✅ Seed complete.')
 }
 
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
+seed()
+  .catch(e => {
+    console.error('❌ Seed failed:', e)
+    process.exit(1)
   })
   .finally(async () => {
-    await prisma.$disconnect();
-  });
+    await prisma.$disconnect()
+  })

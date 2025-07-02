@@ -156,14 +156,12 @@ model TrackingDevice {
   plateNumber  String
   batteryLevel  Float?
   signalStrength Int?
-
   deviceCategory DeviceCategory
   firmwareVersion String?
   simCardNumber String?
   installationDate DateTime?
   communicationProtocol CommunicationProtocol @default(MQTT)
   dataTransmissionInterval String?
-
   enableOBDMonitoring Boolean @default(false)
   enableGPSTracking Boolean @default(false)
   enableEmissionMonitoring Boolean @default(false)
@@ -171,7 +169,6 @@ model TrackingDevice {
   isActive      Boolean   @default(true)
   status        DeviceStatus @default(ACTIVE)
   lastPing      DateTime?
-
   gpsData      GpsData[]
   fuelData     FuelData[]
   emissionData EmissionData[]
@@ -308,7 +305,7 @@ model ConnectionState {
   id          Int      @id @default(autoincrement())
   vehicleId   String   @unique
   socketId    String
-  status      String   // CONNECTED, DISCONNECTED
+  status      String  
   lastUpdated DateTime
 }
 
