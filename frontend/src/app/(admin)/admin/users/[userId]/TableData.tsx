@@ -28,7 +28,7 @@ import { deleteVehicle, getVehiclesForUser } from "@/services/vehicleService";
 import { AddVehicleModal } from "@/components/adminComponents/add-vehicle-modal";
 import { getDevicesForVehicle } from "@/services/deviceServices";
 import { AddDeviceModal } from "@/components/adminComponents/add-device-modal";
-
+import { EditVehicleModal } from "@/components/adminComponents/edit-vehicle-model";
 
 interface VehicleData {
   id: number;
@@ -72,12 +72,21 @@ interface VehicleTableProps {
   onAddDevice: (vehicleId: number) => void;
 }
 
+interface IUpdateVehicle {
+  id: number;
+  licensePlate: string;
+  chassisNumber: string;
+  vehicleType: string;
+  model: string;
+  year: number;
+  usage: string;
+}
+
 export function VehicleTable({
   userId,
   onAddVehicle,
   onAddDevice,
 }: VehicleTableProps) {
-  
   const [vehicles, setVehicles] = useState<VehicleData[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingDevices, setLoadingDevices] = useState<number | null>(null);
@@ -90,21 +99,23 @@ export function VehicleTable({
   const [selectedVehicle, setSelectedVehicle] = useState<VehicleData | null>(
     null
   );
-  
+
+  // Edit vehicle states
+  const [isEditVehicleModalOpen, setIsEditVehicleModalOpen] = useState(false);
+  const [vehicleToEdit, setVehicleToEdit] = useState<IUpdateVehicle | null>(
+    null
+  );
+
   const isComponentMounted = useRef(true);
 
-  
   useEffect(() => {
-    
     isComponentMounted.current = true;
 
     return () => {
-      
       isComponentMounted.current = false;
     };
   }, []);
 
-  
   useEffect(() => {
     if (userId) {
       fetchVehicles(userId);
@@ -132,7 +143,6 @@ export function VehicleTable({
       const response = await getDevicesForVehicle(vehicleId.toString());
 
       if (response && response.data) {
-        
         setVehicles((prevVehicles) =>
           prevVehicles.map((vehicle) => {
             if (vehicle.id === vehicleId) {
@@ -145,7 +155,6 @@ export function VehicleTable({
           })
         );
 
-        
         if (!isAddDeviceModalOpen) {
           toast.success(`Loaded ${response.count} devices for vehicle`);
         }
@@ -158,7 +167,6 @@ export function VehicleTable({
     }
   };
 
-  
   const handleAddVehicle = () => {
     try {
       setIsAddVehicleModalOpen(true);
@@ -168,19 +176,14 @@ export function VehicleTable({
     }
   };
 
-  
   const handleAddDevice = (vehicle: VehicleData) => {
     try {
-      
       setIsAddDeviceModalOpen(false);
 
-      
       setSelectedVehicle(vehicle);
 
-      
       requestAnimationFrame(() => {
         if (isComponentMounted.current) {
-          
           setIsAddDeviceModalOpen(true);
           console.log("Opening add device modal for vehicle:", vehicle.id);
         }
@@ -193,20 +196,15 @@ export function VehicleTable({
     }
   };
 
-  
   const [isModalActionPending, setIsModalActionPending] = useState(false);
 
-  
   const handleDeviceModalClose = () => {
-    
     if (isModalActionPending) return;
 
     setIsModalActionPending(true);
 
-    
     setIsAddDeviceModalOpen(false);
 
-    
     setTimeout(() => {
       if (isComponentMounted.current) {
         setSelectedVehicle(null);
@@ -215,64 +213,72 @@ export function VehicleTable({
     }, 300);
   };
 
-  
   const handleDeviceAdded = () => {
     if (!selectedVehicle || isModalActionPending) return;
 
     setIsModalActionPending(true);
 
-    
     setIsAddDeviceModalOpen(false);
 
-    
     const vehicleId = selectedVehicle.id;
     const plateNumber = selectedVehicle.plateNumber;
 
-    
     setTimeout(() => {
       if (isComponentMounted.current) {
-        
         setSelectedVehicle(null);
 
-        
         fetchVehicleDevices(vehicleId);
-        
 
-        
         setIsModalActionPending(false);
       }
     }, 300);
   };
 
-  
   const handleEditVehicle = (vehicle: VehicleData) => {
     try {
-      console.log("Edit vehicle:", vehicle);
-      if (isComponentMounted.current) {
-        toast.info(`Editing vehicle ${vehicle.plateNumber}`);
-      }
+      // Map VehicleData to IUpdateVehicle format
+      const editVehicle: IUpdateVehicle = {
+        id: vehicle.id,
+        licensePlate: vehicle.plateNumber,
+        chassisNumber: vehicle.chassisNumber,
+        vehicleType: vehicle.vehicleType,
+        model: vehicle.vehicleModel,
+        year: vehicle.yearOfManufacture,
+        usage: vehicle.usage,
+      };
+
+      // Set the vehicle to edit
+      setVehicleToEdit(editVehicle);
+
+      // Open the edit modal
+      setIsEditVehicleModalOpen(true);
+
+      console.log("Editing vehicle:", editVehicle);
     } catch (error) {
-      console.error("Error editing vehicle:", error);
+      console.error("Error preparing vehicle edit:", error);
       if (isComponentMounted.current) {
         toast.error("Failed to edit vehicle");
       }
     }
   };
 
-  
+  const handleEditSuccess = () => {
+    // Refresh the vehicles list
+    fetchVehicles(userId);
+    toast.success("Vehicle updated successfully");
+  };
+
   const openDeleteConfirm = (vehicle: VehicleData) => {
     if (isComponentMounted.current) {
-      setVehicleToDelete({ ...vehicle }); 
+      setVehicleToDelete({ ...vehicle });
       setShowDeleteConfirm(true);
     }
   };
 
-  
   const closeDeleteConfirm = () => {
     if (isComponentMounted.current) {
       setShowDeleteConfirm(false);
 
-      
       setTimeout(() => {
         if (isComponentMounted.current) {
           setVehicleToDelete(null);
@@ -281,7 +287,6 @@ export function VehicleTable({
     }
   };
 
-  
   const confirmDelete = async () => {
     if (!vehicleToDelete) return;
     try {
@@ -301,14 +306,12 @@ export function VehicleTable({
     }
   };
 
-  
   const getDeviceTypes = (devices: TrackingDevice[]) => {
     if (!Array.isArray(devices)) return [];
     const deviceTypes = devices.map((device) => device.type);
     return [...new Set(deviceTypes)];
   };
 
-  
   const renderDeviceBadges = (devices: TrackingDevice[]) => {
     if (!Array.isArray(devices) || devices.length === 0) {
       return <span className="text-muted-foreground text-sm">No devices</span>;
@@ -555,6 +558,14 @@ export function VehicleTable({
         vehicleId={selectedVehicle?.id?.toString() || ""}
         plateNumber={selectedVehicle?.plateNumber || ""}
         onSuccess={handleDeviceAdded}
+      />
+
+      {/* Edit Vehicle Modal */}
+      <EditVehicleModal
+        isOpen={isEditVehicleModalOpen}
+        onClose={() => setIsEditVehicleModalOpen(false)}
+        vehicle={vehicleToEdit}
+        onSuccess={handleEditSuccess}
       />
     </div>
   );

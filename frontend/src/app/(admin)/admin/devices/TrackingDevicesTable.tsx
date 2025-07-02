@@ -45,6 +45,7 @@ export interface TrackingDeviceWithVehicle extends TrackingDevice {
 }
 
 
+
 interface TrackingDevicesTableProps {
   trackingDevices: TrackingDeviceWithVehicle[];
 

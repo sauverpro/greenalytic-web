@@ -54,7 +54,8 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
 
 interface DeviceDetailsModalProps {
 
-  deviceId: string | null
+  deviceId: string | null,
+  
 }
 
 interface DeviceData {
