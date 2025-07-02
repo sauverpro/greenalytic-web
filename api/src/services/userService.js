@@ -1,8 +1,6 @@
 import prisma from "../../prismaClient.js";
 import { passHashing } from "../utils/passwordfunctions.js";
 
-prisma;
-
 export const createUserService = async (userData) => {
   console.log("Creating user:", userData);
   try {
@@ -21,16 +19,23 @@ export const createUserService = async (userData) => {
 
     const hashedPassword = await passHashing(userData.password);
 
+
     const newUser = await prisma.user.create({
       data: {
         ...userData,
         password: hashedPassword,
+        status: userData.role === 'ADMIN' ? 'ACTIVE' : 'PENDING_APPROVAL',
+        language: userData.language || 'English',
+        notificationPreference: userData.notificationPreference || 'Email',
       },
     });
 
     return {
       success: true,
-      user: newUser,
+      user: {
+        ...newUser,
+        password: undefined, // Don't return password
+      },
     };
   } catch (error) {
     console.error("Error creating user:", error);
@@ -41,20 +46,36 @@ export const createUserService = async (userData) => {
   }
 };
 
-export const getAllUsersService = async (page, limit) => {
+export const getAllUsersService = async (page, limit, filters = {}) => {
   try {
+
+    const whereClause = {
+      deletedAt: null,
+    };
+
+    if (filters.role) {
+      whereClause.role = filters.role;
+    }
+
+    if (filters.status) {
+      whereClause.status = filters.status;
+    }
+
+    if (filters.companyName) {
+      whereClause.companyName = {
+        contains: filters.companyName,
+        mode: 'insensitive'
+      };
+    }
+
     const totalItems = await prisma.user.count({
-      where: {
-        deletedAt: null,
-      },
+      where: whereClause,
     });
 
     const totalPages = Math.ceil(totalItems / limit);
 
     const users = await prisma.user.findMany({
-      where: {
-        deletedAt: null,
-      },
+      where: whereClause,
       skip: (page - 1) * limit,
       take: limit,
       select: {
@@ -62,9 +83,15 @@ export const getAllUsersService = async (page, limit) => {
         username: true,
         email: true,
         image: true,
+        fullName: true,
         role: true,
+        status: true,
         phoneNumber: true,
         verified: true,
+        companyName: true,
+        businessSector: true,
+        fleetSize: true,
+        language: true,
         createdAt: true,
         updatedAt: true,
         vehicles: {
@@ -73,6 +100,8 @@ export const getAllUsersService = async (page, limit) => {
             plateNumber: true,
             vehicleModel: true,
             vehicleType: true,
+            status: true,
+            fuelType: true,
           },
         },
         trackingDevices: {
@@ -81,7 +110,34 @@ export const getAllUsersService = async (page, limit) => {
             serialNumber: true,
             model: true,
             type: true,
+            deviceCategory: true,
+            status: true,
             isActive: true,
+            installationDate: true,
+          },
+        },
+        alerts: {
+          where: {
+            isRead: false, // Only show unread alerts
+          },
+          select: {
+            id: true,
+            type: true,
+            title: true,
+            createdAt: true,
+          },
+          take: 5, // Latest 5 alerts
+          orderBy: {
+            createdAt: 'desc',
+          },
+        },
+        _count: {
+          select: {
+            vehicles: true,
+            trackingDevices: true,
+            alerts: {
+              where: { isRead: false }
+            },
           },
         },
       },
@@ -116,22 +172,41 @@ export const getUserByIdService = async (id) => {
         username: true,
         email: true,
         image: true,
+        fullName: true,
+        nationalId: true,
+        gender: true,
         role: true,
+        status: true,
         phoneNumber: true,
         verified: true,
+        companyName: true,
+        companyRegistrationNumber: true,
+        businessSector: true,
+        fleetSize: true,
+        language: true,
+        notificationPreference: true,
         createdAt: true,
         updatedAt: true,
         vehicles: {
           select: {
             id: true,
             plateNumber: true,
+            registrationNumber: true,
             vehicleModel: true,
             vehicleType: true,
+            fuelType: true,
+            status: true,
+            yearOfManufacture: true,
+            lastMaintenanceDate: true,
             _count: {
               select: {
-                emissionDatas: true,
-                fuelDatas: true,
-                gpsDatas: true,
+                emissionData: true,
+                fuelData: true,
+                gpsData: true,
+                obdData: true,
+                alerts: {
+                  where: { isRead: false }
+                },
               },
             },
           },
@@ -139,23 +214,73 @@ export const getUserByIdService = async (id) => {
         trackingDevices: {
           select: {
             id: true,
+            serialNumber: true,
             plateNumber: true,
             model: true,
             type: true,
+            deviceCategory: true,
+            firmwareVersion: true,
+            installationDate: true,
+            communicationProtocol: true,
+            status: true,
             isActive: true,
+            lastPing: true,
+            enableOBDMonitoring: true,
+            enableGPSTracking: true,
+            enableEmissionMonitoring: true,
             _count: {
               select: {
-                emissionDatas: true,
-                fuelDatas: true,
-                gpsDatas: true,
+                emissionData: true,
+                fuelData: true,
+                gpsData: true,
+                obdData: true,
               },
             },
           },
+        },
+        alerts: {
+          select: {
+            id: true,
+            type: true,
+            title: true,
+            message: true,
+            isRead: true,
+            triggerValue: true,
+            triggerThreshold: true,
+            createdAt: true,
+            vehicle: {
+              select: {
+                plateNumber: true,
+                vehicleModel: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+          take: 20,
+        },
+        reports: {
+          select: {
+            id: true,
+            title: true,
+            type: true,
+            format: true,
+            createdAt: true,
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+          take: 10,
         },
         _count: {
           select: {
             vehicles: true,
             trackingDevices: true,
+            alerts: {
+              where: { isRead: false }
+            },
+            reports: true,
           },
         },
       },
@@ -168,72 +293,91 @@ export const getUserByIdService = async (id) => {
       };
     }
 
+    // Analytics
     let totalEmissions = 0;
     let totalFuelData = 0;
     let totalGpsData = 0;
+    let totalOBDData = 0;
 
     const deviceCounts = {
-      gps: 0,
-      fuel: 0,
-      emissions: 0,
+      motorcycle: 0,
+      car: 0,
+      truck: 0,
+      tricycle: 0,
+      other: 0,
       total: user.trackingDevices.length,
+      online: 0,
+      offline: 0,
+    };
+
+
+    const deviceStatusCounts = {
+      active: 0,
+      inactive: 0,
+      pending: 0,
+      disconnected: 0,
+      maintenance: 0,
     };
 
     user.trackingDevices.forEach((device) => {
-      totalEmissions += device._count.emissionDatas;
-      totalFuelData += device._count.fuelDatas;
-      totalGpsData += device._count.gpsDatas;
+      totalEmissions += device._count.emissionData;
+      totalFuelData += device._count.fuelData;
+      totalGpsData += device._count.gpsData;
+      totalOBDData += device._count.obdData;
 
-      const deviceType = device.type.toLowerCase();
-      if (deviceType === "gps") {
-        deviceCounts.gps++;
-      } else if (deviceType === "fuel") {
-        deviceCounts.fuel++;
-      } else if (deviceType === "emission") {
-        deviceCounts.emissions++;
+      const category = device.deviceCategory.toLowerCase();
+      if (deviceCounts.hasOwnProperty(category)) {
+        deviceCounts[category]++;
+      }
+
+      const status = device.status.toLowerCase();
+      if (deviceStatusCounts.hasOwnProperty(status)) {
+        deviceStatusCounts[status]++;
+      }
+
+      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+      if (device.lastPing && new Date(device.lastPing) > fiveMinutesAgo) {
+        deviceCounts.online++;
+      } else {
+        deviceCounts.offline++;
       }
     });
 
     user.vehicles.forEach((vehicle) => {
-      totalEmissions += vehicle._count.emissionDatas;
-      totalFuelData += vehicle._count.fuelDatas;
-      totalGpsData += vehicle._count.gpsDatas;
+      totalEmissions += vehicle._count.emissionData;
+      totalFuelData += vehicle._count.fuelData;
+      totalGpsData += vehicle._count.gpsData;
+      totalOBDData += vehicle._count.obdData;
     });
 
-    const vehiclesWithDevices = user.vehicles.map((vehicle) => {
-      const connectedDevices = user.trackingDevices.filter(
-        (device) => device.vehicleId === vehicle.id
-      );
-      const vehicleDeviceTypes = {
-        gps: connectedDevices.filter((d) => d.type.toLowerCase() === "gps")
-          .length,
-        fuel: connectedDevices.filter((d) => d.type.toLowerCase() === "fuel")
-          .length,
-        emission: connectedDevices.filter(
-          (d) => d.type.toLowerCase() === "emission"
-        ).length,
-        total: connectedDevices.length,
-      };
-      return {
-        ...vehicle,
-        deviceTypes: vehicleDeviceTypes,
-        connectedDevices: connectedDevices.map((d) => ({
-          id: d.id,
-          serialNumber: d.serialNumber,
-          type: d.type,
-          model: d.model,
-          status: d.isActive ? "active" : "inactive",
-        })),
-      };
+    const vehicleStatusCounts = {
+      normalEmission: 0,
+      topPolluting: 0,
+      inactiveDisconnected: 0,
+      underMaintenance: 0,
+    };
+
+    user.vehicles.forEach((vehicle) => {
+      const status = vehicle.status.toLowerCase().replace('_', '');
+      if (status === 'normalemission') vehicleStatusCounts.normalEmission++;
+      else if (status === 'toppolluting') vehicleStatusCounts.topPolluting++;
+      else if (status === 'inactivedisconnected') vehicleStatusCounts.inactiveDisconnected++;
+      else if (status === 'undermaintenance') vehicleStatusCounts.underMaintenance++;
     });
 
     const userWithCounts = {
       ...user,
-      totalEmissions,
-      totalFuelData,
-      totalGpsData,
-      deviceCounts,
-      vehiclesWithDevices,
+      analytics: {
+        totalEmissions,
+        totalFuelData,
+        totalGpsData,
+        totalOBDData,
+        deviceCounts,
+        deviceStatusCounts,
+        vehicleStatusCounts,
+        unreadAlerts: user._count.alerts,
+        totalReports: user._count.reports,
+      },
     };
 
     return {
@@ -250,12 +394,37 @@ export const getUserByIdService = async (id) => {
 };
 
 export const updateUserService = async (id, updateData) => {
-  const { vehicles, trackingDevices, ...userData } = updateData;
+  const { vehicles, trackingDevices, alerts, reports, ...userData } = updateData;
 
   try {
+    const {
+      password,
+      verified,
+      otp,
+      otpExpiresAt,
+      token,
+      ...safeUpdateData
+    } = userData;
+
     const updatedUser = await prisma.user.update({
       where: { id: Number(id) },
-      data: userData,
+      data: safeUpdateData,
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        fullName: true,
+        role: true,
+        status: true,
+        phoneNumber: true,
+        companyName: true,
+        businessSector: true,
+        fleetSize: true,
+        language: true,
+        notificationPreference: true,
+        verified: true,
+        updatedAt: true,
+      },
     });
 
     return {
@@ -272,11 +441,65 @@ export const updateUserService = async (id, updateData) => {
   }
 };
 
+export const approveUserService = async (id, adminId) => {
+  try {
+    const updatedUser = await prisma.user.update({
+      where: { id: Number(id) },
+      data: { 
+        status: 'ACTIVE',
+        verified: true,
+        updatedAt: new Date(),
+      },
+    });
+
+    console.log(`User ${id} approved by admin ${adminId}`);
+
+    return {
+      success: true,
+      message: "User approved successfully",
+      user: updatedUser,
+    };
+  } catch (error) {
+    console.error("Error approving user:", error);
+    return {
+      success: false,
+      message: "Error approving user, please try again.",
+    };
+  }
+};
+
+export const suspendUserService = async (id, reason = '') => {
+  try {
+    const updatedUser = await prisma.user.update({
+      where: { id: Number(id) },
+      data: { 
+        status: 'SUSPENDED',
+        updatedAt: new Date(),
+      },
+    });
+
+    return {
+      success: true,
+      message: "User suspended successfully",
+      user: updatedUser,
+    };
+  } catch (error) {
+    console.error("Error suspending user:", error);
+    return {
+      success: false,
+      message: "Error suspending user, please try again.",
+    };
+  }
+};
+
 export const deleteUserService = async (id) => {
   try {
     const deletedUser = await prisma.user.update({
       where: { id: Number(id) },
-      data: { deletedAt: new Date() },
+      data: { 
+        deletedAt: new Date(),
+        status: 'DEACTIVATED', // Update status
+      },
     });
 
     return {
@@ -289,6 +512,163 @@ export const deleteUserService = async (id) => {
     return {
       success: false,
       message: "Error deleting user, please try again.",
+    };
+  }
+};
+
+export const hardDeleteUserService = async (id) => {
+  try {
+    const deletedUser = await prisma.user.delete({
+      where: { id: Number(id) },
+    });
+
+    return {
+      success: true,
+      message: "User hard deleted successfully",
+      user: deletedUser,
+    };
+  } catch (error) {
+    console.error("Error hard deleting user:", error);
+    return {
+      success: false,
+      message: "Error hard deleting user, please try again.",
+    };
+  }
+}
+
+export const getUsersByRoleService = async (role) => {
+  try {
+    const users = await prisma.user.findMany({
+      where: {
+        role: role,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        status: true,
+        companyName: true,
+        _count: {
+          select: {
+            vehicles: true,
+            trackingDevices: true,
+          },
+        },
+      },
+    });
+
+    return {
+      success: true,
+      users,
+    };
+  } catch (error) {
+    console.error("Error retrieving users by role:", error);
+    return {
+      success: false,
+      message: "Error retrieving users by role, please try again.",
+    };
+  }
+};
+
+// Get users vehicles service
+export const getUserVehiclesService = async (userId, page, limit) => {
+  try {
+    const totalItems = await prisma.vehicle.count({
+      where: {
+        userId: Number(userId),
+        deletedAt: null,
+      },
+    });
+
+    const totalPages = Math.ceil(totalItems / limit);
+
+    const vehicles = await prisma.vehicle.findMany({
+      where: {
+        userId: Number(userId),
+        deletedAt: null,
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+      select: {
+        id: true,
+        plateNumber: true,
+        vehicleModel: true,
+        vehicleType: true,
+        fuelType: true,
+        status: true,
+        yearOfManufacture: true,
+        lastMaintenanceDate: true,
+      },
+    });
+
+    return {
+      success: true,
+      vehicles,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        remainingItems: Math.max(0, totalItems - page * limit),
+        totalItems,
+        limit,
+      },
+    };
+  } catch (error) {
+    console.error("Error retrieving user vehicles:", error);
+    return {
+      success: false,
+      message: "Error retrieving user vehicles, please try again.",
+    };
+  }
+};
+
+// Get users tracking devices service
+export const getUserDevicesService = async (userId, page, limit) => {
+  try {
+    const totalItems = await prisma.trackingDevice.count({
+      where: {
+        userId: Number(userId),
+        deletedAt: null,
+      },
+    });
+
+    const totalPages = Math.ceil(totalItems / limit);
+
+    const trackingDevices = await prisma.trackingDevice.findMany({
+      where: {
+        userId: Number(userId),
+        deletedAt: null,
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+      select: {
+        id: true,
+        serialNumber: true,
+        model: true,
+        type: true,
+        deviceCategory: true,
+        status: true,
+        isActive: true,
+        installationDate: true,
+      },
+    });
+
+    return {
+      success: true,
+      trackingDevices,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        remainingItems: Math.max(0, totalItems - page * limit),
+        totalItems,
+        limit,
+      },
+    };
+  } catch (error) {
+    console.error("Error retrieving user tracking devices:", error);
+    return {
+      success: false,
+      message: "Error retrieving user tracking devices, please try again.",
     };
   }
 };

@@ -23,9 +23,9 @@ export interface Vehicle {
   yearOfManufacture: number;
   usage: string;
   userId?: number;
-  emissionDatas?: EmissionData[];
-  gpsDatas?: GPSData[];
-  fuelDatas?: FuelData[];
+  emissionData?: EmissionData[];
+  gpsData?: GPSData[];
+  fuelData?: FuelData[];
   createdAt?: Date;
   updatedAt?: Date;
   deletedAt?: Date;
@@ -40,9 +40,9 @@ export interface IUpdateVehicle {
   yearOfManufacture?: number;
   usage?: string;
   userId?: number;
-  emissionDatas?: EmissionData[];
-  gpsDatas?: GPSData[];
-  fuelDatas?: FuelData[];
+  emissionData?: EmissionData[];
+  gpsData?: GPSData[];
+  fuelData?: FuelData[];
   createdAt?: Date;
   updatedAt?: Date;
   deletedAt?: Date;
@@ -57,9 +57,9 @@ export interface TrackingDevice {
   plateNumber: string;
   isActive?: boolean;
   lastPing?: Date;
-  gpsDatas?: GPSData[];
-  fuelDatas?: FuelData[];
-  emissionDatas?: EmissionData[];
+  gpsData?: GPSData[];
+  fuelData?: FuelData[];
+  emissionData?: EmissionData[];
   userId?: number;
   email?: string;
   username?: string;

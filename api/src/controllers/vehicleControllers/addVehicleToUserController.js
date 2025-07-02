@@ -1,20 +1,35 @@
-import {  addVehicleToUserService, deleteVehicleService, updateVehicleByIdService } from "../../services/vehiclesService/vehicleService .js";
+import { VehicleService } from "../../services/vehiclesService/vehicleService.js";
 
 export const addVehicleToUser = async (req, res) => {
   const { userId } = req.params;
   const vehicleData = req.body;
 
   try {
-    const updatedUser = await addVehicleToUserService(userId, vehicleData);
+    // Parse userId to ensure it's a number
+    const parsedUserId = parseInt(userId, 10);
+    
+    if (isNaN(parsedUserId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user ID",
+      });
+    }
+
+    // Use the enhanced createVehicle method
+    const newVehicle = await VehicleService.createVehicle(vehicleData, parsedUserId);
+    
     return res.status(201).json({
       success: true,
-      message: "Vehicle added successfully..",
-      data: updatedUser,
+      message: "Vehicle added successfully",
+      data: newVehicle,
+      timestamp: new Date().toISOString()
     });
   } catch (error) {
-    return res.status(400).json({
+    console.error('Error adding vehicle to user:', error);
+    return res.status(error.statusCode || 500).json({
       success: false,
-      message: error.message,
+      message: error.message || "Failed to add vehicle",
+      timestamp: new Date().toISOString()
     });
   }
 };
@@ -23,33 +38,46 @@ export const updateVehicleById = async (req, res) => {
   try {
     const { vehicleId } = req.params;
     const vehicleData = req.body;
+    console.log('Updating vehicle with ID:', vehicleId, 'Data:', vehicleData);
 
     const parsedVehicleId = parseInt(vehicleId, 10);
 
     if (isNaN(parsedVehicleId)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid vehicle ID" });
+      return res.status(400).json({ 
+        success: false, 
+        message: "Invalid vehicle ID",
+        timestamp: new Date().toISOString()
+      });
     }
 
     if (!vehicleData || Object.keys(vehicleData).length === 0) {
-      return res
-        .status(400)
-        .json({ success: false, message: "No update data provided" });
+      return res.status(400).json({ 
+        success: false, 
+        message: "No update data provided",
+        timestamp: new Date().toISOString()
+      });
     }
 
-    const updatedVehicle = await updateVehicleByIdService(
+    // Use the enhanced updateVehicle method
+    const updatedVehicle = await VehicleService.updateVehicle(
       parsedVehicleId,
-      vehicleData
+      vehicleData,
+      req.userId // Pass userId for ownership validation
     );
 
     return res.status(200).json({
       success: true,
       message: "Vehicle updated successfully",
       data: updatedVehicle,
+      timestamp: new Date().toISOString()
     });
   } catch (error) {
-    return res.status(400).json({ success: false, message: error.message });
+    console.error('Error updating vehicle:', error);
+    return res.status(error.statusCode || 500).json({ 
+      success: false, 
+      message: error.message || "Failed to update vehicle",
+      timestamp: new Date().toISOString()
+    });
   }
 };
 
@@ -60,20 +88,31 @@ export const deleteVehicle = async (req, res) => {
     const parsedVehicleId = parseInt(vehicleId, 10);
 
     if (isNaN(parsedVehicleId)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid vehicle ID" });
+      return res.status(400).json({ 
+        success: false, 
+        message: "Invalid vehicle ID",
+        timestamp: new Date().toISOString()
+      });
     }
 
-    const result = await deleteVehicleService(
-      parsedVehicleId
+    // Use the enhanced deleteVehicle method
+    const result = await VehicleService.deleteVehicle(
+      parsedVehicleId,
+      req.userId // Pass userId for ownership validation
     );
 
     return res.status(200).json({
       success: true,
-      message: result.message,
+      message: "Vehicle deleted successfully",
+      data: { deleted: result },
+      timestamp: new Date().toISOString()
     });
   } catch (error) {
-    return res.status(400).json({ success: false, message: error.message });
+    console.error('Error deleting vehicle:', error);
+    return res.status(error.statusCode || 500).json({ 
+      success: false, 
+      message: error.message || "Failed to delete vehicle",
+      timestamp: new Date().toISOString()
+    });
   }
 };

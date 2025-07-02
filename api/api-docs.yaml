@@ -393,7 +393,7 @@ paths:
               required:
                 - email
                 - otp
-                - newpassword
+                - newPassword
               properties:
                 email:
                   type: string
@@ -401,7 +401,7 @@ paths:
                 otp:
                   type: string
                   example: "123456"
-                newpassword:
+                newPassword:
                   type: string
                   example: "NewStrongPassword123!"
       responses:
@@ -460,12 +460,12 @@ paths:
               type: object
               required:
                 - currentpassword
-                - newpassword
+                - newPassword
               properties:
                 currentpassword:
                   type: string
                   example: "OldPassword123!"
-                newpassword:
+                newPassword:
                   type: string
                   example: "NewStrongPassword123!"
       responses:

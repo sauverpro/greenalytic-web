@@ -34,10 +34,10 @@ export const getAllVehiclesService = async (filters, pagination) => {
 }
 
 // ✅ 3️⃣ Get Vehicle by ID
-export const getVehicleByIdService = async vehicleId => {
+export const getVehicleByIdService = async id => {
   try {
     return await prisma.vehicle.findUnique({
-      where: { id: parseInt(vehicleId) }
+      where: { id: parseInt(id) }
     })
   } catch (error) {
     throw error
@@ -121,7 +121,7 @@ export const filterVehiclesService = async filters => {
 
 // ✅ 1️⃣4️⃣ Get Vehicle History (GPS, Fuel, Emission) in a Time Range
 export const getVehicleHistoryService = async (
-  vehicleId,
+  id,
   startTime,
   endTime,
   pagination
@@ -131,7 +131,7 @@ export const getVehicleHistoryService = async (
 
     // ✅ Step 1: Check if the vehicle exists
     const vehicle = await prisma.vehicle.findUnique({
-      where: { id: parseInt(vehicleId) },
+      where: { id: parseInt(id) },
       select: { id: true } // Select only the ID to reduce query load
     })
 
@@ -144,11 +144,13 @@ export const getVehicleHistoryService = async (
       emissions,
       gpsData,
       fuelData,
-      totalCounts
+      emissionCount,
+      gpsCount,
+      fuelCount
     ] = await prisma.$transaction([
       prisma.emissionData.findMany({
         where: {
-          vehicleId: parseInt(vehicleId),
+          vehicleId: parseInt(id),
           timestamp: { gte: new Date(startTime), lte: new Date(endTime) }
         },
         select: {
@@ -164,65 +166,64 @@ export const getVehicleHistoryService = async (
         take
       }),
 
-      // prisma.gpsData.findMany({
-      //   where: {
-      //     vehicleId: parseInt(vehicleId),
-      //     timestamp: { gte: new Date(startTime), lte: new Date(endTime) }
-      //   },
-      //   select: {
-      //     id: true,
-      //     timestamp: true,
-      //     latitude: true,
-      //     longitude: true,
-      //     speed: true,
-      //     accuracy: true
-      //   },
-      //   orderBy: { timestamp: 'desc' },
-      //   skip,
-      //   take
-      // }),
+      prisma.gpsData.findMany({
+        where: {
+          vehicleId: parseInt(id),
+          timestamp: { gte: new Date(startTime), lte: new Date(endTime) }
+        },
+        select: {
+          id: true,
+          timestamp: true,
+          latitude: true,
+          longitude: true,
+          speed: true,
+          accuracy: true
+        },
+        orderBy: { timestamp: 'desc' },
+        skip,
+        take
+      }),
 
-      // prisma.fuelData.findMany({
-      //   where: {
-      //     vehicleId: parseInt(vehicleId),
-      //     timestamp: { gte: new Date(startTime), lte: new Date(endTime) }
-      //   },
-      //   select: {
-      //     id: true,
-      //     timestamp: true,
-      //     fuelLevel: true,
-      //     fuelConsumption: true
-      //   },
-      //   orderBy: { timestamp: 'desc' },
-      //   skip,
-      //   take
-      // }),
+      prisma.fuelData.findMany({
+        where: {
+          vehicleId: parseInt(id),
+          timestamp: { gte: new Date(startTime), lte: new Date(endTime) }
+        },
+        select: {
+          id: true,
+          timestamp: true,
+          fuelLevel: true,
+          fuelConsumption: true
+        },
+        orderBy: { timestamp: 'desc' },
+        skip,
+        take
+      }),
 
       // ✅ Step 3: Fetch total counts for pagination
-      prisma.$transaction([
-        prisma.emissionData.count({
-          where: {
-            vehicleId: parseInt(vehicleId),
-            timestamp: { gte: new Date(startTime), lte: new Date(endTime) }
-          }
-        }),
-        prisma.gpsData.count({
-          where: {
-            vehicleId: parseInt(vehicleId),
-            timestamp: { gte: new Date(startTime), lte: new Date(endTime) }
-          }
-        }),
-        prisma.fuelData.count({
-          where: {
-            vehicleId: parseInt(vehicleId),
-            timestamp: { gte: new Date(startTime), lte: new Date(endTime) }
-          }
-        })
-      ])
-    ])
+  
+      prisma.emissionData.count({
+        where: {
+          vehicleId: parseInt(id),
+          timestamp: { gte: new Date(startTime), lte: new Date(endTime) }
+        }
+      }),
+      prisma.gpsData.count({
+        where: {
+          vehicleId: parseInt(id),
+          timestamp: { gte: new Date(startTime), lte: new Date(endTime) }
+        }
+      }),
+      prisma.fuelData.count({
+        where: {
+          vehicleId: parseInt(id),
+          timestamp: { gte: new Date(startTime), lte: new Date(endTime) }
+        }
+      })
+  ])
 
     // ✅ Step 4: Compute total pagination values
-    const totalItems = totalCounts.reduce((acc, count) => acc + count, 0)
+    const totalItems = emissionCount + gpsCount + fuelCount
     const totalPages = Math.ceil(totalItems / limit)
     const remainingItems = Math.max(0, totalItems - page * limit)
 

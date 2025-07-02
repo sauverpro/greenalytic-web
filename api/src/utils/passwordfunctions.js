@@ -1,7 +1,8 @@
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
+
 export const passHashing = async password => {
-  const saltRounds = await bcrypt.genSalt(parseInt(process.env.saltRounds))
+  const saltRounds = parseInt(process.env.saltRounds) || 12;
   let hashedPassword = await bcrypt.hash(password, saltRounds)
   return hashedPassword
 }
@@ -11,7 +12,7 @@ export const passComparer = async (password, hashedPass) => {
   return result
 }
 
-export const generateOTP = (expiryMinutes = 5) => {
+export const generateOTP = (expiryMinutes = 30) => {
   const otp = crypto.randomInt(100000, 999999)
   const expiryTime = new Date()
   expiryTime.setMinutes(expiryTime.getMinutes() + expiryMinutes)
@@ -21,26 +22,26 @@ export const generateOTP = (expiryMinutes = 5) => {
   }
 }
 
-export const isOTPValid = (storedOTP, enteredOTP, expiresAt, res) => {
+export const isOTPValid = (storedOTP, enteredOTP, expiresAt) => {
   if (storedOTP !== enteredOTP) {
-    res
-      .status(401)
-      .json({
-        message: `Enter a valid OTP. Entered: ${enteredOTP}, Stored: ${storedOTP}`
-      })
-    return false
+    return {
+      valid: false,
+      message: "Invalid OTP provided"
+    }
   }
+  
   const currentDateTime = new Date()
-  console.log('Current Date:', currentDateTime)
-
   const storedExpiresAt = new Date(expiresAt)
-
+  
   if (currentDateTime > storedExpiresAt) {
-    res.status(409).json({
-      message: `The provided OTP has expired. Current date: ${currentDateTime}, Expiration date: ${storedExpiresAt}`
-    })
-    return false
+    return {
+      valid: false,
+      message: "The provided OTP has expired"
+    }
   }
-
-  return true
+  
+  return {
+    valid: true,
+    message: "OTP is valid"
+  }
 }
