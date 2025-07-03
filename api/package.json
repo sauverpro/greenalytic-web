@@ -39,6 +39,7 @@
     "nodemailer": "^6.10.0",
     "pg": "^8.13.1",
     "pg-promise": "^11.10.2",
+    "prisma-zod-generator": "^0.8.13",
     "redis": "^4.7.0",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
@@ -46,7 +47,8 @@
     "swagger-ui-express": "^5.0.1",
     "ws": "^8.18.0",
     "xlsx": "^0.18.5",
-    "yamljs": "^0.3.0"
+    "yamljs": "^0.3.0",
+    "zod": "^3.25.71"
   },
   "devDependencies": {
     "@babel/cli": "^7.26.4",
