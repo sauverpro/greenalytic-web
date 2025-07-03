@@ -1,10 +1,7 @@
 generator client {
   provider = "prisma-client-js"
-    output   = "../app/generated/prisma"  
+ 
 }
-
-
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -108,6 +105,7 @@ location      String?
   trackingDevices TrackingDevice[]
   alerts           Alert[]
   reports          Report[]
+  activityLogs     ActivityLog[]
 
   @@index([email])
   @@index([phoneNumber])
@@ -138,6 +136,7 @@ model Vehicle {
   trackingDevices    TrackingDevice[]
   alerts           Alert[]
   maintenanceRecords MaintenanceRecord[]
+  connectionState   ConnectionState? // Opposite relation for ConnectionState
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -180,6 +179,8 @@ model TrackingDevice {
 
   vehicleId Int? 
   vehicle   Vehicle? @relation(fields: [vehicleId], references: [id])
+
+  deviceHeartbeats DeviceHeartbeat[] // Opposite relation
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -304,12 +305,13 @@ model Alert {
 }
 model ConnectionState {
   id          Int      @id @default(autoincrement())
-  vehicleId   String   @unique
+  vehicleId   Int @unique
+  vehicle     Vehicle @relation(fields: [vehicleId], references: [id])
   socketId    String
   status      ConnectionStatus 
   lastUpdated DateTime
 }
-
+  
 model Report {
   id          Int      @id @default(autoincrement())
   title       String
@@ -350,4 +352,40 @@ model MaintenanceRecord {
   @@index([vehicleId])
   @@index([performedAt])
   @@index([nextDueDate])
+}
+
+model ActivityLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  action    String   // e.g., "Login", "Device Registered", "Updated Vehicle"
+  metadata  Json?    // Optional extra data
+  timestamp DateTime @default(now())
+  @@index([userId])
+  @@index([timestamp])
+}
+model InventoryItem {
+  id        Int      @id @default(autoincrement())
+  deviceType String
+  quantity  Int
+  threshold Int      // minimum stock before alert
+  updatedAt DateTime @updatedAt
+}
+model ThresholdConfig {
+  id          Int      @id @default(autoincrement())
+  parameter   String   // e.g., "CO2", "NOx", "Speed"
+  maxValue    Float
+  minValue    Float?
+  alertType   NotificationType
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+model DeviceHeartbeat {
+  id           Int      @id @default(autoincrement())
+  deviceId     Int
+  trackingDevice TrackingDevice @relation(fields: [deviceId], references: [id])
+  status       ConnectionStatus
+  timestamp    DateTime @default(now())
+
+  @@index([deviceId])
 }
