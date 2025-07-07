@@ -4,8 +4,8 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { FaRegEnvelope, FaLock } from "react-icons/fa";
 import AuthLayout from "../../components/authLayout";
-import { TextInput } from "../login/TextInput";
-import Button from "../login/Button";
+import { TextInput } from "../login-ouwn/TextInput";
+import Button from "../login-ouwn/Button";
 import useAxiosClient from "@/hooks/axiosClient";
 import Link from "next/link";
 

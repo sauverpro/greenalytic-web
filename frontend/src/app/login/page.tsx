@@ -1,170 +1,100 @@
-"use client";
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "react-toastify";
-import { login } from "../../services/userService";
-import { FaRegEnvelope } from "react-icons/fa";
-import { MdLockOutline } from "react-icons/md";
-import { FiEyeOff } from "react-icons/fi";
-import { FaRegEye } from "react-icons/fa";
-import Link from "next/link";
-import AuthLayout from "../../components/authLayout";
-import { TextInput } from "./TextInput";
-import Button from "./Button";
+'use client';
 
-const Login: React.FC = () => {
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [formData, setFormData] = useState({ email: "", password: "" });
-  const [errors, setErrors] = useState({ email: "", password: "" });
-  const [passwordShown, setPasswordShown] = useState(false);
+import { useState } from 'react';
 
-  const validateForm = () => {
-    let valid = true;
-    const newErrors = { email: "", password: "" };
-
-    if (!formData.email) {
-      newErrors.email = "Email is required";
-      valid = false;
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email";
-      valid = false;
-    }
-
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-      valid = false;
-    } else if (formData.password.length < 3) {
-      newErrors.password = "Password must contain at least 3 characters";
-      valid = false;
-    }
-
-    setErrors(newErrors);
-    return valid;
-  };
+export default function LoginPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
-      setIsLoading(true);
-      try {
-        const result = await login(formData);
-        if (result.success) {
-          if (result.role === "admin") {
-            router.push("/admin");
-          } else {
-            router.push("/client");
-          }
-          toast.success("Login successful!");
-        } else {
-          toast.error(result.message);
-        }
-      } catch (error: any) {
-        toast.error(error.message);
-      } finally {
-        setIsLoading(false);
-      }
+
+    if (!email || !password) {
+      setError('Please fill in both fields');
+      return;
+    }
+
+    setError('');
+    setLoading(true);
+
+    // Simulate API call
+    await new Promise((res) => setTimeout(res, 1500));
+
+    setLoading(false);
+
+    if (email === 'admin@greenalytic.rw' && password === 'green123') {
+      alert('Login successful!');
+    } else {
+      setError('Invalid credentials');
     }
   };
 
-  const togglePassword = () => {
-    setPasswordShown(!passwordShown);
-  };
-
   return (
-    <AuthLayout>
-      <div className="w-full max-w-lg p-5 mx-auto bg-indigo-100 mt-10 mb-28 md:shadow-xl sm:shadow-none md:rounded-xl sm:rounded-none">
-        <div className="">
-          <div className="flex flex-col items-center justify-center">
-            <h2 className="text-2xl font-bold text-primary">
-              Welcome to Greenalytic
-            </h2>
-            <div className="border-[1px] w-10 bg-primary border-primary inline-block mb-2" />
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div className="bg-white rounded-2xl shadow-xl p-8">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome back</h2>
+            <p className="text-gray-600">Sign in to your Greenalytic account</p>
           </div>
-
-          <div className="text-sm text-center">Login to continue</div>
-
-          <div className="flex flex-col items-center">
-            <form
-              className="w-full"
-              onSubmit={handleLogin}
-              data-testid="loginForm"
-            >
-              {errors.password && (
-                <div className="w-full p-4 my-4 text-center bg-red-400 rounded-md">
-                  <small className="text-white">{errors.password}</small>
-                </div>
-              )}
-              <TextInput
+          
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
+              {error}
+            </div>
+          )}
+          
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                Email address
+              </label>
+              <input
+                id="email"
                 type="email"
-                placeholder="Enter email"
-                value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
-                icon={<FaRegEnvelope className="mr-2 text-sms" />}
-                error={errors.email}
+                placeholder="Enter your email"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
-              <div className="pl-4 mb-1 text-left">
-                {errors.email && (
-                  <small className="text-red-600">{errors.email}</small>
-                )}
-              </div>
-
-              <TextInput
-                type={passwordShown ? "text" : "password"}
-                placeholder="Enter password"
-                value={formData.password}
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
-                icon={<MdLockOutline className="mr-2 text-sms" />}
-                error={errors.password}
-                togglePassword={togglePassword}
+            </div>
+            
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                placeholder="Enter your password"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
               />
-              <div className="pl-4 mb-1 text-left">
-                {errors.password && (
-                  <small className="text-red-600">{errors.password}</small>
-                )}
-              </div>
-              <div className="flex flex-col items-center justify-between w-full mt-5 mb-5 rounded sm:flex-row">
-                <div className="w-50%">
-                  <label
-                    htmlFor="checkbox"
-                    className="flex items-center text-xs"
-                  >
-                    <input type="checkbox" name="remember" className="mr-1" />
-                    Remember me
-                  </label>
-                </div>
-                <div className="w-[50%] flex flex-row justify-end">
-                  <Link href="/forgotPassword" className="text-xs">
-                    Forgot Password?
-                  </Link>
-                </div>
-              </div>
-              <div className="justify-center w-full">
-                {isLoading ? (
-                  <Button type="button" disabled>
-                    Loading...
-                  </Button>
-                ) : (
-                  <Button type="submit">Login</Button>
-                )}
-              </div>
-            </form>
-          </div>
-
-          <div className="my-4 text-sm text-center">
-            First time here?
-            <Link href="/signup" className="mx-1 text-primary">
-              Register
-            </Link>
+            </div>
+            
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Signing in...' : 'Sign in'}
+            </button>
+          </form>
+          
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-600">
+              Need help? Contact{' '}
+              <a href="mailto:support@greenalytic.rw" className="text-emerald-600 hover:text-emerald-700 font-medium">
+                support@greenalytic.rw
+              </a>
+            </p>
           </div>
         </div>
       </div>
-    </AuthLayout>
+    </div>
   );
-};
+}
 
-export default Login;

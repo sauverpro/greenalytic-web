@@ -7,32 +7,18 @@ export default function Home() {
 
   const slides = [
     {
-      image: '/carousel1.jpg',
+      image: '/carousel2.jpg',
       title: 'Clean mobility works better here.',
       subtitle: 'Zero emissions. Real impact.',
       description: 'Track vehicle emissions in real-time and drive change with expert-built monitoring solutions.',
       cta: 'Get started'
     },
     {
-      image: '/carousel2.jpg', 
-      title: 'Electric tricycles built for Africa.',
+      image: '/tricycle2.jpg', 
+      title: 'Electric vehicles built for Africa.',
       subtitle: 'Rugged. Reliable. Revolutionary.',
       description: 'Transport agricultural goods with zero emissions using tricycles designed for rural roads.',
-      cta: 'Explore tricycles'
-    },
-    {
-      image: '/carousel-1.jpg',
-      title: 'Smart monitoring solutions.',
-      subtitle: 'Data-driven. Decision-ready.',
-      description: 'IoT sensors and real-time analytics to optimize your fleet performance and reduce environmental impact.',
-      cta: 'Learn more'
-    },
-    {
-      image: '/green.jpeg',
-      title: 'Innovation for Africa.',
-      subtitle: 'Local solutions. Global impact.',
-      description: 'Locally engineered technologies designed specifically for African road conditions and climate.',
-      cta: 'Discover more'
+      cta: 'Explore vehicles'
     }
   ];
 
@@ -45,67 +31,56 @@ export default function Home() {
 
   return (
     <>
-      {/* Hero Section with Background Slideshow */}
-      <section className="relative min-h-screen overflow-hidden">
-        {/* Background Slideshow */}
-        <div className="absolute inset-0 z-0">
-          {slides.map((slide, index) => (
-            <img
-              key={index}
-              src={slide.image}
-              alt={`Slide ${index + 1}`}
-              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${
-                currentSlide === index ? 'opacity-100' : 'opacity-0'
-              }`}
-            />
-          ))}
-          {/* Dark overlay for text readability */}
-          <div className="absolute inset-0 bg-black/60"></div>
+      {/* Force Cache Bust Comment - Update: 2024 */}
+      <section className="relative min-h-screen bg-white overflow-hidden">
+        {/* Background Elements */}
+        <div className="absolute inset-0">
+          <div className="absolute top-20 right-20 w-96 h-96 bg-emerald-100 rounded-full blur-3xl opacity-60"></div>
+          <div className="absolute bottom-20 left-20 w-80 h-80 bg-blue-50 rounded-full blur-2xl opacity-80"></div>
         </div>
 
-        <div className="relative z-10 container mx-auto px-6 lg:px-8 pt-20 pb-32 h-full flex items-center">
-          <div className="max-w-4xl mx-auto text-center text-white">
+        <div className="relative container mx-auto px-6 lg:px-8 pt-20 pb-32">
+          <div className="max-w-4xl mx-auto text-center">
             {/* Main Headline - Large and Bold like Wealthfront */}
-            <h1 className="text-6xl lg:text-8xl font-bold mb-8 leading-tight tracking-tight">
+            <h1 className="text-6xl lg:text-8xl font-bold text-gray-900 mb-8 leading-tight tracking-tight">
               {slides[currentSlide].title}
             </h1>
             
             {/* Subtitle */}
             <div className="mb-6">
-              <span className="text-2xl lg:text-3xl font-semibold text-emerald-400">
+              <span className="text-2xl lg:text-3xl font-semibold text-emerald-600">
                 {slides[currentSlide].subtitle}
               </span>
             </div>
             
             {/* Description */}
-            <p className="text-xl lg:text-2xl text-gray-200 mb-12 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-xl lg:text-2xl text-gray-600 mb-12 max-w-3xl mx-auto leading-relaxed">
               {slides[currentSlide].description}
             </p>
 
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+            {/* CTA Button - Clean Wealthfront Style */}
+            <div className="mb-16">
               <button className="bg-emerald-600 hover:bg-emerald-700 text-white text-xl font-semibold px-12 py-4 rounded-2xl transition-all duration-300 hover:shadow-2xl transform hover:scale-105">
                 {slides[currentSlide].cta}
               </button>
-              <a 
-                href="https://www.facebook.com/watch/?v=249386448091361"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="border-2 border-white text-white hover:bg-white hover:text-gray-900 text-xl font-semibold px-12 py-4 rounded-2xl transition-all duration-300 hover:shadow-2xl text-center"
-              >
-                Watch Story
-              </a>
             </div>
 
-            {/* Floating Icons */}
-            <div className="flex justify-center space-x-8">
-              <div className="w-16 h-16 bg-emerald-600/20 backdrop-blur-sm rounded-full flex items-center justify-center text-emerald-400 border border-emerald-400/30">
-                <Zap className="w-8 h-8" strokeWidth={1.5} />
+            {/* Floating Image - Wealthfront Style */}
+            <div className="relative max-w-2xl mx-auto">
+              <img
+                src={slides[currentSlide].image}
+                alt="Clean mobility solution"
+                className="w-full h-auto rounded-3xl shadow-2xl transform transition-all duration-1000"
+                style={{
+                  filter: 'drop-shadow(0 25px 50px rgba(0, 0, 0, 0.15))'
+                }}
+              />
+              
+              {/* Floating Elements with Outline Icons */}
+              <div className="absolute -top-6 -right-6 w-24 h-24 bg-emerald-600 rounded-full flex items-center justify-center text-white shadow-xl">
+                <Zap className="w-10 h-10" strokeWidth={1.5} />
               </div>
-              <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white border border-white/30">
-                <Shield className="w-8 h-8" strokeWidth={1.5} />
-              </div>
-              <div className="w-16 h-16 bg-emerald-600/20 backdrop-blur-sm rounded-full flex items-center justify-center text-emerald-400 border border-emerald-400/30">
+              <div className="absolute -bottom-6 -left-6 w-20 h-20 bg-gray-600 rounded-full flex items-center justify-center text-white shadow-xl">
                 <Leaf className="w-8 h-8" strokeWidth={1.5} />
               </div>
             </div>
@@ -113,31 +88,17 @@ export default function Home() {
         </div>
 
         {/* Slide Indicators */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-3 z-20">
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-3">
           {slides.map((_, index) => (
             <button
               key={index}
               onClick={() => setCurrentSlide(index)}
               className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                index === currentSlide ? 'bg-emerald-400 w-8' : 'bg-white/50'
+                index === currentSlide ? 'bg-emerald-600 w-8' : 'bg-gray-300'
               }`}
             />
           ))}
         </div>
-
-        {/* Navigation Arrows */}
-        <button
-          onClick={() => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length)}
-          className="absolute left-6 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-full flex items-center justify-center text-white transition-all duration-300 z-20"
-        >
-          <ArrowRight className="w-6 h-6 rotate-180" />
-        </button>
-        <button
-          onClick={() => setCurrentSlide((prev) => (prev + 1) % slides.length)}
-          className="absolute right-6 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-full flex items-center justify-center text-white transition-all duration-300 z-20"
-        >
-          <ArrowRight className="w-6 h-6" />
-        </button>
       </section>
 
       {/* Value Proposition Section */}
