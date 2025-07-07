@@ -1,7 +1,7 @@
 "use client";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
-import type { DateRange } from "react-day-picker";
+// import type { DateRange } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { DateRange } from "react-day-picker";
 
 interface DatePickerWithRangeProps {
   className?: string;
