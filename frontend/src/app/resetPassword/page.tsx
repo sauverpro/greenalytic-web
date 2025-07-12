@@ -4,8 +4,8 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { FaRegEnvelope, FaLock } from "react-icons/fa";
 import AuthLayout from "../../components/authLayout";
-import { TextInput } from "../login-ouwn/TextInput";
-import Button from "../login-ouwn/Button";
+import { TextInput } from "../login/TextInput";
+import Button from "../login/Button";
 import useAxiosClient from "@/hooks/axiosClient";
 import Link from "next/link";
 
@@ -15,13 +15,13 @@ const ResetPassword: React.FC = () => {
   const [formData, setFormData] = useState({
     email: "",
     otp: "",
-    newPassword: "",
+    newpassword: "",
     confirmPassword: "",
   });
   const [errors, setErrors] = useState({
     email: "",
     otp: "",
-    newPassword: "",
+    newpassword: "",
     confirmPassword: "",
   });
   const client = useAxiosClient();
@@ -31,7 +31,7 @@ const ResetPassword: React.FC = () => {
     const newErrors = {
       email: "",
       otp: "",
-      newPassword: "",
+      newpassword: "",
       confirmPassword: "",
     };
 
@@ -48,18 +48,18 @@ const ResetPassword: React.FC = () => {
       valid = false;
     }
 
-    if (!formData.newPassword) {
-      newErrors.newPassword = "New password is required";
+    if (!formData.newpassword) {
+      newErrors.newpassword = "New password is required";
       valid = false;
-    } else if (formData.newPassword.length < 6) {
-      newErrors.newPassword = "New password must be at least 6 characters";
+    } else if (formData.newpassword.length < 6) {
+      newErrors.newpassword = "New password must be at least 6 characters";
       valid = false;
     }
 
     if (!formData.confirmPassword) {
       newErrors.confirmPassword = "Confirm password is required";
       valid = false;
-    } else if (formData.confirmPassword !== formData.newPassword) {
+    } else if (formData.confirmPassword !== formData.newpassword) {
       newErrors.confirmPassword = "Passwords do not match";
       valid = false;
     }
@@ -142,16 +142,16 @@ const ResetPassword: React.FC = () => {
               <TextInput
                 type="password"
                 placeholder="Enter new password"
-                value={formData.newPassword}
+                value={formData.newpassword}
                 onChange={(e) =>
-                  setFormData({ ...formData, newPassword: e.target.value })
+                  setFormData({ ...formData, newpassword: e.target.value })
                 }
                 icon={<FaLock className="mr-2 text-sms" />}
-                error={errors.newPassword}
+                error={errors.newpassword}
               />
               <div className="pl-4 mb-1 text-left">
-                {errors.newPassword && (
-                  <small className="text-red-600">{errors.newPassword}</small>
+                {errors.newpassword && (
+                  <small className="text-red-600">{errors.newpassword}</small>
                 )}
               </div>
 

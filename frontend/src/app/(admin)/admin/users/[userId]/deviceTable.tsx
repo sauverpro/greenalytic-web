@@ -1,248 +1,239 @@
-// "use client";
+"use client";
 
-// import { useState } from "react";
-// import { Button } from "@/components/ui/button";
-// import { Badge } from "@/components/ui/badge";
-// import {
-//   Fuel,
-//   MapPin,
-//   Router,
-//   MoreHorizontal,
-//   Edit,
-//   Trash,
-//   Eye,
-//   Plus,
-// } from "lucide-react";
-// import {
-//   DropdownMenu,
-//   DropdownMenuTrigger,
-//   DropdownMenuContent,
-//   DropdownMenuItem,
-//   DropdownMenuSeparator,
-// } from "@/components/ui/dropdown-menu";
-// import { toast } from "sonner";
-// import { DeviceDetailsModal } from "@/components/device/device-details-model";
+import { useState } from "react";
+import { Edit, Eye, Trash } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-// // Define the device interface
-// export interface Device {
-//   id: string;
-//   serialNumber: string;
-//   model: string;
-//   type: "GPS" | "FUEL" | "EMISSION";
-//   status: string;
-//   lastPing?: string;
-//   vehicle?: {
-//     id: string;
-//     plateNumber: string;
-//     vehicleModel: string;
-//   } | null;
-// }
+interface User {
+  id: number;
+  username?: string;
+  email: string;
+  image?: string;
+}
 
-// interface DeviceTableProps {
-//   devices: Device[];
-//   isLoading?: boolean;
-//   onAddDevice?: () => void;
-//   onViewDevice?: (deviceId: string) => void;
-//   onEditDevice?: (deviceId: string) => void;
-//   onDeleteDevice?: (deviceId: string) => void;
-// }
+interface TrackingDeviceProps {
+  id: number;
+  serialNumber: string;
+  model: string;
+  type: string;
+  plateNumber: string;
+  isActive: boolean;
+  status: string;
+  lastPing?: string;
+  userId?: number;
+  vehicleId?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  user?: User | null;
+}
 
-// export const DeviceTable = ({
-//   devices = [],
-//   isLoading = false,
-//   onAddDevice,
-//   onViewDevice,
-//   onEditDevice,
-//   onDeleteDevice,
-// }: DeviceTableProps) => {
-//   // State to track which device modal is open
-//   const [modalDeviceId, setModalDeviceId] = useState<string | null>(null);
-//   const [isDeviceModalOpen, setIsDeviceModalOpen] = useState(false);
+interface TrackingDevicesTableProps {
+  initialDevices: TrackingDeviceProps[];
+}
 
-//   const handleViewDevice = (deviceId: string) => {
-//     if (onViewDevice) {
-//       onViewDevice(deviceId);
-//     } else {
-//       // Fallback if no explicit handler is provided
-//       setModalDeviceId(deviceId);
-//       setIsDeviceModalOpen(true);
-//     }
-//   };
+export default function TrackingDevicesTable({
+  initialDevices,
+}: TrackingDevicesTableProps) {
+  const [devices, setDevices] = useState<TrackingDeviceProps[]>(initialDevices);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
-//   const handleEditDevice = (deviceId: string) => {
-//     if (onEditDevice) {
-//       onEditDevice(deviceId);
-//     } else {
-//       toast("Edit device action not implemented");
-//     }
-//   };
+  // Calculate pagination
+  const totalPages = Math.ceil(devices.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentDevices = devices.slice(startIndex, endIndex);
 
-//   const handleDeleteDevice = (deviceId: string) => {
-//     if (onDeleteDevice) {
-//       onDeleteDevice(deviceId);
-//     } else {
-//       toast("Delete device action not implemented");
-//     }
-//   };
+  // Format date for display
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleString();
+  };
 
-//   if (isLoading) {
-//     return (
-//       <div className="flex items-center justify-center h-64">
-//         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500"></div>
-//       </div>
-//     );
-//   }
+  // Get initials for avatar fallback
+  const getInitials = (name?: string) => {
+    if (!name) return "UN";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase();
+  };
 
-//   return (
-//     <div className="space-y-4">
-//       <div className="flex justify-between items-center">
-//         <h2 className="text-xl font-bold">Devices</h2>
-//         {onAddDevice && (
-//           <Button
-//             className="bg-emerald-600 hover:bg-emerald-700"
-//             onClick={onAddDevice}
-//           >
-//             <Plus className="mr-2 h-4 w-4" />
-//             Add Device
-//           </Button>
-//         )}
-//       </div>
+  return (
+    <Card>
+      <CardContent className="p-0">
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[80px]">ID</TableHead>
+                <TableHead>Serial Number</TableHead>
+                <TableHead>Model</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Plate Number</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Last Ping</TableHead>
+                <TableHead>Assigned To</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {currentDevices.length > 0 ? (
+                currentDevices.map((device) => (
+                  <TableRow key={device.id}>
+                    <TableCell className="font-medium">{device.id}</TableCell>
+                    <TableCell>{device.serialNumber}</TableCell>
+                    <TableCell>{device.model}</TableCell>
+                    <TableCell>{device.type}</TableCell>
+                    <TableCell>{device.plateNumber}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={device.isActive ? "default" : "destructive"}
+                        className={
+                          device.isActive
+                            ? "bg-green-100 text-green-800 hover:bg-green-100"
+                            : "bg-red-100 text-red-800 hover:bg-red-100"
+                        }
+                      >
+                        {device.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{formatDate(device.lastPing)}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage
+                            src={device.user?.image || "/placeholder.svg"}
+                            alt={device.user?.username}
+                          />
+                          <AvatarFallback>
+                            {getInitials(device.user?.username)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span>{device.user?.username || "Unassigned"}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Open menu</span>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className="h-4 w-4"
+                            >
+                              <circle cx="12" cy="12" r="1" />
+                              <circle cx="12" cy="5" r="1" />
+                              <circle cx="12" cy="19" r="1" />
+                            </svg>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem className="flex items-center gap-2">
+                            <Eye className="h-4 w-4" />
+                            View Details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="flex items-center gap-2">
+                            <Edit className="h-4 w-4" />
+                            Edit Device
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="flex items-center gap-2 text-red-600">
+                            <Trash className="h-4 w-4" />
+                            Delete Device
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={9} className="h-24 text-center">
+                    No devices found.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
 
-//       <div className="rounded-lg border bg-white shadow-sm">
-//         <div className="overflow-x-auto">
-//           <table className="w-full border-collapse">
-//             <thead>
-//               <tr className="border-b bg-muted/50 text-left">
-//                 <th className="p-4 font-medium">Device ID</th>
-//                 <th className="p-4 font-medium">Serial Number</th>
-//                 <th className="p-4 font-medium">Model</th>
-//                 <th className="p-4 font-medium">Type</th>
-//                 <th className="p-4 font-medium">Vehicle</th>
-//                 <th className="p-4 font-medium">Status</th>
-//                 <th className="p-4 font-medium">Last Ping</th>
-//                 <th className="p-4 font-medium text-right">Actions</th>
-//               </tr>
-//             </thead>
-//             <tbody>
-//               {devices.length === 0 ? (
-//                 <tr>
-//                   <td
-//                     colSpan={8}
-//                     className="p-4 text-center text-muted-foreground"
-//                   >
-//                     No devices found
-//                   </td>
-//                 </tr>
-//               ) : (
-//                 devices.map((device, index) => (
-//                   <tr key={device.id} className="border-b hover:bg-muted/20">
-//                     <td className="p-4">{index + 1}</td>
-//                     <td className="p-4">{device.serialNumber}</td>
-//                     <td className="p-4">{device.model}</td>
-//                     <td className="p-4">
-//                       <div className="flex items-center gap-2">
-//                         {device.type === "FUEL" && (
-//                           <Fuel className="h-4 w-4 text-amber-500" />
-//                         )}
-//                         {device.type === "EMISSION" && (
-//                           <Router className="h-4 w-4 text-green-500" />
-//                         )}
-//                         {device.type === "GPS" && (
-//                           <MapPin className="h-4 w-4 text-blue-500" />
-//                         )}
-//                         <span>{device.type} Tracker</span>
-//                       </div>
-//                     </td>
-//                     <td className="p-4 font-medium">
-//                       {device.vehicle
-//                         ? `${device.vehicle.plateNumber} (${device.vehicle.vehicleModel})`
-//                         : "Unassigned"}
-//                     </td>
-//                     <td className="p-4">
-//                       <Badge
-//                         className={
-//                           device.status === "active"
-//                             ? "bg-green-100 text-green-700"
-//                             : "bg-gray-100 text-gray-700"
-//                         }
-//                       >
-//                         {device.status}
-//                       </Badge>
-//                     </td>
-//                     <td className="p-4 text-muted-foreground">
-//                       {device.lastPing
-//                         ? new Date(device.lastPing).toLocaleString()
-//                         : "N/A"}
-//                     </td>
-//                     <td className="p-4 text-right">
-//                       <DropdownMenu>
-//                         <DropdownMenuTrigger asChild>
-//                           <Button
-//                             variant="ghost"
-//                             size="icon"
-//                             className="h-8 w-8"
-//                           >
-//                             <MoreHorizontal className="h-4 w-4" />
-//                           </Button>
-//                         </DropdownMenuTrigger>
-//                         <DropdownMenuContent align="end">
-//                           <DropdownMenuItem
-//                             onClick={() => handleViewDevice(device.id)}
-//                             className="cursor-pointer"
-//                           >
-//                             <Eye className="mr-2 h-4 w-4" />
-//                             View Details
-//                           </DropdownMenuItem>
-//                           <DropdownMenuItem
-//                             onClick={() => handleEditDevice(device.id)}
-//                             className="cursor-pointer"
-//                           >
-//                             <Edit className="mr-2 h-4 w-4" />
-//                             Edit Device
-//                           </DropdownMenuItem>
-//                           <DropdownMenuSeparator />
-//                           <DropdownMenuItem
-//                             onClick={() => handleDeleteDevice(device.id)}
-//                             className="text-red-500 cursor-pointer"
-//                           >
-//                             <Trash className="mr-2 h-4 w-4" />
-//                             Remove Device
-//                           </DropdownMenuItem>
-//                         </DropdownMenuContent>
-//                       </DropdownMenu>
-//                     </td>
-//                   </tr>
-//                 ))
-//               )}
-//             </tbody>
-//           </table>
-//         </div>
-//         <div className="flex items-center justify-between border-t px-6 py-3">
-//           <div className="text-sm text-muted-foreground">
-//             Showing {devices.length} of {devices.length} devices
-//           </div>
-//           <div className="flex items-center gap-2">
-//             <Button variant="outline" size="sm" disabled>
-//               Previous
-//             </Button>
-//             <Button variant="outline" size="sm" disabled={devices.length <= 10}>
-//               Next
-//             </Button>
-//           </div>
-//         </div>
-//       </div>
+        {totalPages > 1 && (
+          <div className="flex items-center justify-end py-4">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.max(prev - 1, 1))
+                    }
+                    className={
+                      currentPage === 1
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
+                  />
+                </PaginationItem>
 
-//       {/* Render the device details modal when a device is selected */}
-//       {modalDeviceId && isDeviceModalOpen && (
-//         <DeviceDetailsModal
-//           deviceId={modalDeviceId}
-//           open={isDeviceModalOpen}
-//           onClose={() => {
-//             setIsDeviceModalOpen(false);
-//             setModalDeviceId(null);
-//           }}
-//         />
-//       )}
-//     </div>
-//   );
-// };
+                {Array.from({ length: totalPages }).map((_, i) => (
+                  <PaginationItem key={i}>
+                    <PaginationLink
+                      onClick={() => setCurrentPage(i + 1)}
+                      isActive={currentPage === i + 1}
+                    >
+                      {i + 1}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                    }
+                    className={
+                      currentPage === totalPages
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}

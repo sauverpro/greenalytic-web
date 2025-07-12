@@ -239,19 +239,19 @@ export default function ViewUserDrawer({
                                   </Badge>
                                 </td>
                                 <td className="px-4 py-3 whitespace-nowrap">
-                                  {Array.isArray(vehicle.fuelData) &&
-                                  vehicle.fuelData.length ? (
+                                  {Array.isArray(vehicle.fuelDatas) &&
+                                  vehicle.fuelDatas.length ? (
                                     <div className="flex items-center gap-1">
                                       <div className="w-20 bg-gray-200 rounded-full h-2">
                                         <div
                                           className="bg-green-500 h-2 rounded-full"
                                           style={{
-                                            width: `${vehicle.fuelData[0].fuelLevel}%`,
+                                            width: `${vehicle.fuelDatas[0].fuelLevel}%`,
                                           }}
                                         ></div>
                                       </div>
                                       <span className="text-xs font-medium">
-                                        {vehicle.fuelData[0].fuelLevel}%
+                                        {vehicle.fuelDatas[0].fuelLevel}%
                                       </span>
                                     </div>
                                   ) : (

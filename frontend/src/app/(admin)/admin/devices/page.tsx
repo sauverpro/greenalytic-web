@@ -1,7 +1,6 @@
 "use client";
-import { HardDrive, Edit, Eye, Trash, PlusCircle } from "lucide-react";
+import { Edit, Eye, Trash } from "lucide-react";
 import type { GridColDef } from "@mui/x-data-grid";
-import DataTable from "@/components/DataTable/GenericDataTable";
 import { getAllDevices } from "@/services/deviceServices";
 import type { ActionItem } from "@/components/DataTable/TableActions";
 import { useState, useEffect } from "react";
@@ -9,9 +8,8 @@ import {
   exportToPDF,
   exportToExcel,
   printDevices,
-
 } from "./ExportUtilsForDevices";
-import { TrackingDevice } from "@/types/types";
+import type { TrackingDevice } from "@/types/types";
 import TrackingDevicesTable from "./TrackingDevicesTable";
 export interface TrackingDeviceWithVehicle extends TrackingDevice {
   vehicle: {
@@ -34,7 +32,6 @@ function DevicesPage() {
     limit: 10,
   });
 
-   
   useEffect(() => {
     fetchDevices(pagination.currentPage, pagination.limit);
   }, []);
@@ -47,11 +44,9 @@ function DevicesPage() {
 
       const allDevices = response.data || [];
 
-       
       const totalItems = allDevices.length;
       const totalPages = Math.ceil(totalItems / limit);
 
-       
       setPagination({
         currentPage: page,
         totalPages,
@@ -59,22 +54,24 @@ function DevicesPage() {
         limit,
       });
 
-       
       const startIndex = (page - 1) * limit;
       const endIndex = startIndex + limit;
       const paginatedDevices = allDevices.slice(startIndex, endIndex);
 
       const formattedDevices = paginatedDevices.map((device: any) => ({
         id: device.id,
-        name: device.model || "Unknown Device",
+        model: device.model || "Unknown Device",
         serialNumber: device.serialNumber,
         status: device.status,
-        batteryLevel: Math.floor(Math.random() * 100),
-        lastActive: device.lastPing || device.updatedAt,
-        assignedTo: device.user?.username || "Unassigned",
-        plateNumber: device.plateNumber,
         type: device.type,
+        plateNumber: device.plateNumber,
         isActive: device.isActive,
+        lastPing: device.lastPing || device.updatedAt,
+        assignedTo: device.user?.username || "Unassigned",
+        userId: device.userId,
+        vehicleId: device.vehicleId,
+        createdAt: device.createdAt,
+        updatedAt: device.updatedAt,
       }));
 
       setDevices(formattedDevices);
@@ -92,7 +89,6 @@ function DevicesPage() {
     }
   };
 
-   
   const handlePageChange = (page: number, limit: number) => {
     console.log(`Changing page to ${page} with limit ${limit}`);
     fetchDevices(page, limit);
@@ -113,7 +109,6 @@ function DevicesPage() {
 
   const handleAddDevice = () => {
     console.log("Add new device");
-     
   };
 
   const getDeviceActions = (
@@ -123,26 +118,26 @@ function DevicesPage() {
       {
         label: "View Details",
         onClick: () => handleViewDevice(device),
-        icon: <Eye size={16} />
+        icon: <Eye size={16} />,
       },
       {
         label: "Edit Device",
         onClick: () => handleEditDevice(device),
-        icon: <Edit size={16} />
+        icon: <Edit size={16} />,
       },
       {
         label: "Delete Device",
         onClick: () => handleDeleteDevice(device),
         variant: "destructive",
-        icon: <Trash size={16} />
-      }
+        icon: <Trash size={16} />,
+      },
     ];
   };
 
   const columns: GridColDef[] = [
     { field: "id", headerName: "ID", width: 70 },
     {
-      field: "name",
+      field: "model",
       headerName: "Device Model",
       width: 180,
       renderCell: (params) => <div className="font-medium">{params.value}</div>,
@@ -182,7 +177,7 @@ function DevicesPage() {
     },
     {
       field: "type",
-      headerName: "Type",
+      headerName: "Device Type",
       width: 120,
     },
     {
@@ -207,13 +202,27 @@ function DevicesPage() {
       ),
     },
     {
+      field: "lastPing",
+      headerName: "Last Ping",
+      width: 180,
+      renderCell: (params) => (
+        <div>
+          {params.value ? new Date(params.value).toLocaleString() : "N/A"}
+        </div>
+      ),
+    },
+    {
       field: "assignedTo",
       headerName: "Assigned To",
       width: 150,
     },
+    {
+      field: "vehicleId",
+      headerName: "Vehicle ID",
+      width: 100,
+    },
   ];
 
-   
   const handleExportPDF = (selectedDevices: TrackingDeviceWithVehicle[]) => {
     try {
       console.log("Export to PDF", selectedDevices);
@@ -246,12 +255,7 @@ function DevicesPage() {
 
   return (
     <div className="h-full flex flex-1 max-w-[100%]">
-     
-      <TrackingDevicesTable
-      trackingDevices={devices}
-       loading={loading}
-      
-      />
+      <TrackingDevicesTable trackingDevices={devices} loading={loading} />
     </div>
   );
 }

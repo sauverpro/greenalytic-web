@@ -30,7 +30,7 @@ export const getDevicesForVehicle = async (vehicleId: string) => {
   }
 }
 
-//get sll devices
+//get all devices
 export const getAllDevices = async () => {
   try {
     const response = await client.get(`/trackingDevices/all`);

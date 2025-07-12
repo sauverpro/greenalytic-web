@@ -9,7 +9,7 @@ import { FaRegEye } from "react-icons/fa";
 import { LuNotebookPen } from "react-icons/lu";
 import Link from "next/link";
 import AuthLayout from "../../components/authLayout";
-import Button from "../login-ouwn/Button";
+import Button from "../login/Button";
 import { signup } from "../../services/userService";
 
 const Signup: React.FC = () => {
