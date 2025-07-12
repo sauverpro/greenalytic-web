@@ -1,22 +1,22 @@
 'use client';
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Menu, X, ChevronDown, Globe } from 'lucide-react';
-
+import { useState, useEffect } from "react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { Menu, User, LogIn } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { Separator } from "@/components/ui/separator"
 export default function Navbar() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [language, setLanguage] = useState('EN');
-  const [showLanguageMenu, setShowLanguageMenu] = useState(false);
-  const pathname = usePathname();
 
-  const languages = [
-    { code: 'EN', name: 'English', flag: '🇺🇸' },
-    { code: 'FR', name: 'Français', flag: '🇫🇷' },
-    { code: 'RW', name: 'Kinyarwanda', flag: '🇷🇼' },
-    { code: 'SW', name: 'Kiswahili', flag: '🇰🇪' }
-  ];
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isSignInOpen, setIsSignInOpen] = useState(false)
+  const [isSignUpOpen, setIsSignUpOpen] = useState(false)
+  const pathname = usePathname()
+
+
+
 
   const navigation = [
     { name: 'Home', href: '/' },
@@ -37,18 +37,7 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Close mobile menu when route changes
-  useEffect(() => {
-    setIsOpen(false);
-  }, [pathname]);
-
-  const handleLanguageChange = (langCode: string) => {
-    setLanguage(langCode);
-    setShowLanguageMenu(false);
-    // Here you would implement actual language switching logic
-    console.log(`Language changed to: ${langCode}`);
-  };
-
+  const closeMobileMenu = () => setIsMobileMenuOpen(false)
   return (
     <>
       {/* Green Accent Stripe */}
@@ -62,7 +51,7 @@ export default function Navbar() {
         {/* Top accent line */}
         <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-greenalytic to-transparent opacity-60"></div>
         
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="px-4">
           <div className="flex items-center justify-between py-4">
             
             {/* Simple Logo Section */}
@@ -73,150 +62,301 @@ export default function Navbar() {
                 className="h-24 w-auto group-hover:scale-105 transition-transform duration-300" 
               />
             </Link>
-
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center space-x-1">
               {navigation.map((item) => {
-                const isActive = pathname === item.href;
+                const isActive = pathname === item.href
                 return (
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
-                      isActive
-                        ? 'text-greenalytic bg-greenalytic-light/10'
-                        : 'text-gray-700 hover:text-greenalytic hover:bg-gray-50'
+                    className={`px-3 xl:px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                      isActive ? "text-green-600 bg-green-50" : "text-gray-700 hover:text-green-600 hover:bg-gray-50"
                     }`}
                   >
                     {item.name}
                   </Link>
-                );
+                )
               })}
             </div>
 
-            {/* Right Section: Language + CTA + Mobile Menu */}
-            <div className="flex items-center space-x-4">
-              
-              {/* Language Switcher */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowLanguageMenu(!showLanguageMenu)}
-                  className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 hover:text-greenalytic bg-gray-50 hover:bg-greenalytic-light/10 rounded-lg transition-all duration-200"
-                >
-                  <Globe className="w-4 h-4" />
-                  <span>{language}</span>
-                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${showLanguageMenu ? 'rotate-180' : ''}`} />
-                </button>
+            {/* Desktop Auth Buttons */}
+            <div className="hidden lg:flex items-center space-x-3">
+              <Sheet open={isSignInOpen} onOpenChange={setIsSignInOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="sm" className="text-gray-700 hover:text-green-600">
+                    <LogIn className="w-4 h-4 mr-2" />
+                    Sign In
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-[400px] sm:w-[540px]">
+                  <SheetHeader>
+                    <SheetTitle>Sign In to Greenalytic</SheetTitle>
+                  </SheetHeader>
+                  <div className="mt-6">
+                    <SignInForm onClose={() => setIsSignInOpen(false)} />
+                  </div>
+                </SheetContent>
+              </Sheet>
 
-                {/* Language Dropdown */}
-                {showLanguageMenu && (
-                  <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50">
-                    <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide border-b border-gray-100">
-                      Select Language
-                    </div>
-                    {languages.map((lang) => (
-                      <button
-                        key={lang.code}
-                        onClick={() => handleLanguageChange(lang.code)}
-                        className={`w-full flex items-center space-x-3 px-4 py-3 text-sm hover:bg-greenalytic-light/10 transition-colors ${
-                          language === lang.code ? 'text-greenalytic bg-greenalytic-light/5' : 'text-gray-700'
+              <Sheet open={isSignUpOpen} onOpenChange={setIsSignUpOpen}>
+                <SheetTrigger asChild>
+                  <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white">
+                    <User className="w-4 h-4 mr-2" />
+                    Sign Up
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-[400px] sm:w-[540px]">
+                  <SheetHeader>
+                    <SheetTitle>Join Greenalytic</SheetTitle>
+                  </SheetHeader>
+                  <div className="mt-6">
+                    <SignUpForm onClose={() => setIsSignUpOpen(false)} />
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
+
+            {/* Mobile Menu Button */}
+            <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="sm" className="lg:hidden">
+                  <Menu className="h-6 w-6" />
+                  <span className="sr-only">Open menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[300px] sm:w-[400px]">
+                <SheetHeader>
+                  <SheetTitle className="text-left">
+                    <img src="/Greenalytic.png" alt="Greenalytic Motors" className="h-16 w-auto" />
+                  </SheetTitle>
+                </SheetHeader>
+
+                <div className="mt-6 space-y-1">
+                  {navigation.map((item) => {
+                    const isActive = pathname === item.href
+                    return (
+                      <Link
+                        key={item.name}
+                        href={item.href}
+                        onClick={closeMobileMenu}
+                        className={`block px-3 py-3 text-base font-medium rounded-lg transition-all duration-200 ${
+                          isActive
+                            ? "text-green-600 bg-green-50"
+                            : "text-gray-700 hover:text-green-600 hover:bg-gray-50"
                         }`}
                       >
-                        <span className="text-lg">{lang.flag}</span>
-                        <div className="flex-1 text-left">
-                          <div className="font-medium">{lang.name}</div>
-                          <div className="text-xs text-gray-500">{lang.code}</div>
-                        </div>
-                        {language === lang.code && (
-                          <div className="w-2 h-2 bg-greenalytic rounded-full"></div>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+                        {item.name}
+                      </Link>
+                    )
+                  })}
+                </div>
 
-              {/* CTA Button */}
-              <Link
-                href="/contact"
-                className="hidden md:inline-flex items-center px-6 py-2.5 bg-gradient-to-r from-greenalytic to-greenalytic-dark hover:from-greenalytic-dark hover:to-greenalytic text-white font-semibold text-sm rounded-xl transition-all duration-300 hover:shadow-lg transform hover:scale-105"
-              >
-                Get Started
-                <div className="ml-2 w-1.5 h-1.5 bg-greenalytic-light rounded-full animate-pulse"></div>
-              </Link>
+                <Separator className="my-6" />
 
-              {/* Mobile Menu Button */}
-              <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="lg:hidden p-2 text-gray-700 hover:text-greenalytic hover:bg-gray-50 rounded-lg transition-colors"
-              >
-                {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-              </button>
-            </div>
+                {/* Mobile Auth Buttons */}
+                <div className="space-y-3">
+                  <Sheet open={isSignInOpen} onOpenChange={setIsSignInOpen}>
+                    <SheetTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start bg-transparent"
+                        onClick={closeMobileMenu}
+                      >
+                        <LogIn className="w-4 h-4 mr-2" />
+                        Sign In
+                      </Button>
+                    </SheetTrigger>
+                    <SheetContent side="left" className="w-[400px] sm:w-[540px]">
+                      <SheetHeader>
+                        <SheetTitle>Sign In to Greenalytic</SheetTitle>
+                      </SheetHeader>
+                      <div className="mt-6">
+                        <SignInForm onClose={() => setIsSignInOpen(false)} />
+                      </div>
+                    </SheetContent>
+                  </Sheet>
+
+                  <Sheet open={isSignUpOpen} onOpenChange={setIsSignUpOpen}>
+                    <SheetTrigger asChild>
+                      <Button
+                        className="w-full justify-start bg-green-600 hover:bg-green-700"
+                        onClick={closeMobileMenu}
+                      >
+                        <User className="w-4 h-4 mr-2" />
+                        Sign Up
+                      </Button>
+                    </SheetTrigger>
+                    <SheetContent side="left" className="w-[400px] sm:w-[540px]">
+                      <SheetHeader>
+                        <SheetTitle>Join Greenalytic</SheetTitle>
+                      </SheetHeader>
+                      <div className="mt-6">
+                        <SignUpForm onClose={() => setIsSignUpOpen(false)} />
+                      </div>
+                    </SheetContent>
+                  </Sheet>
+                </div>
+              </SheetContent>
+            </Sheet>
+
           </div>
         </div>
 
-        {/* Mobile Menu */}
-        {isOpen && (
-          <div className="lg:hidden border-t border-gray-100 bg-white/95 backdrop-blur-lg">
-            <div className="max-w-7xl mx-auto px-4 py-4">
-              <div className="space-y-2">
-                {navigation.map((item) => {
-                  const isActive = pathname === item.href;
-                  return (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      className={`flex items-center px-4 py-3 text-base font-medium rounded-xl transition-all duration-200 ${
-                        isActive
-                          ? 'text-greenalytic bg-greenalytic-light/10 border-l-4 border-greenalytic'
-                          : 'text-gray-700 hover:text-greenalytic hover:bg-gray-50'
-                      }`}
-                    >
-                      <span>{item.name}</span>
-                    </Link>
-                  );
-                })}
-                
-                {/* Mobile Language Selector */}
-                <div className="pt-4 border-t border-gray-100">
-                  <div className="text-sm font-semibold text-gray-500 mb-2 px-4">Language</div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {languages.map((lang) => (
-                      <button
-                        key={lang.code}
-                        onClick={() => handleLanguageChange(lang.code)}
-                        className={`flex items-center space-x-2 px-3 py-2 text-sm rounded-lg transition-colors ${
-                          language === lang.code ? 'text-greenalytic bg-greenalytic-light/10' : 'text-gray-700 hover:bg-gray-50'
-                        }`}
-                      >
-                        <span>{lang.flag}</span>
-                        <span>{lang.code}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                
-                {/* Mobile CTA */}
-                <Link
-                  href="/contact"
-                  className="flex items-center justify-center w-full mt-4 px-6 py-3 bg-gradient-to-r from-greenalytic to-greenalytic-dark text-white font-semibold rounded-xl transition-all duration-300 hover:shadow-lg"
-                >
-                  Get Started
-                </Link>
-              </div>
-            </div>
-          </div>
-        )}
+
       </nav>
 
-      {/* Click outside to close language menu */}
-      {showLanguageMenu && (
-        <div 
-          className="fixed inset-0 z-40" 
-          onClick={() => setShowLanguageMenu(false)}
-        />
-      )}
     </>
   );
+  function SignInForm({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="space-y-6">
+      <div className="space-y-4">
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+            Email
+          </label>
+          <input
+            type="email"
+            id="email"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            placeholder="Enter your email"
+          />
+        </div>
+        <div>
+          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+            Password
+          </label>
+          <input
+            type="password"
+            id="password"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            placeholder="Enter your password"
+          />
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <label className="flex items-center">
+          <input type="checkbox" className="rounded border-gray-300 text-green-600 focus:ring-green-500" />
+          <span className="ml-2 text-sm text-gray-600">Remember me</span>
+        </label>
+        <Link href="/forgot-password" className="text-sm text-green-600 hover:text-green-700">
+          Forgot password?
+        </Link>
+      </div>
+
+      <div className="space-y-3">
+        <Button className="w-full bg-green-600 hover:bg-green-700">Sign In</Button>
+        <Button variant="outline" className="w-full bg-transparent">
+          Continue with Google
+        </Button>
+      </div>
+
+      <p className="text-center text-sm text-gray-600">
+        {"Don't have an account? "}
+        <button onClick={onClose} className="text-green-600 hover:text-green-700 font-medium">
+          Sign up
+        </button>
+      </p>
+    </div>
+  )
+}
+  
+  function SignUpForm({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="space-y-6">
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
+              First Name
+            </label>
+            <input
+              type="text"
+              id="firstName"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              placeholder="First name"
+            />
+          </div>
+          <div>
+            <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
+              Last Name
+            </label>
+            <input
+              type="text"
+              id="lastName"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              placeholder="Last name"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label htmlFor="signupEmail" className="block text-sm font-medium text-gray-700 mb-2">
+            Email
+          </label>
+          <input
+            type="email"
+            id="signupEmail"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            placeholder="Enter your email"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="signupPassword" className="block text-sm font-medium text-gray-700 mb-2">
+            Password
+          </label>
+          <input
+            type="password"
+            id="signupPassword"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            placeholder="Create a password"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+            Confirm Password
+          </label>
+          <input
+            type="password"
+            id="confirmPassword"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            placeholder="Confirm your password"
+          />
+        </div>
+      </div>
+
+      <div className="flex items-start">
+        <input type="checkbox" className="rounded border-gray-300 text-green-600 focus:ring-green-500 mt-1" />
+        <span className="ml-2 text-sm text-gray-600">
+          I agree to the{" "}
+          <Link href="/terms" className="text-green-600 hover:text-green-700">
+            Terms of Service
+          </Link>{" "}
+          and{" "}
+          <Link href="/privacy" className="text-green-600 hover:text-green-700">
+            Privacy Policy
+          </Link>
+        </span>
+      </div>
+
+      <div className="space-y-3">
+        <Button className="w-full bg-green-600 hover:bg-green-700">Create Account</Button>
+        <Button variant="outline" className="w-full bg-transparent">
+          Continue with Google
+        </Button>
+      </div>
+
+      <p className="text-center text-sm text-gray-600">
+        Already have an account?{" "}
+        <button onClick={onClose} className="text-green-600 hover:text-green-700 font-medium">
+          Sign in
+        </button>
+      </p>
+    </div>
+  )
+}
 }
