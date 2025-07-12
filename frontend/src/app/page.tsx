@@ -1,9 +1,10 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { ArrowRight, Play, Zap, Shield, Leaf, TrendingUp, MapPin, Users } from 'lucide-react';
-
+import { useSwipeable } from 'react-swipeable';
 export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
+
 
   const slides = [
     {
@@ -42,108 +43,115 @@ export default function Home() {
     }, 6000);
     return () => clearInterval(interval);
   }, [slides.length]);
+  const handlers = useSwipeable({
+  onSwipedLeft: () => setCurrentSlide((prev) => (prev + 1) % slides.length),
+  onSwipedRight: () => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length),
+  preventScrollOnSwipe: true,
+  trackTouch: true,
+  trackMouse: false,
+});
 
   return (
     <>
-      {/* Hero Section with Background Slideshow */}
-      <section className="relative min-h-screen overflow-hidden">
-        {/* Background Slideshow */}
-        <div className="absolute inset-0 z-0">
-          {slides.map((slide, index) => (
-            <img
-              key={index}
-              src={slide.image}
-              alt={`Slide ${index + 1}`}
-              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${
-                currentSlide === index ? 'opacity-100' : 'opacity-0'
-              }`}
-            />
-          ))}
-          {/* Dark overlay for text readability */}
-          <div className="absolute inset-0 bg-black/60"></div>
-        </div>
+<section className="relative min-h-screen overflow-hidden">
+  {/* Background Slideshow */}
+  <div className="absolute inset-0 z-0">
+    {slides.map((slide, index) => (
+      <img
+        key={index}
+        src={slide.image}
+        alt={`Slide ${index + 1}`}
+        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${
+          currentSlide === index ? 'opacity-100' : 'opacity-0'
+        }`}
+      />
+    ))}
+    <div className="absolute inset-0 bg-black/60" />
+  </div>
 
-        <div className="relative z-10 container mx-auto px-6 lg:px-8 pt-20 pb-32 h-full flex items-center">
-          <div className="max-w-4xl mx-auto text-center text-white">
-            {/* Main Headline - Large and Bold like Wealthfront */}
-            <h1 className="text-6xl lg:text-8xl font-bold mb-8 leading-tight tracking-tight">
-              {slides[currentSlide].title}
-            </h1>
-            
-            {/* Subtitle */}
-            <div className="mb-6">
-              <span className="text-2xl lg:text-3xl font-semibold text-emerald-400">
-                {slides[currentSlide].subtitle}
-              </span>
-            </div>
-            
-            {/* Description */}
-            <p className="text-xl lg:text-2xl text-gray-200 mb-12 max-w-3xl mx-auto leading-relaxed">
-              {slides[currentSlide].description}
-            </p>
+  {/* Foreground Content */}
+  <div 
+      {...handlers}
+  className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-32 flex items-center min-h-screen">
+    <div className="w-full text-center text-white space-y-6">
+      {/* Title */}
+      <h1 className="text-[clamp(2rem,6vw,5rem)] font-extrabold leading-tight tracking-tight">
+        {slides[currentSlide].title}
+      </h1>
 
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-              <button className="bg-emerald-600 hover:bg-emerald-700 text-white text-xl font-semibold px-12 py-4 rounded-2xl transition-all duration-300 hover:shadow-2xl transform hover:scale-105">
-                {slides[currentSlide].cta}
-              </button>
-              <a 
-                href="https://www.facebook.com/watch/?v=249386448091361"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="border-2 border-white text-white hover:bg-white hover:text-gray-900 text-xl font-semibold px-12 py-4 rounded-2xl transition-all duration-300 hover:shadow-2xl text-center"
-              >
-                Watch Story
-              </a>
-            </div>
+      {/* Subtitle */}
+      <p className="text-[clamp(1.2rem,3vw,2rem)] font-semibold text-emerald-400">
+        {slides[currentSlide].subtitle}
+      </p>
 
-            {/* Floating Icons */}
-            <div className="flex justify-center space-x-8">
-              <div className="w-16 h-16 bg-emerald-600/20 backdrop-blur-sm rounded-full flex items-center justify-center text-emerald-400 border border-emerald-400/30">
-                <Zap className="w-8 h-8" strokeWidth={1.5} />
-              </div>
-              <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white border border-white/30">
-                <Shield className="w-8 h-8" strokeWidth={1.5} />
-              </div>
-              <div className="w-16 h-16 bg-emerald-600/20 backdrop-blur-sm rounded-full flex items-center justify-center text-emerald-400 border border-emerald-400/30">
-                <Leaf className="w-8 h-8" strokeWidth={1.5} />
-              </div>
-            </div>
+      {/* Description */}
+      <p className="max-w-3xl mx-auto text-[clamp(1rem,2.5vw,1.5rem)] text-gray-200 leading-relaxed">
+        {slides[currentSlide].description}
+      </p>
+
+      {/* Buttons */}
+      <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        <button className="px-6 sm:px-10 py-3 sm:py-4 text-[clamp(1rem,2vw,1.25rem)] bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-all duration-300 hover:shadow-xl transform hover:scale-105">
+          {slides[currentSlide].cta}
+        </button>
+        <a
+          href="https://www.facebook.com/watch/?v=249386448091361"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="px-6 sm:px-10 py-3 sm:py-4 text-[clamp(1rem,2vw,1.25rem)] border-2 border-white text-white hover:bg-white hover:text-gray-900 font-semibold rounded-xl transition-all duration-300 hover:shadow-xl transform hover:scale-105"
+        >
+          Watch Story
+        </a>
+      </div>
+
+      {/* Feature Icons */}
+      <div className="flex justify-center gap-4 sm:gap-6 pt-8">
+        {[Zap, Shield, Leaf].map((Icon, i) => (
+          <div
+            key={i}
+            className="w-12 h-12 sm:w-16 sm:h-16 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/30 text-white"
+          >
+            <Icon className="w-6 h-6 sm:w-8 sm:h-8" strokeWidth={1.5} />
           </div>
-        </div>
+        ))}
+      </div>
+    </div>
+  </div>
 
-        {/* Slide Indicators */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-3 z-20">
-          {slides.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentSlide(index)}
-              className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                index === currentSlide ? 'bg-emerald-400 w-8' : 'bg-white/50'
-              }`}
-            />
-          ))}
-        </div>
+  {/* Slide Indicators */}
+  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+    {slides.map((_, index) => (
+      <button
+        key={index}
+        onClick={() => setCurrentSlide(index)}
+        className={`h-2.5 rounded-full transition-all duration-300 ${
+          index === currentSlide ? 'w-6 bg-emerald-400' : 'w-2.5 bg-white/50'
+        }`}
+      />
+    ))}
+  </div>
 
-        {/* Navigation Arrows */}
-        <button
-          onClick={() => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length)}
-          className="absolute left-6 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-full flex items-center justify-center text-white transition-all duration-300 z-20"
-        >
-          <ArrowRight className="w-6 h-6 rotate-180" />
-        </button>
-        <button
-          onClick={() => setCurrentSlide((prev) => (prev + 1) % slides.length)}
-          className="absolute right-6 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-full flex items-center justify-center text-white transition-all duration-300 z-20"
-        >
-          <ArrowRight className="w-6 h-6" />
-        </button>
-      </section>
+  {/* Arrows */}
+  <button
+    onClick={() => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length)}
+    className="absolute left-0 sm:left-0 top-[50%] -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center text-white z-20 transition"
+  >
+    <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 rotate-180" />
+  </button>
+  <button
+    onClick={() => setCurrentSlide((prev) => (prev + 1) % slides.length)}
+    className="absolute right-0 sm:right-6 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center text-white z-20 transition"
+  >
+    <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6" />
+  </button>
+</section>
+
+
 
       {/* Value Proposition Section */}
-      <section className="py-32 bg-gray-50">
-        <div className="container mx-auto px-6 lg:px-8">
-          <div className="max-w-6xl mx-auto">
+      <section className="space-y-3 ">
+        <div className="">
+          <div className="">
             <div className="text-center mb-20">
               <h2 className="text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
                 Choose the right solution for different parts of your fleet.
@@ -210,9 +218,9 @@ export default function Home() {
       </section>
 
       {/* Social Proof Section */}
-      <section className="py-32 bg-white">
-        <div className="container mx-auto px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto text-center">
+      <section className=" bg-white">
+        <div className="">
+          <div className=" text-center">
             <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-16">
               Don&apos;t just take our word for it.
             </h2>
@@ -250,14 +258,14 @@ export default function Home() {
       </section>
 
       {/* Stats Section */}
-      <section className="py-32 bg-emerald-600 text-white relative overflow-hidden">
+      <section className="  text-white relative overflow-hidden">
         <div className="absolute inset-0">
           <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 left-0 w-80 h-80 bg-emerald-400/20 rounded-full blur-2xl"></div>
         </div>
         
-        <div className="relative container mx-auto px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto text-center">
+        <div className="relative">
+          <div className=" text-center  bg-emerald-600">
             <div className="w-32 h-32 mx-auto mb-8 bg-emerald-500/20 rounded-full flex items-center justify-center">
               <MapPin className="w-16 h-16 text-emerald-200" />
             </div>
