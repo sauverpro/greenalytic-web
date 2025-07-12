@@ -21,6 +21,7 @@ export default function Header() {
     }
   };
 
+  
   return (
     <header className="bg-primary text-light px-10 py-2 flex justify-between items-center">
       <div className="flex gap-10 justify-center items-center text-[16px]">
