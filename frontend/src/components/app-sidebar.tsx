@@ -3,7 +3,7 @@ import type React from "react";
 import { useEffect, useState } from "react";
 import { useSidebar } from "@/components/ui/sidebar";
 import Image from "next/image";
-import logo from "../../public/images/logo.png";
+
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { usePathname, useRouter} from "next/navigation";
@@ -124,7 +124,7 @@ export function AppSidebar() {
               <div className="absolute inset-0 bg-emerald-400 blur-xl opacity-20 group-hover:opacity-30 transition-opacity duration-500 rounded-full"></div>
               <div className="h-20 flex items-center justify-center overflow-hidden">
                 <Image
-                  src={logo || "/placeholder.svg"}
+                  src="/images/logo.png"
                   alt="GreenAlytics Logo"
                   width={300}
                   height={80}
