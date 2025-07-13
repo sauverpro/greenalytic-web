@@ -20,7 +20,7 @@ import {
   Youtube,
   CheckSquare
 } from "lucide-react";
-
+import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -129,11 +129,11 @@ export default function Navbar() {
             </div>
 
             {/* Mobile Menu Button & Sheet */}
-            <div className="lg:hidden  bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-tl-2xl rounded-br-2xl shadow-lg px-2">
-              <Sheet open={isOpen} onOpenChange={setIsOpen}>
+            <div className="lg:hidden  bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-tl-2xl rounded-br-2xl shadow-lg px-2 txl-xl retive top-36">
+              < Sheet open={isOpen} onOpenChange={setIsOpen} >
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="sm" className="p-2 hover:bg-green-50 hover:text-green-600 rounded-tl-lg rounded-br-lg transition-all duration-200">
-                    <Menu className="h-6 w-6" />
+                    <Menu className="h-10 w-10" />
                     <span className="sr-only">Open menu</span>
                   </Button>
                 </SheetTrigger>
@@ -142,9 +142,9 @@ export default function Navbar() {
                   <div className="h-full flex flex-col p-2">
                     {/* Header with Logo */}
                     <DialogTitle>
-                      <div className="p-6 border-b bg-gradient-to-r from-green-10 to-emerald-600 rounded-tl-xl rounded-br-xl">
+                      <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-gray-700 p-6 rounded-tl-2xl rounded-br-2xl ">
                         <div className="flex items-center gap-3">
-                          <img src="/Greenalytic.png" alt="Greenalytic Motors" className="h-12 w-auto brightness-0 invert" />
+                          <Image src="/Greenalytic.png" alt="Greenalytic Motors" width={160} height={48} className="h-10 sm:h-12 md:h-16 w-auto brightness-0 invert" priority />
                         </div>
                       </div>
                     </DialogTitle>

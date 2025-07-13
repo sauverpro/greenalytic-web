@@ -91,14 +91,14 @@ export default function Home() {
 
       {/* Buttons */}
       <div className="flex flex-col sm:flex-row gap-4 justify-center">
-        <button className="px-6 sm:px-10 py-3 sm:py-4 text-[clamp(1rem,2vw,1.25rem)] bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-all duration-300 hover:shadow-xl transform hover:scale-105">
+        <button className="px-6 sm:px-10 py-3 sm:py-4 text-[clamp(1rem,2vw,1.25rem)] bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-tl-3xl rounded-br-3xl transition-all duration-300 hover:shadow-xl transform hover:scale-105">
           {slides[currentSlide].cta}
         </button>
         <a
           href="https://www.facebook.com/watch/?v=249386448091361"
           target="_blank"
           rel="noopener noreferrer"
-          className="px-6 sm:px-10 py-3 sm:py-4 text-[clamp(1rem,2vw,1.25rem)] border-2 border-white text-white hover:bg-white hover:text-gray-900 font-semibold rounded-xl transition-all duration-300 hover:shadow-xl transform hover:scale-105"
+          className="px-6 sm:px-10 py-3 sm:py-4 text-[clamp(1rem,2vw,1.25rem)] border-2 border-white text-white hover:bg-white hover:text-gray-900 font-semibold rounded-tl-3xl rounded-br-3xl transition-all duration-300 hover:shadow-xl transform hover:scale-105"
         >
           Watch Story
         </a>
@@ -140,7 +140,7 @@ export default function Home() {
   </button>
   <button
     onClick={() => setCurrentSlide((prev) => (prev + 1) % slides.length)}
-    className="absolute right-0 sm:right-6 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center text-white z-20 transition"
+    className="absolute right-0 sm:right-0 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center text-white z-20 transition"
   >
     <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6" />
   </button>
@@ -149,113 +149,141 @@ export default function Home() {
 
 
       {/* Value Proposition Section */}
-      <section className="space-y-3 ">
-        <div className="">
-          <div className="">
-            <div className="text-center mb-20">
-              <h2 className="text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
-                Choose the right solution for different parts of your fleet.
-              </h2>
-            </div>
+<section className="px-4 sm:px-6 lg:px-20 py-16 space-y-12">
+  {/* Section Header */}
+  <div className="text-center">
+    <h2 className="text-[clamp(2rem,4vw,3.5rem)] font-bold text-gray-900 leading-tight max-w-4xl mx-auto">
+      Choose the right solution for different parts of your fleet.
+    </h2>
+  </div>
 
-            <div className="grid lg:grid-cols-3 gap-12">
-              {[
-                {
-                  icon: <Shield className="w-12 h-12" />,
-                  title: 'Emissions Monitoring',
-                  subtitle: 'Real-time tracking',
-                  description: 'Best for regulatory compliance and fleet optimization, until you&apos;re ready for full electrification.',
-                  risk: 'LOW RISK',
-                  color: 'emerald'
-                },
-                {
-                  icon: <Zap className="w-12 h-12" />,
-                  title: 'Electric Tricycles',
-                  subtitle: 'Zero emissions transport',
-                  description: 'Purpose-built vehicles that earn steady performance and are considered ideal for rural logistics.',
-                  risk: 'PROVEN TECH',
-                  color: 'gray'
-                },
-                {
-                  icon: <TrendingUp className="w-12 h-12" />,
-                  title: 'IoT Fleet Management',
-                  subtitle: 'Smart operations',
-                  description: 'The data-driven method designed to maximize efficiency over the long term, while we automatically manage the insights.',
-                  risk: 'HIGH IMPACT',
-                  color: 'emerald'
-                }
-              ].map((solution, idx) => (
-                <div key={idx} className="bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
-                  <div className="text-center mb-8">
-                    <div className={`w-24 h-24 mx-auto mb-6 rounded-full ${
-                      solution.color === 'emerald' ? 'bg-emerald-50' : 'bg-gray-50'
-                    } flex items-center justify-center ${
-                      solution.color === 'emerald' ? 'text-emerald-600' : 'text-gray-600'
-                    }`}>
-                      {solution.icon}
-                    </div>
-                    <div className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${
-                      solution.color === 'emerald' 
-                        ? 'text-emerald-700 bg-emerald-100' 
-                        : 'text-gray-700 bg-gray-100'
-                    } mb-4`}>
-                      {solution.risk}
-                    </div>
-                  </div>
-                  
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">{solution.title}</h3>
-                  <p className="text-lg font-semibold text-emerald-600 mb-4">{solution.subtitle}</p>
-                  <p className="text-gray-600 leading-relaxed mb-6">{solution.description}</p>
-                  
-                  <button className="w-full bg-gray-100 hover:bg-emerald-50 hover:text-emerald-700 text-gray-900 font-semibold py-3 rounded-xl transition-colors">
-                    Learn more
-                  </button>
-                </div>
-              ))}
-            </div>
+  {/* Solutions Grid */}
+  <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+    {[
+      {
+        icon: <Shield className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12" />,
+        title: 'Emissions Monitoring',
+        subtitle: 'Real-time tracking',
+        description: 'Best for regulatory compliance and fleet optimization, until you’re ready for full electrification.',
+        risk: 'LOW RISK',
+        color: 'emerald',
+      },
+      {
+        icon: <Zap className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12" />,
+        title: 'Electric Tricycles',
+        subtitle: 'Zero emissions transport',
+        description: 'Purpose-built vehicles that earn steady performance and are considered ideal for rural logistics.',
+        risk: 'PROVEN TECH',
+        color: 'gray',
+      },
+      {
+        icon: <TrendingUp className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12" />,
+        title: 'IoT Fleet Management',
+        subtitle: 'Smart operations',
+        description: 'The data-driven method designed to maximize efficiency over the long term, while we automatically manage the insights.',
+        risk: 'HIGH IMPACT',
+        color: 'emerald',
+      }
+    ].map((solution, idx) => (
+      <div
+        key={idx}
+        className="bg-white  rounded-tl-3xl rounded-br-3xl p-6 sm:p-8 shadow-md hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 flex flex-col justify-between"
+      >
+        {/* Icon + Risk Label */}
+        <div className="text-center mb-6 sm:mb-8">
+          <div
+            className={`w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-4 sm:mb-6 rounded-full ${
+              solution.color === 'emerald' ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-50 text-gray-600'
+            } flex items-center justify-center`}
+          >
+            {solution.icon}
+          </div>
+          <div
+            className={`inline-block px-3 py-1 rounded-tl-3xl rounded-br-3xl text-[0.65rem] sm:text-xs font-bold mb-2 sm:mb-4 ${
+              solution.color === 'emerald'
+                ? 'text-emerald-700 bg-emerald-200'
+                : 'text-gray-700 bg-gray-400'
+            }`}
+          >
+            {solution.risk}
           </div>
         </div>
-      </section>
+
+        {/* Content */}
+        <div className="text-center">
+          <h3 className="text-[clamp(1.25rem,2vw,1.75rem)] font-bold text-gray-900 mb-2">
+            {solution.title}
+          </h3>
+          <p className="text-[clamp(1rem,1.5vw,1.25rem)] font-semibold text-emerald-600 mb-3">
+            {solution.subtitle}
+          </p>
+          <p className="text-[clamp(0.9rem,1.3vw,1rem)] text-gray-600 leading-relaxed mb-6">
+            {solution.description}
+          </p>
+        </div>
+
+        {/* Button */}
+        <button className="w-full text-[clamp(0.9rem,1vw,1rem)] bg-gray-100 hover:bg-emerald-50 hover:text-emerald-700 text-gray-900 font-semibold py-3  transition-colors rounded-tr-3xl rounded-bl-3xl">
+          Learn more
+        </button>
+      </div>
+    ))}
+  </div>
+</section>
+
 
       {/* Social Proof Section */}
-      <section className=" bg-white">
-        <div className="">
-          <div className=" text-center">
-            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-16">
-              Don&apos;t just take our word for it.
-            </h2>
+<section className="bg-white px-4 sm:px-6 lg:px-20 py-16">
+  <div className="max-w-7xl mx-auto text-center">
+    {/* Section Title */}
+    <h2 className="text-[clamp(2rem,5vw,3.5rem)] font-bold text-gray-900 mb-12 sm:mb-16 leading-tight">
+      Don&apos;t just take our word for it.
+    </h2>
 
-            <div className="grid md:grid-cols-3 gap-8 mb-16">
-              {[
-                {
-                  quote: "Greenalytic takes the crown for best emissions monitoring platform in Rwanda",
-                  author: "Transport Ministry",
-                  product: "Emissions Monitoring"
-                },
-                {
-                  quote: "The single best resource for rural logistics and seeing our entire transport picture.",
-                  author: "Agricultural Cooperative",
-                  product: "Electric Tricycles"
-                },
-                {
-                  quote: "I LOVE Greenalytic and have moved almost all of our fleet monitoring there.",
-                  author: "Fleet Manager",
-                  product: "IoT Solutions"
-                }
-              ].map((testimonial, idx) => (
-                <div key={idx} className="bg-gray-50 rounded-2xl p-8">
-                  <div className="text-4xl mb-4">&quot;</div>
-                  <p className="text-lg text-gray-700 mb-6 leading-relaxed">{testimonial.quote}</p>
-                  <div className="text-sm">
-                    <p className="font-semibold text-gray-900">{testimonial.author}</p>
-                    <p className="text-emerald-600">{testimonial.product}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+    {/* Testimonials Grid */}
+    <div className="grid gap-8 sm:grid-cols-1 lg:grid-cols-3 mb-12">
+      {[
+        {
+          quote:
+            'Greenalytic takes the crown for best emissions monitoring platform in Rwanda',
+          author: 'Transport Ministry',
+          product: 'Emissions Monitoring',
+        },
+        {
+          quote:
+            'The single best resource for rural logistics and seeing our entire transport picture.',
+          author: 'Agricultural Cooperative',
+          product: 'Electric Tricycles',
+        },
+        {
+          quote:
+            'I LOVE Greenalytic and have moved almost all of our fleet monitoring there.',
+          author: 'Fleet Manager',
+          product: 'IoT Solutions',
+        },
+      ].map((testimonial, idx) => (
+        <div
+          key={idx}
+          className="bg-gray-50  rounded-tl-3xl rounded-br-3xl p-6 sm:p-8 flex flex-col justify-between shadow hover:shadow-lg transition-all duration-300"
+        >
+          <div className="text-[clamp(2rem,3vw,3rem)] mb-4 leading-none text-gray-400">
+            &quot;
+          </div>
+          <p className="text-[clamp(1rem,1.2vw,1.125rem)] text-gray-700 mb-6 leading-relaxed">
+            {testimonial.quote}
+          </p>
+          <div className="text-sm">
+            <p className="font-semibold text-gray-900">
+              {testimonial.author}
+            </p>
+            <p className="text-emerald-600">{testimonial.product}</p>
           </div>
         </div>
-      </section>
+      ))}
+    </div>
+  </div>
+</section>
+
 
       {/* Stats Section */}
       <section className="  text-white relative overflow-hidden">

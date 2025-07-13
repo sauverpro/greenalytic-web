@@ -12,31 +12,31 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedRole = localStorage.getItem("USER_ROLE");
-      const token = localStorage.getItem("AUTH_TOKEN");
+  // useEffect(() => {
+  //   if (typeof window !== "undefined") {
+  //     const storedRole = localStorage.getItem("USER_ROLE");
+  //     const token = localStorage.getItem("AUTH_TOKEN");
 
-      setRole(storedRole);
+  //     setRole(storedRole);
 
-      if (!token) {
-        if (pathname !== "/login") {
-          router.push("/login");
-        }
-      } else if (storedRole === "admin") {
-        if (!pathname.startsWith("/admin")) {
-          router.push("/admin");
-        }
-      } else if (storedRole === "user") {
-        if (!pathname.startsWith("/client")) {
-          router.push("/client");
-        }
-      }
+  //     if (!token) {
+  //       if (pathname !== "/login") {
+  //         router.push("/login");
+  //       }
+  //     } else if (storedRole === "admin") {
+  //       if (!pathname.startsWith("/admin")) {
+  //         router.push("/admin");
+  //       }
+  //     } else if (storedRole === "user") {
+  //       if (!pathname.startsWith("/client")) {
+  //         router.push("/client");
+  //       }
+  //     }
 
-      setAuthChecked(true);
-      setIsLoading(false);
-    }
-  }, [pathname, router]);
+  //     setAuthChecked(true);
+  //     setIsLoading(false);
+  //   }
+  // }, [pathname, router]);
 
   return (
     <SidebarProvider>

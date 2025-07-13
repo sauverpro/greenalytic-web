@@ -1,66 +1,52 @@
-"use client"
+"use client";
 
-import type React from "react"
+import { useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { useForm } from "react-hook-form";
+import {
+  Eye,
+  EyeOff,
+  Lock,
+  Mail,
+  Shield,
+  Users,
+  BarChart3
+} from "lucide-react";
 
-import { useState } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { Eye, EyeOff, Lock, Mail, Shield, Users, BarChart3 } from "lucide-react"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+type LoginFormInputs = {
+  username: string;
+  password: string;
+};
 
 export default function LoginPage() {
-  const [showPassword, setShowPassword] = useState(false)
-  const [formData, setFormData] = useState({
-    username: "",
-    password: "",
-  })
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const [isLoading, setIsLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }))
-    }
-  }
+  const { register, handleSubmit, formState: { errors } } = useForm<
+    LoginFormInputs
+  >();
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {}
-
-    if (!formData.username.trim()) {
-      newErrors.username = "Username is required"
-    }
-
-    if (!formData.password) {
-      newErrors.password = "Password is required"
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!validateForm()) return
-
-    setIsLoading(true)
+  const onSubmit = async (data: LoginFormInputs) => {
+    setIsLoading(true);
+    setFormError(null);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-      console.log("Login successful", formData)
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      console.log("Login successful", data);
     } catch (error) {
-      setErrors({ general: "Invalid username or password" })
+      setFormError("Invalid username or password");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-emerald-50">
@@ -69,183 +55,198 @@ export default function LoginPage() {
           <Card className="w-full max-w-6xl shadow-2xl overflow-hidden">
             <CardContent className="p-0">
               <div className="grid lg:grid-cols-2 min-h-[600px]">
-                {/* Left Side - Branding & Features */}
-                <div className="bg-gradient-to-br from-green-600 to-emerald-700 p-12 flex flex-col justify-center text-white relative overflow-hidden">
-                  <div className="absolute inset-0 bg-black/10"></div>
+                {/* Left Side - Branding */}
+                <div className="bg-gradient-to-br from-green-600 to-emerald-700 p-12 text-white relative">
+                  <div className="absolute inset-0 bg-black/10" />
                   <div className="relative z-10">
-                    <div className="mb-8">
-                      <Image
-                        src="/images/logo.png"
-                        alt="Greenalytic Logo"
-                        width={180}
-                        height={90}
-                        className="object-contain mb-6 brightness-0 invert"
-                      />
-                      <h1 className="text-4xl font-bold mb-4">Welcome Back</h1>
-                      <p className="text-xl text-green-100 mb-8">Sign in to your Vehicle Data Monitoring Platform</p>
-                    </div>
-
+                    <Image
+                      src="/images/logo.png"
+                      alt="Greenalytic Logo"
+                      width={180}
+                      height={90}
+                      className="object-contain mb-6 brightness-0 invert"
+                    />
+                    <h1 className="text-4xl font-bold mb-4">Welcome Back</h1>
+                    <p className="text-xl text-green-100 mb-8">
+                      Sign in to your Vehicle Data Monitoring Platform
+                    </p>
                     <div className="space-y-6">
-                      <div className="flex items-center space-x-4">
-                        <div className="bg-white/20 p-3 rounded-full">
-                          <BarChart3 className="h-6 w-6" />
+                      {[
+                        {
+                          icon: BarChart3,
+                          title: "Real-time Analytics",
+                          desc: "Monitor vehicle emissions and performance data"
+                        },
+                        {
+                          icon: Shield,
+                          title: "Secure Platform",
+                          desc: "Enterprise-grade security for your fleet data"
+                        },
+                        {
+                          icon: Users,
+                          title: "Team Collaboration",
+                          desc: "Role-based access for your entire team"
+                        }
+                      ].map(({ icon: Icon, title, desc }, i) =>
+                        <div key={i} className="flex items-center space-x-4">
+                          <div className="bg-white/20 p-3 rounded-full">
+                            <Icon className="h-6 w-6" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-lg">
+                              {title}
+                            </h3>
+                            <p className="text-green-100">
+                              {desc}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="font-semibold text-lg">Real-time Analytics</h3>
-                          <p className="text-green-100">Monitor vehicle emissions and performance data</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center space-x-4">
-                        <div className="bg-white/20 p-3 rounded-full">
-                          <Shield className="h-6 w-6" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-lg">Secure Platform</h3>
-                          <p className="text-green-100">Enterprise-grade security for your fleet data</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center space-x-4">
-                        <div className="bg-white/20 p-3 rounded-full">
-                          <Users className="h-6 w-6" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-lg">Team Collaboration</h3>
-                          <p className="text-green-100">Role-based access for your entire team</p>
-                        </div>
-                      </div>
+                      )}
                     </div>
-
                     <div className="mt-12 p-6 bg-white/10 rounded-lg backdrop-blur-sm">
                       <p className="text-sm text-green-100 italic">
-                        "Greenalytic has transformed how we monitor our fleet emissions. The real-time insights help us
-                        maintain compliance and reduce our environmental impact."
+                        "Greenalytic has transformed how we monitor our fleet
+                        emissions..."
                       </p>
-                      <p className="text-sm font-semibold mt-2">- Fleet Manager, EcoTransport Ltd</p>
+                      <p className="text-sm font-semibold mt-2">
+                        - Fleet Manager, EcoTransport Ltd
+                      </p>
                     </div>
                   </div>
                 </div>
 
                 {/* Right Side - Login Form */}
-                <div className="p-12 flex flex-col justify-center bg-white">
+                <div className="p-12 bg-white flex flex-col justify-center">
                   <div className="max-w-md mx-auto w-full">
                     <div className="text-center mb-8">
-                      <h2 className="text-3xl font-bold text-gray-900 mb-2">Sign In</h2>
-                      <p className="text-gray-600">Enter your credentials to access your dashboard</p>
+                      <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                        Sign In
+                      </h2>
+                      <p className="text-gray-600">
+                        Enter your credentials to access your dashboard
+                      </p>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                      {errors.general && (
+                    <form
+                      onSubmit={handleSubmit(onSubmit)}
+                      className="space-y-6">
+                      {formError &&
                         <Alert variant="destructive">
-                          <AlertDescription>{errors.general}</AlertDescription>
-                        </Alert>
-                      )}
+                          <AlertDescription>
+                            {formError}
+                          </AlertDescription>
+                        </Alert>}
 
+                      {/* Username */}
                       <div className="space-y-2">
-                        <Label htmlFor="username" className="text-sm font-medium text-gray-700">
-                          Username
-                        </Label>
+                        <Label htmlFor="username">Username</Label>
                         <div className="relative">
-                          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                           <Input
                             id="username"
-                            name="username"
                             type="text"
                             placeholder="Enter your username"
-                            value={formData.username}
-                            onChange={handleInputChange}
-                            className={`pl-12 h-12 text-base ${errors.username ? "border-red-500 focus:border-red-500" : "border-gray-300 focus:border-green-500"}`}
+                            {...register("username", {
+                              required: "Username is required",
+                              minLength: {
+                                value: 3,
+                                message: "Minimum 3 characters"
+                              }
+                            })}
+                            className="pl-12 h-12 text-base"
                           />
                         </div>
-                        {errors.username && <p className="text-sm text-red-500 mt-1">{errors.username}</p>}
+                        {errors.username &&
+                          <p className="text-sm text-red-500">
+                            {errors.username.message}
+                          </p>}
                       </div>
 
+                      {/* Password */}
                       <div className="space-y-2">
-                        <Label htmlFor="password" className="text-sm font-medium text-gray-700">
-                          Password
-                        </Label>
+                        <Label htmlFor="password">Password</Label>
                         <div className="relative">
-                          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                           <Input
                             id="password"
-                            name="password"
                             type={showPassword ? "text" : "password"}
                             placeholder="Enter your password"
-                            value={formData.password}
-                            onChange={handleInputChange}
-                            className={`pl-12 pr-12 h-12 text-base ${errors.password ? "border-red-500 focus:border-red-500" : "border-gray-300 focus:border-green-500"}`}
+                            {...register("password", {
+                              required: "Password is required",
+                              minLength: {
+                                value: 6,
+                                message: "Minimum 6 characters"
+                              }
+                            })}
+                            className="pl-12 pr-12 h-12 text-base"
                           />
                           <button
                             type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                          >
-                            {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                            onClick={() => setShowPassword(prev => !prev)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                            {showPassword
+                              ? <EyeOff className="h-5 w-5" />
+                              : <Eye className="h-5 w-5" />}
                           </button>
                         </div>
-                        {errors.password && <p className="text-sm text-red-500 mt-1">{errors.password}</p>}
+                        {errors.password &&
+                          <p className="text-sm text-red-500">
+                            {errors.password.message}
+                          </p>}
                       </div>
 
+                      {/* Remember + Forgot */}
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center">
+                        <label className="flex items-center space-x-2 text-sm text-gray-700">
                           <input
-                            id="remember-me"
-                            name="remember-me"
                             type="checkbox"
-                            className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                            className="h-4 w-4 text-green-600"
                           />
-                          <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
-                            Remember me
-                          </label>
-                        </div>
+                          <span>Remember me</span>
+                        </label>
                         <Link
                           href="/forgot-password"
-                          className="text-sm text-green-600 hover:text-green-700 font-medium hover:underline transition-colors"
-                        >
+                          className="text-sm text-green-600 hover:underline">
                           Forgot password?
                         </Link>
                       </div>
 
+                      {/* Submit Button */}
                       <Button
                         type="submit"
-                        className="w-full h-12 text-base font-semibold bg-green-600 hover:bg-green-700 focus:ring-4 focus:ring-green-200 transition-all duration-200"
-                        disabled={isLoading}
-                      >
-                        {isLoading ? (
-                          <div className="flex items-center">
-                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                            Signing in...
-                          </div>
-                        ) : (
-                          "Sign In"
-                        )}
+                        className="w-full h-12 text-base text-white"
+                        disabled={isLoading}>
+                        {isLoading
+                          ? <div className="flex items-center">
+                              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
+                              Signing in...
+                            </div>
+                          : "Sign In"}
                       </Button>
 
-                      <div className="text-center">
-                        <p className="text-gray-600">
-                          {"Don't have an account? "}
-                          <Link
-                            href="/signup"
-                            className="text-green-600 hover:text-green-700 font-semibold hover:underline transition-colors"
-                          >
-                            Create one here
-                          </Link>
-                        </p>
-                      </div>
-                    </form>
-
-                    <div className="mt-8 pt-6 border-t border-gray-200">
-                      <p className="text-xs text-gray-500 text-center">
-                        By signing in, you agree to our{" "}
-                        <Link href="/terms" className="text-green-600 hover:underline">
-                          Terms of Service
-                        </Link>{" "}
-                        and{" "}
-                        <Link href="/privacy" className="text-green-600 hover:underline">
-                          Privacy Policy
+                      <p className="text-center text-gray-600">
+                        Don't have an account?{" "}
+                        <Link
+                          href="/signup"
+                          className="text-green-600 hover:underline font-semibold">
+                          Create one here
                         </Link>
                       </p>
+                    </form>
+
+                    <div className="mt-8 pt-6 border-t border-gray-200 text-center text-xs text-gray-500">
+                      By signing in, you agree to our{" "}
+                      <Link
+                        href="/terms"
+                        className="text-green-600 hover:underline">
+                        Terms of Service
+                      </Link>{" "}
+                      and{" "}
+                      <Link
+                        href="/privacy"
+                        className="text-green-600 hover:underline">
+                        Privacy Policy
+                      </Link>
                     </div>
                   </div>
                 </div>
@@ -255,5 +256,5 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

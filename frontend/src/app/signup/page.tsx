@@ -1,8 +1,7 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
+import { useForm, Controller } from "react-hook-form"
 import Image from "next/image"
 import Link from "next/link"
 import { Eye, EyeOff, User, Mail, Phone, Building, Users, CheckCircle, ArrowRight, ArrowLeft } from "lucide-react"
@@ -16,7 +15,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
-
+import { useState } from "react"
 
 const USER_ROLES = [
   { value: "fleet_manager", label: "Fleet Manager", description: "Manage fleet operations and view analytics" },
@@ -42,119 +41,71 @@ const LANGUAGES = [
   { value: "rw", label: "Kinyarwanda" },
 ]
 
+type FormData = {
+  fullName: string
+  email: string
+  phoneNumber: string
+  nationalId: string
+  username: string
+  password: string
+  confirmPassword: string
+  role: string
+  companyName: string
+  companyRegNo: string
+  businessSector: string
+  fleetSize: string
+  notificationPreference: "email" | "sms" | "whatsapp"
+  language: string
+  agreeToTerms: boolean
+}
+
 export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [currentStep, setCurrentStep] = useState(1)
-  const [formData, setFormData] = useState({
-    fullName: "",
-    email: "",
-    phoneNumber: "",
-    nationalId: "",
-    username: "",
-    password: "",
-    confirmPassword: "",
-    role: "",
-    companyName: "",
-    companyRegNo: "",
-    businessSector: "",
-    fleetSize: "",
-    notificationPreference: "email",
-    language: "en",
-    agreeToTerms: false,
-  })
-
-  const [errors, setErrors] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }))
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    formState: { errors },
+    trigger,
+  } = useForm<FormData>({
+    defaultValues: {
+      notificationPreference: "email",
+      language: "en",
+      agreeToTerms: false,
+    },
+  })
 
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }))
-    }
-  }
+  const stepTitles = ["Personal Information", "Account Setup", "Company Details", "Preferences & Terms"]
+  const progress = (currentStep / 4) * 100
 
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }))
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }))
-    }
-  }
-
-  const validateStep = (step: number) => {
-    const newErrors: Record<string, string> = {}
+  const validateStep = async (step: number) => {
+    let isValid = false
 
     if (step === 1) {
-      if (!formData.fullName.trim()) {
-        newErrors.fullName = "Full name is required"
-      } else if (!/^[a-zA-Z\s]+$/.test(formData.fullName)) {
-        newErrors.fullName = "Full name should contain only letters"
+      isValid = await trigger(["fullName", "email", "phoneNumber"])
+    } else if (step === 2) {
+      isValid = await trigger(["username", "password", "confirmPassword", "role"])
+    } else if (step === 3) {
+      if (watch("role") === "fleet_manager") {
+        isValid = await trigger(["fleetSize"])
+      } else {
+        isValid = true
       }
-
-      if (!formData.email.trim()) {
-        newErrors.email = "Email is required"
-      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-        newErrors.email = "Please enter a valid email address"
-      }
-
-      if (!formData.phoneNumber.trim()) {
-        newErrors.phoneNumber = "Phone number is required"
-      } else if (!/^\+?[1-9]\d{1,14}$/.test(formData.phoneNumber.replace(/\s/g, ""))) {
-        newErrors.phoneNumber = "Please enter a valid phone number"
-      }
+    } else if (step === 4) {
+      isValid = await trigger(["agreeToTerms"])
     }
 
-    if (step === 2) {
-      if (!formData.username.trim()) {
-        newErrors.username = "Username is required"
-      } else if (formData.username.length < 6 || formData.username.length > 10) {
-        newErrors.username = "Username must be 6-10 characters"
-      }
-
-      if (!formData.password) {
-        newErrors.password = "Password is required"
-      } else if (formData.password.length < 6) {
-        newErrors.password = "Password must be at least 6 characters"
-      } else if (!/(?=.*[A-Z])(?=.*[!@#$%^&*])/.test(formData.password)) {
-        newErrors.password = "Password must include uppercase letter and symbol"
-      }
-
-      if (!formData.confirmPassword) {
-        newErrors.confirmPassword = "Please confirm your password"
-      } else if (formData.password !== formData.confirmPassword) {
-        newErrors.confirmPassword = "Passwords do not match"
-      }
-
-      if (!formData.role) {
-        newErrors.role = "Please select a role"
-      }
-    }
-
-    if (step === 3) {
-      if (formData.role === "fleet_manager") {
-        if (!formData.fleetSize) {
-          newErrors.fleetSize = "Fleet size is required for fleet managers"
-        }
-      }
-    }
-
-    if (step === 4) {
-      if (!formData.agreeToTerms) {
-        newErrors.agreeToTerms = "You must agree to the terms of use"
-      }
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+    return isValid
   }
 
-  const handleNext = () => {
-    if (validateStep(currentStep)) {
+  const handleNext = async () => {
+    const isValid = await validateStep(currentStep)
+    if (isValid) {
       setCurrentStep((prev) => prev + 1)
     }
   }
@@ -163,26 +114,17 @@ export default function SignupPage() {
     setCurrentStep((prev) => prev - 1)
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!validateStep(4)) return
-
+  const onSubmit = async (data: FormData) => {
     setIsLoading(true)
-
     try {
       await new Promise((resolve) => setTimeout(resolve, 2000))
-      console.log("Registration successful", formData)
+      console.log("Registration successful", data)
     } catch (error) {
-      setErrors({ general: "Registration failed. Please try again." })
+      console.error("Registration failed", error)
     } finally {
       setIsLoading(false)
     }
   }
-
-  const stepTitles = ["Personal Information", "Account Setup", "Company Details", "Preferences & Terms"]
-
-  const progress = (currentStep / 4) * 100
 
   const renderStepContent = () => {
     switch (currentStep) {
@@ -198,14 +140,18 @@ export default function SignupPage() {
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <Input
                     id="fullName"
-                    name="fullName"
                     placeholder="Enter your full name"
-                    value={formData.fullName}
-                    onChange={handleInputChange}
                     className={`pl-12 h-12 ${errors.fullName ? "border-red-500" : "border-gray-300 focus:border-green-500"}`}
+                    {...register("fullName", {
+                      required: "Full name is required",
+                      pattern: {
+                        value: /^[a-zA-Z\s]+$/,
+                        message: "Full name should contain only letters",
+                      },
+                    })}
                   />
                 </div>
-                {errors.fullName && <p className="text-sm text-red-500">{errors.fullName}</p>}
+                {errors.fullName && <p className="text-sm text-red-500">{errors.fullName.message}</p>}
               </div>
 
               <div className="space-y-2">
@@ -216,15 +162,19 @@ export default function SignupPage() {
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <Input
                     id="email"
-                    name="email"
                     type="email"
                     placeholder="Enter your email"
-                    value={formData.email}
-                    onChange={handleInputChange}
                     className={`pl-12 h-12 ${errors.email ? "border-red-500" : "border-gray-300 focus:border-green-500"}`}
+                    {...register("email", {
+                      required: "Email is required",
+                      pattern: {
+                        value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                        message: "Please enter a valid email address",
+                      },
+                    })}
                   />
                 </div>
-                {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
+                {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
               </div>
             </div>
 
@@ -237,14 +187,18 @@ export default function SignupPage() {
                   <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <Input
                     id="phoneNumber"
-                    name="phoneNumber"
                     placeholder="+250 xxx xxx xxx"
-                    value={formData.phoneNumber}
-                    onChange={handleInputChange}
                     className={`pl-12 h-12 ${errors.phoneNumber ? "border-red-500" : "border-gray-300 focus:border-green-500"}`}
+                    {...register("phoneNumber", {
+                      required: "Phone number is required",
+                      pattern: {
+                        value: /^\+?[1-9]\d{1,14}$/,
+                        message: "Please enter a valid phone number",
+                      },
+                    })}
                   />
                 </div>
-                {errors.phoneNumber && <p className="text-sm text-red-500">{errors.phoneNumber}</p>}
+                {errors.phoneNumber && <p className="text-sm text-red-500">{errors.phoneNumber.message}</p>}
               </div>
 
               <div className="space-y-2">
@@ -253,11 +207,9 @@ export default function SignupPage() {
                 </Label>
                 <Input
                   id="nationalId"
-                  name="nationalId"
                   placeholder="Enter ID number"
-                  value={formData.nationalId}
-                  onChange={handleInputChange}
                   className="h-12 border-gray-300 focus:border-green-500"
+                  {...register("nationalId")}
                 />
               </div>
             </div>
@@ -274,35 +226,58 @@ export default function SignupPage() {
                 </Label>
                 <Input
                   id="username"
-                  name="username"
                   placeholder="6-10 characters"
-                  value={formData.username}
-                  onChange={handleInputChange}
                   className={`h-12 ${errors.username ? "border-red-500" : "border-gray-300 focus:border-green-500"}`}
+                  {...register("username", {
+                    required: "Username is required",
+                    minLength: {
+                      value: 6,
+                      message: "Username must be at least 6 characters",
+                    },
+                    maxLength: {
+                      value: 10,
+                      message: "Username must be at most 10 characters",
+                    },
+                  })}
                 />
-                {errors.username && <p className="text-sm text-red-500">{errors.username}</p>}
+                {errors.username && <p className="text-sm text-red-500">{errors.username.message}</p>}
               </div>
 
               <div className="space-y-2">
                 <Label className="text-sm font-medium text-gray-700">Role *</Label>
-                <Select value={formData.role} onValueChange={(value) => handleSelectChange("role", value)}>
-                  <SelectTrigger
-                    className={`h-12 ${errors.role ? "border-red-500" : "border-gray-300 focus:border-green-500"}`}
-                  >
-                    <SelectValue placeholder="Select your role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {USER_ROLES.map((role) => (
-                      <SelectItem key={role.value} value={role.value}>
-                        <div>
-                          <div className="font-medium">{role.label}</div>
-                          <div className="text-sm text-gray-500">{role.description}</div>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.role && <p className="text-sm text-red-500">{errors.role}</p>}
+                <Controller
+                  name="role"
+                  control={control}
+                  rules={{ required: "Please select a role" }}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value}
+                      onValueChange={(value) => {
+                        field.onChange(value)
+                        if (errors.role) {
+                          trigger("role")
+                        }
+                      }}
+                    >
+                      <SelectTrigger
+                        className={`h-12 ${errors.role ? "border-red-500" : "border-gray-300 focus:border-green-500"}`}
+                      >
+                        <SelectValue placeholder="Select your role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {USER_ROLES.map((role) => (
+                          <SelectItem key={role.value} value={role.value}>
+                            <div>
+                              <div className="font-medium">{role.label}</div>
+                              <div className="text-sm text-gray-500">{role.description}</div>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.role && <p className="text-sm text-red-500">{errors.role.message}</p>}
               </div>
             </div>
 
@@ -314,12 +289,20 @@ export default function SignupPage() {
                 <div className="relative">
                   <Input
                     id="password"
-                    name="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="Min 6 chars, uppercase & symbol"
-                    value={formData.password}
-                    onChange={handleInputChange}
                     className={`pr-12 h-12 ${errors.password ? "border-red-500" : "border-gray-300 focus:border-green-500"}`}
+                    {...register("password", {
+                      required: "Password is required",
+                      minLength: {
+                        value: 6,
+                        message: "Password must be at least 6 characters",
+                      },
+                      pattern: {
+                        value: /(?=.*[A-Z])(?=.*[!@#$%^&*])/,
+                        message: "Password must include uppercase letter and symbol",
+                      },
+                    })}
                   />
                   <button
                     type="button"
@@ -329,7 +312,7 @@ export default function SignupPage() {
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
-                {errors.password && <p className="text-sm text-red-500">{errors.password}</p>}
+                {errors.password && <p className="text-sm text-red-500">{errors.password.message}</p>}
               </div>
 
               <div className="space-y-2">
@@ -339,12 +322,14 @@ export default function SignupPage() {
                 <div className="relative">
                   <Input
                     id="confirmPassword"
-                    name="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
                     placeholder="Confirm your password"
-                    value={formData.confirmPassword}
-                    onChange={handleInputChange}
                     className={`pr-12 h-12 ${errors.confirmPassword ? "border-red-500" : "border-gray-300 focus:border-green-500"}`}
+                    {...register("confirmPassword", {
+                      required: "Please confirm your password",
+                      validate: (value) =>
+                        value === watch("password") || "Passwords do not match",
+                    })}
                   />
                   <button
                     type="button"
@@ -354,7 +339,9 @@ export default function SignupPage() {
                     {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
-                {errors.confirmPassword && <p className="text-sm text-red-500">{errors.confirmPassword}</p>}
+                {errors.confirmPassword && (
+                  <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>
+                )}
               </div>
             </div>
           </div>
@@ -379,11 +366,9 @@ export default function SignupPage() {
                   <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <Input
                     id="companyName"
-                    name="companyName"
                     placeholder="Enter company name"
-                    value={formData.companyName}
-                    onChange={handleInputChange}
                     className="pl-12 h-12 border-gray-300 focus:border-green-500"
+                    {...register("companyName")}
                   />
                 </div>
               </div>
@@ -394,11 +379,9 @@ export default function SignupPage() {
                 </Label>
                 <Input
                   id="companyRegNo"
-                  name="companyRegNo"
                   placeholder="Enter registration number"
-                  value={formData.companyRegNo}
-                  onChange={handleInputChange}
                   className="h-12 border-gray-300 focus:border-green-500"
+                  {...register("companyRegNo")}
                 />
               </div>
             </div>
@@ -406,40 +389,48 @@ export default function SignupPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label className="text-sm font-medium text-gray-700">Business Sector</Label>
-                <Select
-                  value={formData.businessSector}
-                  onValueChange={(value) => handleSelectChange("businessSector", value)}
-                >
-                  <SelectTrigger className="h-12 border-gray-300 focus:border-green-500">
-                    <SelectValue placeholder="Select business sector" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {BUSINESS_SECTORS.map((sector) => (
-                      <SelectItem key={sector} value={sector.toLowerCase()}>
-                        {sector}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Controller
+                  name="businessSector"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value}
+                      onValueChange={(value) => {
+                        field.onChange(value)
+                      }}
+                    >
+                      <SelectTrigger className="h-12 border-gray-300 focus:border-green-500">
+                        <SelectValue placeholder="Select business sector" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {BUSINESS_SECTORS.map((sector) => (
+                          <SelectItem key={sector} value={sector.toLowerCase()}>
+                            {sector}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="fleetSize" className="text-sm font-medium text-gray-700">
-                  Fleet Size (Number of Vehicles) {formData.role === "fleet_manager" && "*"}
+                  Fleet Size (Number of Vehicles) {watch("role") === "fleet_manager" && "*"}
                 </Label>
                 <div className="relative">
                   <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <Input
                     id="fleetSize"
-                    name="fleetSize"
                     type="number"
                     placeholder="Enter number of vehicles"
-                    value={formData.fleetSize}
-                    onChange={handleInputChange}
                     className={`pl-12 h-12 ${errors.fleetSize ? "border-red-500" : "border-gray-300 focus:border-green-500"}`}
+                    {...register("fleetSize", {
+                      required: watch("role") === "fleet_manager" ? "Fleet size is required for fleet managers" : false,
+                    })}
                   />
                 </div>
-                {errors.fleetSize && <p className="text-sm text-red-500">{errors.fleetSize}</p>}
+                {errors.fleetSize && <p className="text-sm text-red-500">{errors.fleetSize.message}</p>}
               </div>
             </div>
           </div>
@@ -451,61 +442,83 @@ export default function SignupPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-4">
                 <Label className="text-base font-medium text-gray-900">Notification Preference</Label>
-                <RadioGroup
-                  value={formData.notificationPreference}
-                  onValueChange={(value) => handleSelectChange("notificationPreference", value)}
-                  className="space-y-3"
-                >
-                  <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50">
-                    <RadioGroupItem value="email" id="email-notif" />
-                    <Label htmlFor="email-notif" className="flex-1 cursor-pointer">
-                      <div className="font-medium">Email</div>
-                      <div className="text-sm text-gray-500">Receive notifications via email</div>
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50">
-                    <RadioGroupItem value="sms" id="sms-notif" />
-                    <Label htmlFor="sms-notif" className="flex-1 cursor-pointer">
-                      <div className="font-medium">SMS</div>
-                      <div className="text-sm text-gray-500">Receive notifications via SMS</div>
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50">
-                    <RadioGroupItem value="whatsapp" id="whatsapp-notif" />
-                    <Label htmlFor="whatsapp-notif" className="flex-1 cursor-pointer">
-                      <div className="font-medium">WhatsApp</div>
-                      <div className="text-sm text-gray-500">Receive notifications via WhatsApp</div>
-                    </Label>
-                  </div>
-                </RadioGroup>
+                <Controller
+                  name="notificationPreference"
+                  control={control}
+                  render={({ field }) => (
+                    <RadioGroup
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      className="space-y-3"
+                    >
+                      <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50">
+                        <RadioGroupItem value="email" id="email-notif" />
+                        <Label htmlFor="email-notif" className="flex-1 cursor-pointer">
+                          <div className="font-medium">Email</div>
+                          <div className="text-sm text-gray-500">Receive notifications via email</div>
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50">
+                        <RadioGroupItem value="sms" id="sms-notif" />
+                        <Label htmlFor="sms-notif" className="flex-1 cursor-pointer">
+                          <div className="font-medium">SMS</div>
+                          <div className="text-sm text-gray-500">Receive notifications via SMS</div>
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50">
+                        <RadioGroupItem value="whatsapp" id="whatsapp-notif" />
+                        <Label htmlFor="whatsapp-notif" className="flex-1 cursor-pointer">
+                          <div className="font-medium">WhatsApp</div>
+                          <div className="text-sm text-gray-500">Receive notifications via WhatsApp</div>
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  )}
+                />
               </div>
 
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label className="text-base font-medium text-gray-900">Language</Label>
-                  <Select value={formData.language} onValueChange={(value) => handleSelectChange("language", value)}>
-                    <SelectTrigger className="h-12 border-gray-300 focus:border-green-500">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {LANGUAGES.map((lang) => (
-                        <SelectItem key={lang.value} value={lang.value}>
-                          {lang.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Controller
+                    name="language"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger className="h-12 border-gray-300 focus:border-green-500">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {LANGUAGES.map((lang) => (
+                            <SelectItem key={lang.value} value={lang.value}>
+                              {lang.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
                 </div>
               </div>
             </div>
 
             <div className="border-t pt-6">
               <div className="flex items-start space-x-3 p-4 bg-gray-50 rounded-lg">
-                <Checkbox
-                  id="agreeToTerms"
-                  checked={formData.agreeToTerms}
-                  onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, agreeToTerms: checked as boolean }))}
-                  className={`mt-1 ${errors.agreeToTerms ? "border-red-500" : ""}`}
+                <Controller
+                  name="agreeToTerms"
+                  control={control}
+                  rules={{ required: "You must agree to the terms of use" }}
+                  render={({ field }) => (
+                    <Checkbox
+                      id="agreeToTerms"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      className={`mt-1 ${errors.agreeToTerms ? "border-red-500" : ""}`}
+                    />
+                  )}
                 />
                 <div className="flex-1">
                   <Label htmlFor="agreeToTerms" className="text-sm cursor-pointer">
@@ -521,7 +534,7 @@ export default function SignupPage() {
                   </Label>
                 </div>
               </div>
-              {errors.agreeToTerms && <p className="text-sm text-red-500 mt-2">{errors.agreeToTerms}</p>}
+              {errors.agreeToTerms && <p className="text-sm text-red-500 mt-2">{errors.agreeToTerms.message}</p>}
             </div>
           </div>
         )
@@ -609,13 +622,7 @@ export default function SignupPage() {
                       </p>
                     </div>
 
-                    <form onSubmit={handleSubmit}>
-                      {errors.general && (
-                        <Alert variant="destructive" className="mb-6">
-                          <AlertDescription>{errors.general}</AlertDescription>
-                        </Alert>
-                      )}
-
+                    <form onSubmit={handleSubmit(onSubmit)}>
                       {renderStepContent()}
 
                       <div className="flex justify-between items-center mt-8 pt-6 border-t">

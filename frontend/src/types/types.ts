@@ -190,3 +190,4 @@ export interface DeviceData {
   lastPing: string;
 }
 
+
