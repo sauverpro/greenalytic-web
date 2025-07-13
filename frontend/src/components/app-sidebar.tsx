@@ -7,7 +7,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { usePathname, useRouter} from "next/navigation";
-
+import { getCookie } from "cookies-next";
 import {
   Tooltip,
   TooltipContent,
@@ -34,67 +34,139 @@ import {
   Router,
   Settings,
   MessageSquare,
-  MapPin,
+
   Leaf,
-  Sparkles,
-  LogOut,
-  ChevronRight,
+  Sparkles,  ChevronRight,
   Truck,
-  Gauge,
-  BarChart3,
-  ClipboardList,
+
   HelpCircle,
+    LayoutDashboard,
+  Car,
+  RadioReceiver,
+  Cloud,
+  AlertTriangle,
+  FileText,
+Gauge,
+  Bell,
+  BarChart2,
+  Activity,
+
 } from "lucide-react";
 import { handleLogout } from "../services/userService";
+import { useAuth } from "@/lib/use-auth";
 
-const adminItems = [
-  { title: "Dashboard", url: "/admin", icon: Home },
-  { title: "Users", url: "/admin/users", icon: Users },
-  { title: "Messages", url: "#", icon: MessageSquare },
-  { title: "Vehicles", url: "/admin/vehicles", icon: Truck },
-  { title: "Devices", url: "/admin/devices", icon: Gauge },
-  { title: "System Settings", url: "#", icon: Settings },
-  { title: "Help Center", url: "#", icon: HelpCircle },
-];
 
-const clientItems = [
-  { title: "Dashboard", url: "/client", icon: Home },
-  { title: "GPS Tracking", url: "/client/gps", icon: LocateFixed },
-  { title: "Fuel Analytics", url: "/client/fuels", icon: Fuel },
-  { title: "Emissions Data", url: "/client/emissions", icon: Router },
-  { title: "Live Vehicle Status", url: "#", icon: Sparkles },
-  { title: "Settings", url: "#", icon: Settings },
-];
+
+
+
+
+
+export const navigationItems = [
+  {
+    title: "Dashboard",
+    url: "/dashboard",
+    icon: LayoutDashboard,
+    roles: ["*"],
+  },
+  {
+    title: "Vehicles",
+    url: "/admin/vehicles",
+    icon: Car,
+    roles: ["FLEET_MANAGER", "TECHNICIAN", "ADMIN", "MANAGER"],
+  },
+  {
+    title: "Tracking Devices",
+    url: "/dashboard/tracking-devices",
+    icon: RadioReceiver,
+    roles: ["TECHNICIAN", "ADMIN"],
+  },
+  {
+    title: "Emissions",
+    url: "/dashboard/emissions",
+    icon: Cloud,
+    roles: ["ANALYST", "ADMIN", "FLEET_MANAGER"],
+  },
+  {
+    title: "Alerts",
+    url: "/dashboard/alerts",
+    icon: AlertTriangle,
+    roles: ["ADMIN", "FLEET_MANAGER", "SUPPORT_AGENT"],
+  },
+  {
+    title: "Reports",
+    url: "/dashboard/reports",
+    icon: FileText,
+    roles: ["ADMIN", "FLEET_MANAGER", "ANALYST"],
+  },
+  {
+    title: "Users",
+    url: "/dashboard/users",
+    icon: Users,
+    roles: ["ADMIN"],
+  },
+  {
+    title: "Notifications",
+    url: "/dashboard/notifications",
+    icon: Bell,
+    roles: ["*"],
+  },
+  {
+    title: "Analytics",
+    url: "/dashboard/analytics",
+    icon: BarChart2,
+    roles: ["ADMIN", "ANALYST"],
+  },
+  {
+    title: "Activity Logs",
+    url: "/dashboard/activity-logs",
+    icon: Activity,
+    roles: ["ADMIN", "SUPPORT_AGENT"],
+  },
+  {
+    title: "Settings",
+    url: "/dashboard/settings",
+    icon: Settings,
+    roles: ["ADMIN"],
+  },
+]
+
 
 export function AppSidebar() {
+  const { user: currentUser } = useAuth()
+  
   const router = useRouter();
-  const pathname = usePathname();
+
   const { state: isCollapsed } = useSidebar();
   const [isLogoHovered, setIsLogoHovered] = useState(false);
-  const [items, setItems] = useState(clientItems);
+
   const [activeItem, setActiveItem] = useState("");
+const sidebarItems = navigationItems.filter(item =>
+  currentUser && (item.roles.includes("*") || item.roles.includes(currentUser.role))
+)
+
 
   useEffect(() => {
-    const currentPath = pathname;
-    const currentItem = [...adminItems, ...clientItems].find(
-      (item) =>
-        currentPath === item.url || currentPath.startsWith(`${item.url}/`)
-    );
-
-    if (currentItem) {
-      setActiveItem(currentItem.title);
-    }
-  }, []);
-
-  useEffect(() => {
-    const role = localStorage.getItem("USER_ROLE");
-    const token = localStorage.getItem("AUTH_TOKEN");
-    if (!token) {
+    const token = getCookie("access_token");
+    const userData = getCookie("user");
+console.log("here  am having the_______ ",userData)
+    if (!token || !userData) {
+      alert("go back to login from the  app side bar")
       router.push("/login");
-    } else if (role === "admin") {
-      setItems(adminItems);
-    } else {
-      setItems(clientItems);
+      
+      return;
+    }
+
+    try {
+      const user = JSON.parse(userData as string);
+      if (user.role?.toLowerCase() === "admin") {
+
+      } else {
+
+      }
+    } catch (error) {
+      alert(" the erro  occur  from side bar")
+      console.error("Error parsing user data from cookie", error);
+      router.push("/login");
     }
   }, [router]);
 
@@ -167,7 +239,7 @@ export function AppSidebar() {
         <SidebarGroup className="h-[calc(100vh-16rem)]  overflow-y-auto px-2 pb-10">
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
+              {sidebarItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <TooltipProvider delayDuration={0}>
                     <Tooltip>
@@ -188,7 +260,7 @@ export function AppSidebar() {
                               activeItem === item.title
                                 ? "bg-[#059669] text-white font-medium shadow-lg shadow-emerald-900/30"
                                 : `text-emerald-100 ${
-                                    items.indexOf(item) % 2 === 0
+                                    sidebarItems.indexOf(item) % 2 === 0
                                       ? "hover:bg-[#059669]"
                                       : "hover:bg-[#059669]"
                                   }`

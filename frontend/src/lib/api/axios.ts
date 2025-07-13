@@ -25,18 +25,18 @@ apiClient.interceptors.request.use(
 )
 
 // Response interceptor to handle auth errors
-apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      deleteCookie("access_token")
-      deleteCookie("user")
-      if (typeof window !== "undefined") {
-        window.location.href = "/login"
-      }
-    }
-    return Promise.reject(error)
-  },
-)
+// apiClient.interceptors.response.use(
+//   (response) => response,
+//   (error) => {
+//     if (error.response?.status === 401) {
+//       deleteCookie("access_token")
+//       deleteCookie("user")
+//       if (typeof window !== "undefined") {
+//         window.location.href = "/login"
+//       }
+//     }
+//     return Promise.reject(error)
+//   },
+// )
 
 export default apiClient

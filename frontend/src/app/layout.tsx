@@ -91,20 +91,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
       <body className="font-body text-midnight_text bg-white dark:bg-darkmode transition-all duration-300 antialiased">
         {/* ✅ Client-side Navbar */}
-        <Navbar />
+        {/* <Navbar /> */}
 
         {/* ✅ Page Content with Transitions */}
         <main className="px-4 md:px-8">
           <PageTransition>{children}</PageTransition>
         </main>
 
-        {/* Enhanced Footer */}
+{/* 
         <footer className="bg-gray-900 text-white">
-          {/* Main Footer Content */}
+     
           <div className="max-w-7xl mx-auto px-4 py-10">
             <div className="grid md:grid-cols-4 gap-8">
               
-              {/* Company Info with Logo */}
+
               <div>
                 <img 
                   src="/Greenalytic.png" 
@@ -119,7 +119,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <p className="text-gray-300 text-sm">+250 796 895 138</p>
               </div>
 
-              {/* Quick Links */}
+
               <div>
                 <h4 className="font-semibold mb-4">Quick Links</h4>
                 <ul className="space-y-1 text-sm">
@@ -132,7 +132,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 </ul>
               </div>
 
-              {/* Social Media Icons */}
+ 
               <div>
                 <h4 className="font-semibold mb-4">Follow Us</h4>
                 <div className="flex space-x-3 mb-6">
@@ -185,7 +185,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </div>
             </div>
           </div>
-        </footer>
+        </footer> */}
       </body>
     </html>
   );

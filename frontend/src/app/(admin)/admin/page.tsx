@@ -38,7 +38,105 @@ import {
   FuelMetricCard,
   EmissionsMetricCard,
 } from "@/components/adminComponents/metricCards";
-import { getDashboardCounts, getMapData } from "@/services/vehicleData";
+// Dummy DashboardData example
+const dummyDashboardData: DashboardData = {
+  success: true,
+  timestamp: new Date().toISOString(),
+  counts: {
+    users: 150,
+    vehicles: 120,
+    devices: 80,
+    gpsData: 75,
+    fuelData: 65,
+    emissionData: 50,
+  },
+  analytics: {
+    gps: {
+      speed: {
+        average: 60,
+        min: 20,
+        max: 120,
+      },
+      activeVehicles: 90,
+      movingVehicles: 60,
+      stoppedVehicles: 30,
+      highSpeedCount: 15,
+    },
+    fuel: {
+      consumption: {
+        average: 8.5,
+        min: 3,
+        max: 15,
+      },
+      level: {
+        average: 40,
+        min: 5,
+        max: 90,
+      },
+      lowFuelCount: 10,
+      highConsumptionCount: 8,
+    },
+    emissions: {
+      co2: {
+        average: 120,
+        min: 50,
+        max: 200,
+      },
+      co: {
+        average: 30,
+        min: 10,
+        max: 50,
+      },
+      o2: {
+        average: 18,
+        min: 15,
+        max: 20,
+      },
+      hc: {
+        average: 5,
+        min: 1,
+        max: 10,
+      },
+      anomalies: 3,
+    },
+  },
+};
+
+// Dummy MapData example
+const dummyMapData: MapData = {
+  totalVehicles: 120,
+  vehiclesWithGpsData: 75,
+  mapData: [
+    {
+      latitude: -1.957875,
+      longitude: 30.112452,
+      plateNumber: "RAB 123A",
+      vehicleId: "veh001",
+      speed: 60,
+      trackingStatus: true,
+      timestamp: new Date().toISOString(),
+    },
+    {
+      latitude: -1.950000,
+      longitude: 30.100000,
+      plateNumber: "RAB 456B",
+      vehicleId: "veh002",
+      speed: 0,
+      trackingStatus: false,
+      timestamp: new Date().toISOString(),
+    },
+    {
+      latitude: -1.940000,
+      longitude: 30.120000,
+      plateNumber: "RAB 789C",
+      vehicleId: "veh003",
+      speed: 45,
+      trackingStatus: true,
+      timestamp: new Date().toISOString(),
+    },
+  ],
+};
+
 
 interface MetricCardProps {
   title: string;
@@ -152,36 +250,7 @@ export default function AdminDashboard() {
     return mapping[timeframe] || "today";
   };
 
-  // Fetch data for the dashboard
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        // Get the proper timeFilter value for the backend
-        const backendTimeFilter = mapTimeframeToFilter(timeFilter);
 
-        // Get dashboard data with the timeFilter parameter
-        const dashboardResponse = await getDashboardCounts(backendTimeFilter);
-
-        // Debug log to see full response
-        console.log("Dashboard response:", dashboardResponse);
-
-        // Get map data
-        const mapResponse = await getMapData();
-
-        setDashboardData(dashboardResponse);
-        setMapData(mapResponse);
-      } catch (err: any) {
-        console.error("Error fetching dashboard data:", err);
-        setError(err.message || "Failed to fetch dashboard data");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [timeFilter, refreshTrigger]);
 
   // Handle refresh button click
   const handleRefresh = () => {

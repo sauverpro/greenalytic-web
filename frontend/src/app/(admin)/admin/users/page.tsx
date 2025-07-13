@@ -1,302 +1,221 @@
-"use client";
+"use client"
 
-import { Users, Edit, Eye, Trash } from "lucide-react";
-import type { GridColDef } from "@mui/x-data-grid";
-import DataTable, {
-  type Pagination
-} from "@/components/DataTable/GenericDataTable";
-import { getAllUsers, deleteUser } from "@/services/userService";
-import type { ActionItem } from "@/components/DataTable/TableActions";
-import { useState, useEffect } from "react";
-import {
-  exportToPDF,
-  exportToExcel,
-  printUsers
-} from "./_components/ExportUtils";
-import type { User } from "@/types/types";
+import { useState, useCallback, useEffect, useMemo } from "react"
+import type { GridColDef } from "@mui/x-data-grid"
+import { DataTable } from "@/components/dashboard/data-table"
+import { Badge } from "@/components/ui/badge"
+import { type User, type PaginationParams, UserStatus } from "@/types"
+import { Button } from "@/components/ui/button"
+import { Plus, RefreshCw } from "lucide-react"
+import { UpdateAndAddUserSheet } from "./_UsersComponents/UpdateAndAddUser"
+import { Input } from "@/components/ui/input"
+import { useDynamicCrud } from "@/hooks/use-dynamic-crud"
 
-
-import { toast } from "sonner";
-
-import ViewUserDrawer from "./_components/ViewUserDrawer";
-import UserDrawer from "@/components/UserDrawer";
-
+const STORAGE_KEY = "users-pagination"
 
 export default function UsersPage() {
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const [openAddUserDrawer, setOpenAddUserDrawer] = useState(false);
-  const [openEditUserDrawer, setOpenEditUserDrawer] = useState(false);
-  const [openViewUserDialog, setOpenViewUserDialog] = useState(false);
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [pagination, setPagination] = useState<Pagination>({
-    currentPage: 1,
-    totalPages: 1,
-    totalItems: 0,
-    limit: 10
-  });
+  // Initialize pagination params without localStorage to avoid hydration issues
+  const [paginationParams, setPaginationParams] = useState<PaginationParams>({
+    page: 1,
+    limit: 25,
+    sortBy: "createdAt",
+    sortOrder: "desc",
+  })
 
-  // Fetch users on component mount and when pagination changes
+  const [filters, setFilters] = useState<Record<string, any>>({
+    role: undefined,
+    status: undefined,
+  })
+
+  // Load from localStorage after component mounts
   useEffect(() => {
-    fetchUsers(pagination.currentPage, pagination.limit);
-  }, []);
-
-  const fetchUsers = async (page = 1, limit = 10) => {
-    try {
-      setLoading(true);
-      const response = await getAllUsers(page, limit);
-
-      const users = Array.isArray(response.users) ? response.users : [];
-
-      const sortedUsers = users.sort(
-        (a: User, b: User) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
-
-      const startIndex = (page - 1) * limit;
-      const usersWithNumbers = sortedUsers.map((user: User, index: number) => ({
-        ...user,
-        no: startIndex + index + 1
-      }));
-
-      setUsers(usersWithNumbers);
-      setPagination(response.pagination);
-      setLoading(false);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      setLoading(false);
-    }
-  };
-
-  // Handle page change from the DataTable
-  const handlePageChange = (page: number, limit: number) => {
-    fetchUsers(page, limit);
-  };
-
-  const refetchUsers = () => {
-    fetchUsers(pagination.currentPage, pagination.limit);
-  };
-
-  const handleEditUser = (user: User) => {
-    setSelectedUser(user);
-    setOpenEditUserDrawer(true);
-  };
-
-  const handleViewUser = (user: User) => {
-    setSelectedUser(user);
-    setOpenViewUserDialog(true);
-  };
-
-  const handleUserAdded = (newUser: User) => {
-    setOpenAddUserDrawer(false);
-    refetchUsers(); // Refresh the data when a new user is added
-  };
-
-  const handleEditDrawerChange = (open: boolean) => {
-    setOpenEditUserDrawer(open);
-    if (!open) {
-      setTimeout(() => {
-        setSelectedUser(null);
-      }, 300);
-    }
-  };
-
-  const handleViewDrawerChange = (open: boolean) => {
-    setOpenViewUserDialog(open);
-    if (!open) {
-      setTimeout(() => {
-        setSelectedUser(null);
-      }, 300);
-    }
-  };
-
-  const handleDeleteUser = async (user: User) => {
-    try {
-      await deleteUser(String(user.id));
-      refetchUsers(); // Refresh after deletion
-      toast.success("User deleted successfully");
-    } catch (error) {
-      console.error("Error deleting user:", error);
-      toast.error("Failed to delete user. Please try again.");
-    }
-  };
-  const getUserActions = (user: User): ActionItem[] => {
-    return [
-      {
-        label: "Manage Account",
-        href: `/admin/users/${user.id}`,
-        icon: <Eye size={16} />
-      },
-      {
-        label: "Edit User",
-        onClick: () => handleEditUser(user),
-        icon: <Edit size={16} />
-      },
-      {
-        label: "Delete User",
-        onClick: () => handleDeleteUser(user),
-        variant: "destructive",
-        icon: <Trash size={16} />
+    const saved = localStorage.getItem(STORAGE_KEY)
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        setPaginationParams(parsed)
+      } catch (error) {
+        console.error("Error parsing saved pagination:", error)
+        localStorage.removeItem(STORAGE_KEY)
       }
-    ];
-  };
+    }
+  }, [])
+
+  // Persist pagination state on change (debounced)
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(paginationParams))
+    }, 100)
+
+    return () => clearTimeout(timeoutId)
+  }, [paginationParams])
+
+  const { fetchData } = useDynamicCrud<User>()
+  
+  // Create stable params with filters included
+  const queryParams = useMemo(() => ({
+    ...paginationParams,
+    filters: Object.fromEntries(
+      Object.entries(filters).filter(([_, value]) => value !== undefined && value !== null && value !== "")
+    )
+  }), [paginationParams, filters])
+
+  const { data, isLoading, refetch } = fetchData("/users", "users", queryParams)
+
+  const handlePaginationChange = useCallback((params: PaginationParams) => {
+    setPaginationParams(prev => ({
+      ...prev,
+      ...params,
+      // Ensure we don't reset to page 1 unless explicitly changing limit
+      page: params.limit !== prev.limit ? 1 : (params.page || prev.page)
+    }))
+  }, [])
+
+  const [goToPage, setGoToPage] = useState("")
 
   const columns: GridColDef[] = [
     {
-      field: "no",
-      headerName: "No",
+      field: "serial",
+      headerName: "ID",
       width: 70,
-      sortable: false
+      sortable: false,
+      filterable: false,
+      renderCell: (params) => {
+        const page = paginationParams.page || 1
+        const limit = paginationParams.limit || 25
+        const rowIndex = params.api.getSortedRowIds().indexOf(params.id)
+        const serialNumber = (page - 1) * limit + rowIndex + 1
+        return <span>{serialNumber}</span>
+      },
     },
-    {
-      field: "username",
-      headerName: "Username",
-      width: 150,
-      renderCell: (params) => <div className="font-medium">{params.value}</div>
-    },
-    {
-      field: "email",
-      headerName: "Email",
-      width: 200
-    },
-    {
-      field: "phoneNumber",
-      headerName: "Phone",
-      width: 150
-    },
-    {
-      field: "vehicles",
-      headerName: "Vehicles",
-      width: 120,
-      renderCell: (params) => (
-        <span className="text-sm text-center font-medium">
-          {params.value?.length ?? 0}
-        </span>
-      )
-    },
-    {
-      field: "trackingDevices",
-      headerName: "Tracking Devices",
-      width: 160,
-      renderCell: (params) => (
-        <span className="text-sm text-center font-medium">
-          {params.value?.length ?? 0}
-        </span>
-      )
-    },
+    { field: "username", headerName: "Username", width: 150 },
+    { field: "email", headerName: "Email", width: 200 },
+    { field: "phoneNumber", headerName: "Phone", width: 150 },
+    { field: "companyName", headerName: "Company", width: 180 },
     {
       field: "role",
       headerName: "Role",
-      width: 120,
+      width: 130,
+      renderCell: (params) => <Badge variant="secondary">{params.value}</Badge>,
+    },
+    {
+      field: "status",
+      headerName: "Status",
+      width: 130,
       renderCell: (params) => {
-        let bgColor = "bg-gray-100";
-        let textColor = "text-gray-700";
-
-        if (params.value === "admin") {
-          bgColor = "bg-purple-100";
-          textColor = "text-purple-700";
-        } else if (params.value === "user") {
-          bgColor = "bg-blue-100";
-          textColor = "text-blue-700";
-        } else if (params.value === "client") {
-          bgColor = "bg-green-100";
-          textColor = "text-green-700";
-        }
-
-        return (
-          <div
-            className={`px-2 py-1 rounded-full text-xs font-semibold ${bgColor} ${textColor}`}>
-            {params.value}
-          </div>
-        );
-      }
+        const variant =
+          params.value === UserStatus.ACTIVE
+            ? "default"
+            : params.value === UserStatus.PENDING_APPROVAL
+            ? "secondary"
+            : "destructive"
+        return <Badge variant={variant}>{params.value}</Badge>
+      },
+    },
+    {
+      field: "vehiclesCount",
+      headerName: "Vehicles",
+      width: 100,
+      valueGetter: (_, row) => row._count?.vehicles ?? 0,
+    },
+    {
+      field: "devicesCount",
+      headerName: "Devices",
+      width: 100,
+      valueGetter: (_, row) => row._count?.trackingDevices ?? 0,
+    },
+    {
+      field: "alertsCount",
+      headerName: "Alerts",
+      width: 100,
+      valueGetter: (_, row) => row._count?.alerts ?? 0,
+    },
+    {
+      field: "reportsCount",
+      headerName: "Reports",
+      width: 100,
+      valueGetter: (_, row) => row._count?.reports ?? 0,
+    },
+    {
+      field: "notificationsCount",
+      headerName: "Notifications",
+      width: 130,
+      valueGetter: (_, row) => row._count?.userNotifications ?? 0,
     },
     {
       field: "createdAt",
-      headerName: "Joined since",
-      width: 180,
-      renderCell: (params) => {
-        if (!params.value) return <span>-</span>;
-        try {
-          const date = new Date(params.value);
-          return <span>{date.toLocaleString()}</span>;
-        } catch (e) {
-          console.error("Error formatting date:", e);
-          return <span>{params.value}</span>;
-        }
-      }
-    }
-  ];
+      headerName: "Joined Since",
+      width: 150,
+      renderCell: (params) => new Date(params.value).toLocaleDateString(),
+    },
+  ]
 
-  const handleExportPDF = (selectedUsers: User[]) => {
-    try {
-      exportToPDF(selectedUsers);
-    } catch (error) {
-      console.error("Error exporting to PDF:", error);
-      toast.error("Failed to export to PDF. Please try again.");
-    }
-  };
+  const handleRefresh = useCallback(() => {
+    refetch()
+  }, [refetch])
 
-  const handleExportExcel = (selectedUsers: User[]) => {
-    try {
-      exportToExcel(selectedUsers);
-    } catch (error) {
-      console.error("Error exporting to Excel:", error);
-      toast.error("Failed to export to Excel. Please try again.");
+  const handleGoToPage = useCallback(() => {
+    const page = parseInt(goToPage)
+    if (!isNaN(page) && page > 0) {
+      const maxPage = Math.ceil((data?.pagination?.totalItems || 0) / (paginationParams.limit || 25))
+      const validPage = Math.min(page, maxPage)
+      
+      setPaginationParams(prev => ({ ...prev, page: validPage }))
+      setGoToPage("")
     }
-  };
-
-  const handlePrint = (selectedUsers: User[]) => {
-    try {
-      printUsers(selectedUsers);
-    } catch (error) {
-      console.error("Error printing users:", error);
-      toast.error("Failed to print. Please try again.");
-    }
-  };
+  }, [goToPage, data?.pagination?.totalItems, paginationParams.limit])
 
   return (
-    <div className="h-full flex flex-1 max-w-[100%]">
-      <DataTable
-        title="User Management"
-        description="Manage all users and their details in one place"
-        icon={<Users size={20} />}
-        columns={columns}
-        data={users}
-        pagination={pagination}
-        loading={loading}
-        onPageChange={handlePageChange}
-        addButtonLabel="Add User"
-        onAddItem={() => setOpenAddUserDrawer(true)}
-        searchPlaceholder="Search users by name, email, role..."
-        searchFields={["username", "email", "role", "phoneNumber"]}
-        handleExportPDF={handleExportPDF}
-        handleExportExcel={handleExportExcel}
-        handlePrint={handlePrint}
-        getRowActions={getUserActions}
-      />
+    <div className="space-y-4">
+      <div className="flex gap-4 mb-4"></div>
 
-      <ViewUserDrawer
-        open={openViewUserDialog}
-        onOpenChange={handleViewDrawerChange}
-        user={selectedUser}
-      />
-      <UserDrawer
-        open={openAddUserDrawer || openEditUserDrawer}
-        onOpenChange={(open) => {
-          if (openAddUserDrawer) {
-            setOpenAddUserDrawer(open);
-          }
-          if (openEditUserDrawer) {
-            handleEditDrawerChange(open);
-          }
-        }}
-        mode={selectedUser ? "edit" : "create"}
-        user={selectedUser}
-        addUserToState={!selectedUser ? handleUserAdded : undefined}
-        refetchUsers={refetchUsers}
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Users</h1>
+        <p className="text-muted-foreground">Manage user accounts and permissions</p>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <Button variant="outline" size="sm" onClick={handleRefresh}>
+          <RefreshCw className="h-4 w-4" />
+        </Button>
+
+        <Button size="sm">
+          <Plus className="h-4 w-4 mr-2" />
+          Add New
+        </Button>
+
+        <UpdateAndAddUserSheet />
+
+        {/* Manual Page Input */}
+        <Input
+          type="number"
+          className="w-24"
+          value={goToPage}
+          onChange={(e) => setGoToPage(e.target.value)}
+          placeholder="Page #"
+          min="1"
+          max={Math.ceil((data?.pagination?.totalItems || 0) / (paginationParams.limit || 25))}
+        />
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={handleGoToPage}
+          disabled={!goToPage || isNaN(parseInt(goToPage))}
+        >
+          Go
+        </Button>
+      </div>
+
+      <DataTable
+        title="All Users"
+        columns={columns}
+        data={data?.data || []}
+        loading={isLoading}
+        totalRows={data?.pagination?.totalItems || 0}
+        onPaginationChange={handlePaginationChange}
+        searchPlaceholder="Search users..."
+        filters={filters}
       />
     </div>
-  );
+  )
 }
