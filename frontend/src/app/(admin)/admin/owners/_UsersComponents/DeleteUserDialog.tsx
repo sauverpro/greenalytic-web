@@ -15,10 +15,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useDynamicCrud } from "@/lib/hooks/use-dynamic-crud";
+
 import { GetUserByIdResponse, User } from "@/types";
 import { toast } from "sonner";
 import { AlertTriangle, Trash2 } from "lucide-react";
+import { useDynamicCrud } from "@/hooks/use-dynamic-crud";
 
 interface DeleteUserDialogProps {
   user: GetUserByIdResponse;

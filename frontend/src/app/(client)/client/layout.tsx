@@ -4,44 +4,26 @@ import type React from "react";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Topbar } from "@/components/Topbar";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { useRouter, usePathname } from "next/navigation";
+
 import { useState, useEffect } from "react";
 
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { AuthProvider } from "@/lib/use-auth";
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const [role, setRole] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [authChecked, setAuthChecked] = useState(false);
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedRole = localStorage.getItem("USER_ROLE");
-      const token = localStorage.getItem("AUTH_TOKEN");
-
-      setRole(storedRole);
-
-      if (!token) {
-        if (pathname !== "/login") {
-          router.push("/login");
-        }
-      } else if (storedRole === "admin") {
-        if (!pathname.startsWith("/admin")) {
-          router.push("/admin");
-        }
-      } else if (storedRole === "user") {
-        if (!pathname.startsWith("/client")) {
-          router.push("/client");
-        }
-      }
-
-      setAuthChecked(true);
-      setIsLoading(false);
-    }
-  }, [pathname, router]);
+    const [queryClient] = useState(() => new QueryClient({
+          defaultOptions: {
+            queries: {
+              staleTime: 60 * 1000, // 1 minute
+              retry: 1
+            }
+          }
+        }));
 
   return (
     <SidebarProvider>
+          <AuthProvider>
+            <QueryClientProvider client={queryClient}>
       <div className="flex w-full h-screen overflow-hidden">
         <AppSidebar />
         <div className="flex flex-col flex-1 overflow-hidden">
@@ -55,6 +37,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </div>
+      </QueryClientProvider>
+      </AuthProvider>
     </SidebarProvider>
   );
 }
