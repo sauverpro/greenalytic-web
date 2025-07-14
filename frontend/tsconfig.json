@@ -22,6 +22,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", ".next/types/app/dashboard/Report/page.tsx", ".next/types/app/dashboard/OBDData/page.tsx", ".next/types/app/dashboard/MaintenanceRecord/page.tsx", ".next/types/app/dashboard/InventoryItem/page.tsx", ".next/types/app/dashboard/GpsData/page.tsx", ".next/types/app/dashboard/FuelData/page.tsx", ".next/types/app/dashboard/EmissionData/page.tsx", ".next/types/app/dashboard/DeviceHeartbeat/page.tsx", ".next/types/app/dashboard/ConnectionState/page.tsx", ".next/types/app/dashboard/Alert/page.tsx", ".next/types/app/dashboard/ActivityLog/page.tsx"],
   "exclude": ["node_modules"]
 }
