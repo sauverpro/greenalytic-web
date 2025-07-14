@@ -37,6 +37,7 @@ import { toast } from "sonner";
 import { GetUserByIdResponse, User, UserRole, UserStatus } from "@/types";
 import { useDynamicCrud } from "@/hooks/use-dynamic-crud";
 
+
 // Validation schema
 const userSchema = z.object({
   email: z.string().email("Invalid email address").min(1, "Email is required"),
@@ -144,7 +145,7 @@ export function UpdateAndAddUserSheet({ onUserCreated, initialData, isEditing = 
           {isEditing ? "Edit User" : "+ Add New"}
         </Button>
       </SheetTrigger>
-      <SheetContent className="sm:max-w-[600px]">
+      <SheetContent className="sm:max-w-[600px]" side="left">
         <SheetHeader>
           <SheetTitle>{isEditing ? "Edit User" : "Create User"}</SheetTitle>
           <SheetDescription>

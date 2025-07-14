@@ -161,11 +161,39 @@ export default function UsersPage() {
         <p className="text-muted-foreground">Manage user accounts and permissions</p>
       </div>
 
+      <div className="flex items-center gap-2">
+        <Button variant="outline" size="sm" onClick={handleRefresh}>
+          <RefreshCw className="h-4 w-4" />
+        </Button>
 
+        <Button size="sm">
+          <Plus className="h-4 w-4 mr-2" />
+          Add New
+        </Button>
+
+        <UpdateAndAddUserSheet />
+
+        <Input
+          type="number"
+          className="w-24"
+          value={goToPage}
+          onChange={(e) => setGoToPage(e.target.value)}
+          placeholder="Page #"
+          min="1"
+          max={Math.ceil(totalItems / (paginationParams.limit || 25))}
+        />
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={handleGoToPage}
+          disabled={!goToPage || isNaN(parseInt(goToPage))}
+        >
+          Go
+        </Button>
+      </div>
 
       <DataTable
         title="All Users"
- additionHeaderContent={<UpdateAndAddUserSheet />}
         columns={columns}
         data={data}
         loading={isLoading}

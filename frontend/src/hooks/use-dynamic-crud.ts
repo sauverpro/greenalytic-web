@@ -1,6 +1,30 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import apiClient from "@/lib/api/axios"
-import type { PaginationParams, ApiResponse } from "@/types"
+import type {  ApiResponse } from "@/types"
+
+interface PaginationParams {
+  page: number;
+  limit: number;
+}
+
+export const usePaginatedData = <T>(
+  key: string,
+  endpoint: string,
+  { page, limit }: PaginationParams
+) => {
+  return useQuery<T>({
+    queryKey: [key, page, limit],
+    queryFn: async () => {
+      const response = await apiClient.get(endpoint, {
+        params: { page, limit },
+      });
+      return response.data;
+    },
+
+  });
+};
+
+
 
 export function useDynamicCrud<T>() {
   const queryClient = useQueryClient()
@@ -10,11 +34,11 @@ export function useDynamicCrud<T>() {
     const normalizedParams = {
       page: Number(params.page) || 1,
       limit: Number(params.limit) || 10,
-      filters: params?.filters || {},
+      // filters: params?.filters || {},
     }
 
     const query = useQuery<ApiResponse<T[]>>({
-      queryKey: [queryKey, normalizedParams.page, normalizedParams.limit, normalizedParams.filters],
+      queryKey: [queryKey, normalizedParams.page, normalizedParams.limit, normalizedParams],
       queryFn: async () => {
         // Clean up params - remove undefined/null values
         const cleanParams = Object.fromEntries(
@@ -31,9 +55,7 @@ export function useDynamicCrud<T>() {
 
         return response.data.data 
       },
-      // Add some sensible defaults
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
+
     })
     return query
   }
