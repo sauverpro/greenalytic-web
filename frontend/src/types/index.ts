@@ -1,3 +1,76 @@
+export enum UserRole {
+  ADMIN = "ADMIN",
+  USER = "USER",
+  TECHNICIAN = "TECHNICIAN",
+  MANAGER = "MANAGER",
+  FLEET_MANAGER = "FLEET_MANAGER",
+  ANALYST = "ANALYST",
+  SUPPORT_AGENT = "SUPPORT_AGENT",
+}
+
+export enum ConnectionStatus {
+  CONNECTED = "CONNECTED",
+  DISCONNECTED = "DISCONNECTED",
+}
+
+export enum DeviceStatus {
+  ACTIVE = "ACTIVE",
+  INACTIVE = "INACTIVE",
+  PENDING = "PENDING",
+  DISCONNECTED = "DISCONNECTED",
+  MAINTENANCE = "MAINTENANCE",
+}
+
+export enum VehicleStatus {
+  NORMAL_EMISSION = "NORMAL_EMISSION",
+  TOP_POLLUTING = "TOP_POLLUTING",
+  INACTIVE_DISCONNECTED = "INACTIVE_DISCONNECTED",
+  UNDER_MAINTENANCE = "UNDER_MAINTENANCE",
+}
+
+export enum EmissionStatus {
+  LOW = "LOW",
+  NORMAL = "NORMAL",
+  HIGH = "HIGH",
+}
+
+export enum FuelType {
+  PETROL = "PETROL",
+  DIESEL = "DIESEL",
+  ELECTRIC = "ELECTRIC",
+  HYBRID = "HYBRID",
+}
+
+export enum DeviceCategory {
+  MOTORCYCLE = "MOTORCYCLE",
+  CAR = "CAR",
+  TRUCK = "TRUCK",
+  TRICYCLE = "TRICYCLE",
+  OTHER = "OTHER",
+}
+
+export enum CommunicationProtocol {
+  MQTT = "MQTT",
+  HTTP = "HTTP",
+  SMS = "SMS",
+}
+
+export enum UserStatus {
+  ACTIVE = "ACTIVE",
+  PENDING_APPROVAL = "PENDING_APPROVAL",
+  SUSPENDED = "SUSPENDED",
+  DEACTIVATED = "DEACTIVATED",
+}
+
+export enum NotificationType {
+  HIGH_EMISSION_ALERT = "HIGH_EMISSION_ALERT",
+  DIAGNOSTIC_FAULT_NOTIFICATION = "DIAGNOSTIC_FAULT_NOTIFICATION",
+  FUEL_ANOMALY_ALERT = "FUEL_ANOMALY_ALERT",
+  DEVICE_OFFLINE_WARNING = "DEVICE_OFFLINE_WARNING",
+  SPEED_VIOLATION_ALERT = "SPEED_VIOLATION_ALERT",
+}
+
+
 export interface PaginationMeta {
   page: number;
   limit: number;
@@ -22,30 +95,67 @@ export interface PaginationParams {
   deletedOnly?: boolean;
 }
 
+export interface UserCreateDTO {
+  email: string;
+  username: string;
+
+  phoneNumber: string;
+  nationalId: string;
+  gender: string;
+  location: string;
+  companyName: string;
+  companyRegistrationNumber: string;
+  businessSector: string;
+  fleetSize: number;
+  language?: string;
+  notificationPreference?: string;
+  role: UserRole;
+  status: UserStatus;
+}
+export interface UserUpdateDTO {
+  email: string;
+  username: string;
+  phoneNumber: string;
+  nationalId: string;
+  gender: string;
+  location: string;
+  companyName: string;
+  companyRegistrationNumber: string;
+  businessSector: string;
+  fleetSize:number;
+  language?: string;
+  notificationPreference?: string;
+  role: UserRole;
+  status: UserStatus;
+}
 export interface ApiResponse<T> {
   success: boolean;
   message: string;
   data: T;
   pagination?: PaginationMeta;
 }
-
-export enum UserRole {
-  ADMIN = "ADMIN",
-  USER = "USER",
-  TECHNICIAN = "TECHNICIAN",
-  MANAGER = "MANAGER",
-  FLEET_MANAGER = "FLEET_MANAGER",
-  ANALYST = "ANALYST",
-  SUPPORT_AGENT = "SUPPORT_AGENT"
+export interface LoginDTO {
+  email: string;
+  password: string;
 }
-
-export enum UserStatus {
-  ACTIVE = "ACTIVE",
-  PENDING_APPROVAL = "PENDING_APPROVAL",
-  SUSPENDED = "SUSPENDED",
-  DEACTIVATED = "DEACTIVATED"
+export interface ChangePasswordDTO {
+  oldPassword: string;
+  newPassword: string;
 }
-
+export interface RequestPasswordResetDTO {
+  email: string;
+}
+export interface ChangeRoleDTO {
+  role: UserRole;
+}
+export interface ChangeRoleDTO {
+  role: UserRole;
+}
+export interface ResetPasswordDTO {
+  email: string;
+  otp: string;
+  newPassword: string;
+}
 export interface User {
   id: number;
   username?: string;
@@ -121,7 +231,7 @@ export interface AuthResponse {
   token: string;
 }
 
-// GetUserByIdResponse type - complete type without Pick
+
 export interface GetUserByIdResponse {
   id: number;
   username?: string;
@@ -133,7 +243,7 @@ export interface GetUserByIdResponse {
   gender?: string;
   phoneNumber?: string;
   companyName?: string;
-  fleetSize: string;
+  fleetSize: number;
   language: string;
   role: UserRole;
   notificationPreference: string;

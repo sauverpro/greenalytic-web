@@ -25,7 +25,7 @@ interface DataTableProps<T> {
   loading: boolean
   totalRows: number
   onPaginationChange: (params: PaginationParams) => void
-
+  customFilters?: React.ReactNode
   onAdd?: () => void
   searchPlaceholder?: string
   filters?: Record<string, any>
@@ -41,6 +41,7 @@ export function DataTable<T extends { id: number | string }>({
   totalRows,
   onPaginationChange,
   onAdd,
+  customFilters,
   searchPlaceholder = "Search...",
 }: DataTableProps<T>) {
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
@@ -89,20 +90,34 @@ export function DataTable<T extends { id: number | string }>({
 
   return (
     <Card className="w-full">
-      <CardHeader>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <CardTitle>{title}</CardTitle>
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder={searchPlaceholder}
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              className="pl-8"
-            />
-          </div>
-        </div>
-      </CardHeader>
+<CardHeader className="border-b px-4 py-3">
+  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    {/* Title */}
+    <CardTitle className="text-lg sm:text-xl font-semibold text-primary tracking-tight">
+      {title}
+    </CardTitle>
+
+    {/* Right section: filters + search */}
+    <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 w-full sm:w-auto">
+      {/* ✅ Injected Filters (like dropdowns) */}
+      {customFilters && (
+        <div className="flex flex-wrap items-center gap-2">{customFilters}</div>
+      )}
+
+      {/* 🔍 Search box */}
+      <div className="relative w-full sm:w-64">
+        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder={searchPlaceholder}
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          className="pl-8 text-sm"
+        />
+      </div>
+    </div>
+  </div>
+</CardHeader>
+
 
       <CardContent>
         <div className="h-[600px] w-full">

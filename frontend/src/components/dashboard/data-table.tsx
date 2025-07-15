@@ -26,12 +26,12 @@ interface DataTableProps<T> {
   loading: boolean
   totalRows: number
   onPaginationChange: (params: PaginationParams) => void
-  additionHeaderContent?: React.ReactNode 
+  additionHeaderContent?: React.ReactNode
+  customFilters?: React.ReactNode
   searchPlaceholder?: string
   filters?: Record<string, any>
   onFilterChange?: (filters: Record<string, any>) => void
 }
-
 export function DataTable<T extends { id: number | string }>({
   title,
   columns,
@@ -42,6 +42,7 @@ export function DataTable<T extends { id: number | string }>({
   onPaginationChange,
   additionHeaderContent,
   searchPlaceholder = "Search...",
+  customFilters
 }: DataTableProps<T>) {
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
@@ -89,25 +90,35 @@ export function DataTable<T extends { id: number | string }>({
 
   return (
     <Card className="w-full">
-      <CardHeader>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-y-3 gap-x-4">
-          <CardTitle className="text-lg">{title}</CardTitle>
-          <div className="flex flex-col sm:flex-col items-center gap-2 w-full sm:w-auto">
-            <div className="relative w-full sm:w-64">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder={searchPlaceholder}
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                className="pl-8"
-              />
-            </div>
-            {additionHeaderContent && additionHeaderContent}
+<CardHeader>
+  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <CardTitle className="text-lg">{title}</CardTitle>
 
-        
-          </div>
+    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto sm:items-center">
+      {/* Filters come first */}
+      {customFilters && (
+        <div className="flex flex-wrap items-center gap-2">
+          {customFilters}
         </div>
-      </CardHeader>
+      )}
+
+      {/* Search bar */}
+      <div className="relative w-full sm:w-64">
+        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder={searchPlaceholder}
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          className="pl-8"
+        />
+      </div>
+
+      {/* Optional extra content like add button */}
+      {additionHeaderContent && additionHeaderContent}
+    </div>
+  </div>
+</CardHeader>
+
 
       <CardContent>
         <div className="h-[600px] w-full">
@@ -122,7 +133,7 @@ export function DataTable<T extends { id: number | string }>({
             rowCount={totalRows}
             paginationMode="server"
             sortingMode="server"
-            pageSizeOptions={[10, 25, 50, 100]}
+            pageSizeOptions={[1,2,3,4,5,6,7,8,9,10, 25, 50, 100]}
             disableRowSelectionOnClick
             hideFooter
             sx={{
@@ -159,7 +170,7 @@ export function DataTable<T extends { id: number | string }>({
               }}
               className="border rounded px-2 py-1 text-sm"
             >
-              {[10, 25, 50, 100].map((size) => (
+              {[1,2,3,4,5,6,7,8,9,10, 25, 50, 100].map((size) => (
                 <option key={size} value={size}>
                   {size}
                 </option>
