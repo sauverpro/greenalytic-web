@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import {
   Eye,
@@ -11,7 +12,7 @@ import {
   Mail,
   Shield,
   Users,
-  BarChart3
+  BarChart3,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -19,34 +20,91 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-
-type LoginFormInputs = {
-  username: string;
-  password: string;
-};
+import authService, { LoginCredentials } from "@/services/authservice";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<
-    LoginFormInputs
-  >();
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const onSubmit = async (data: LoginFormInputs) => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginCredentials>();
+
+  // Handle Google OAuth callback
+  useEffect(() => {
+    const token = searchParams.get("token");
+    if (token) {
+      handleGoogleCallback(token);
+    }
+  }, [searchParams]);
+
+  const handleGoogleCallback = async (token: string) => {
+    setIsGoogleLoading(true);
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("token");
+      window.history.replaceState({}, "", url.toString());
+
+      await authService.handleGoogleCallback(token);
+      router.push("/dashboard");
+    } catch (error: any) {
+      setFormError(error.message || "Google authentication failed");
+      router.push("/login");
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
+
+  const onSubmit = async (data: LoginCredentials) => {
     setIsLoading(true);
     setFormError(null);
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      console.log("Login successful", data);
-    } catch (error) {
-      setFormError("Invalid username or password");
+      const response = await authService.login(data);
+
+      if (response.success) {
+        // Redirect to dashboard or intended page
+        router.push("/dashboard");
+      } else {
+        setFormError(response.message || "Login failed");
+      }
+    } catch (error: any) {
+      setFormError(error.message);
     } finally {
       setIsLoading(false);
     }
   };
+
+  const handleGoogleLogin = async () => {
+    setIsGoogleLoading(true);
+    setFormError(null);
+
+    try {
+      await authService.initiateGoogleLogin();
+    } catch (error: any) {
+      setFormError(error.message);
+      setIsGoogleLoading(false);
+    }
+  };
+
+  // Show loading state during Google callback processing
+  if (isGoogleLoading && searchParams.get("token")) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-emerald-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4" />
+          <p className="text-gray-600">Processing Google login...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-emerald-50">
@@ -75,33 +133,29 @@ export default function LoginPage() {
                         {
                           icon: BarChart3,
                           title: "Real-time Analytics",
-                          desc: "Monitor vehicle emissions and performance data"
+                          desc: "Monitor vehicle emissions and performance data",
                         },
                         {
                           icon: Shield,
                           title: "Secure Platform",
-                          desc: "Enterprise-grade security for your fleet data"
+                          desc: "Enterprise-grade security for your fleet data",
                         },
                         {
                           icon: Users,
                           title: "Team Collaboration",
-                          desc: "Role-based access for your entire team"
-                        }
-                      ].map(({ icon: Icon, title, desc }, i) =>
+                          desc: "Role-based access for your entire team",
+                        },
+                      ].map(({ icon: Icon, title, desc }, i) => (
                         <div key={i} className="flex items-center space-x-4">
                           <div className="bg-white/20 p-3 rounded-full">
                             <Icon className="h-6 w-6" />
                           </div>
                           <div>
-                            <h3 className="font-semibold text-lg">
-                              {title}
-                            </h3>
-                            <p className="text-green-100">
-                              {desc}
-                            </p>
+                            <h3 className="font-semibold text-lg">{title}</h3>
+                            <p className="text-green-100">{desc}</p>
                           </div>
                         </div>
-                      )}
+                      ))}
                     </div>
                     <div className="mt-12 p-6 bg-white/10 rounded-lg backdrop-blur-sm">
                       <p className="text-sm text-green-100 italic">
@@ -129,37 +183,39 @@ export default function LoginPage() {
 
                     <form
                       onSubmit={handleSubmit(onSubmit)}
-                      className="space-y-6">
-                      {formError &&
+                      className="space-y-6"
+                    >
+                      {formError && (
                         <Alert variant="destructive">
-                          <AlertDescription>
-                            {formError}
-                          </AlertDescription>
-                        </Alert>}
+                          <AlertDescription>{formError}</AlertDescription>
+                        </Alert>
+                      )}
 
-                      {/* Username */}
+                      {/* email */}
                       <div className="space-y-2">
-                        <Label htmlFor="username">Username</Label>
+                        <Label htmlFor="email">Email</Label>
                         <div className="relative">
                           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                           <Input
-                            id="username"
-                            type="text"
-                            placeholder="Enter your username"
-                            {...register("username", {
-                              required: "Username is required",
-                              minLength: {
-                                value: 3,
-                                message: "Minimum 3 characters"
-                              }
+                            id="email"
+                            type="email"
+                            placeholder="Enter your Email"
+                            {...register("email", {
+                              required: "Email is required",
+                              pattern: {
+                                value:
+                                  /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                                message: "Invalid email address",
+                              },
                             })}
                             className="pl-12 h-12 text-base"
                           />
                         </div>
-                        {errors.username &&
+                        {errors.email && (
                           <p className="text-sm text-red-500">
-                            {errors.username.message}
-                          </p>}
+                            {errors.email.message}
+                          </p>
+                        )}
                       </div>
 
                       {/* Password */}
@@ -175,24 +231,28 @@ export default function LoginPage() {
                               required: "Password is required",
                               minLength: {
                                 value: 6,
-                                message: "Minimum 6 characters"
-                              }
+                                message: "Minimum 6 characters",
+                              },
                             })}
                             className="pl-12 pr-12 h-12 text-base"
                           />
                           <button
                             type="button"
-                            onClick={() => setShowPassword(prev => !prev)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                            {showPassword
-                              ? <EyeOff className="h-5 w-5" />
-                              : <Eye className="h-5 w-5" />}
+                            onClick={() => setShowPassword((prev) => !prev)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                          >
+                            {showPassword ? (
+                              <EyeOff className="h-5 w-5" />
+                            ) : (
+                              <Eye className="h-5 w-5" />
+                            )}
                           </button>
                         </div>
-                        {errors.password &&
+                        {errors.password && (
                           <p className="text-sm text-red-500">
                             {errors.password.message}
-                          </p>}
+                          </p>
+                        )}
                       </div>
 
                       {/* Remember + Forgot */}
@@ -206,7 +266,8 @@ export default function LoginPage() {
                         </label>
                         <Link
                           href="/forgot-password"
-                          className="text-sm text-green-600 hover:underline">
+                          className="text-sm text-green-600 hover:underline"
+                        >
                           Forgot password?
                         </Link>
                       </div>
@@ -215,20 +276,64 @@ export default function LoginPage() {
                       <Button
                         type="submit"
                         className="w-full h-12 text-base text-white"
-                        disabled={isLoading}>
-                        {isLoading
-                          ? <div className="flex items-center">
-                              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
-                              Signing in...
-                            </div>
-                          : "Sign In"}
+                        disabled={isLoading}
+                      >
+                        {isLoading ? (
+                          <div className="flex items-center">
+                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
+                            Signing in...
+                          </div>
+                        ) : (
+                          "Sign In"
+                        )}
                       </Button>
+
+                      <div className="flex items-center my-4">
+                        <div className="flex-grow border-t border-gray-300" />
+                        <span className="mx-3 text-sm text-gray-400">
+                          or continue with
+                        </span>
+                        <div className="flex-grow border-t border-gray-300" />
+                      </div>
+
+                      <div className="space-y-4">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="w-full flex items-center justify-center gap-3 border border-gray-300 hover:bg-gray-50 text-gray-700"
+                          onClick={handleGoogleLogin}
+                          disabled={isGoogleLoading}
+                        >
+                          {isGoogleLoading ? (
+                            <div className="flex items-center">
+                              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-600 mr-2" />
+                              <span className="text-sm font-medium">
+                                Redirecting to Google...
+                              </span>
+                            </div>
+                          ) : (
+                            <>
+                              <span className="text-sm font-medium">
+                                Sign in with Google
+                              </span>
+                              <Image
+                                src="/icons8-google-50.png"
+                                alt="Google"
+                                width={20}
+                                height={20}
+                                className="h-5 w-5"
+                              />
+                            </>
+                          )}
+                        </Button>
+                      </div>
 
                       <p className="text-center text-gray-600">
                         Don't have an account?{" "}
                         <Link
                           href="/signup"
-                          className="text-green-600 hover:underline font-semibold">
+                          className="text-green-600 hover:underline font-semibold"
+                        >
                           Create one here
                         </Link>
                       </p>
@@ -238,13 +343,15 @@ export default function LoginPage() {
                       By signing in, you agree to our{" "}
                       <Link
                         href="/terms"
-                        className="text-green-600 hover:underline">
+                        className="text-green-600 hover:underline"
+                      >
                         Terms of Service
                       </Link>{" "}
                       and{" "}
                       <Link
                         href="/privacy"
-                        className="text-green-600 hover:underline">
+                        className="text-green-600 hover:underline"
+                      >
                         Privacy Policy
                       </Link>
                     </div>
