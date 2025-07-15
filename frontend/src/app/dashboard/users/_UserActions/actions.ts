@@ -71,7 +71,7 @@ export async function listUsers(params?:PaginationParams) {
   return res.data.data
 }
 
-export async function getUserById(id: string) {
+export async function getUserById(id: number) {
   const res = await apiClient.get<ApiResponse<GetUserByIdResponse>>(`/users/${id}`)
   return res.data.data
 }

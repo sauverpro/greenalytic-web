@@ -91,14 +91,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
       <body className="font-body text-midnight_text bg-white dark:bg-darkmode transition-all duration-300 antialiased">
         {/* ✅ Client-side Navbar */}
-        {/* <Navbar /> */}
+        <Navbar />
 
         {/* ✅ Page Content with Transitions */}
         <main className="px-4 md:px-8">
           <PageTransition>{children}</PageTransition>
         </main>
 
-{/* 
+
         <footer className="bg-gray-900 text-white">
      
           <div className="max-w-7xl mx-auto px-4 py-10">
@@ -185,7 +185,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </div>
             </div>
           </div>
-        </footer> */}
+        </footer>
       </body>
     </html>
   );
