@@ -33,7 +33,8 @@ const navigationItems = [
   { name: "Team", href: "/team", icon: Users },
   { name: "Partners", href: "/partners", icon: Handshake },
   { name: "Blog", href: "/blog", icon: Newspaper },
-  { name: "Contact", href: "/contact", icon: Phone }
+  { name: "Contact", href: "/contact", icon: Phone },
+  { name: "Login", href: "/login", icon: Phone }
 ];
 
 const socialLinks = [

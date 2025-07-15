@@ -1,28 +1,61 @@
-"use client"
+"use client";
+import { useForm, Controller } from "react-hook-form";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
+import {
+  Eye,
+  EyeOff,
+  User,
+  Mail,
+  Phone,
+  Building,
+  Users,
+  CheckCircle,
+  ArrowRight,
+  ArrowLeft,
+} from "lucide-react";
 
-import type React from "react"
-import { useForm, Controller } from "react-hook-form"
-import Image from "next/image"
-import Link from "next/link"
-import { Eye, EyeOff, User, Mail, Phone, Building, Users, CheckCircle, ArrowRight, ArrowLeft } from "lucide-react"
-
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Progress } from "@/components/ui/progress"
-import { useState } from "react"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
+import { useState } from "react";
+import authService, { type SignupData } from "@/services/authservice";
 
 const USER_ROLES = [
-  { value: "fleet_manager", label: "Fleet Manager", description: "Manage fleet operations and view analytics" },
-  { value: "technician", label: "Technician", description: "Handle device installation and diagnostics" },
-  { value: "analyst", label: "Analyst", description: "Access reports and data analysis tools" },
-  { value: "support_agent", label: "Support Agent", description: "Provide customer support and assistance" },
-]
+  {
+    value: "fleet_manager",
+    label: "Fleet Manager",
+    description: "Manage fleet operations and view analytics",
+  },
+  {
+    value: "technician",
+    label: "Technician",
+    description: "Handle device installation and diagnostics",
+  },
+  {
+    value: "analyst",
+    label: "Analyst",
+    description: "Access reports and data analysis tools",
+  },
+  {
+    value: "support_agent",
+    label: "Support Agent",
+    description: "Provide customer support and assistance",
+  },
+];
 
 const BUSINESS_SECTORS = [
   "Transport",
@@ -33,37 +66,41 @@ const BUSINESS_SECTORS = [
   "Mining",
   "Tourism",
   "Other",
-]
+];
 
 const LANGUAGES = [
   { value: "en", label: "English" },
   { value: "fr", label: "French" },
   { value: "rw", label: "Kinyarwanda" },
-]
+];
 
 type FormData = {
-  fullName: string
-  email: string
-  phoneNumber: string
-  nationalId: string
-  username: string
-  password: string
-  confirmPassword: string
-  role: string
-  companyName: string
-  companyRegNo: string
-  businessSector: string
-  fleetSize: string
-  notificationPreference: "email" | "sms" | "whatsapp"
-  language: string
-  agreeToTerms: boolean
-}
+  fullName: string;
+  email: string;
+  phoneNumber: string;
+  nationalId: string;
+  username: string;
+  password: string;
+  confirmPassword: string;
+  role: string;
+  companyName: string;
+  companyRegNo: string;
+  businessSector: string;
+  fleetSize: string;
+  notificationPreference: "email" | "sms" | "whatsapp";
+  language: string;
+  agreeToTerms: boolean;
+};
 
 export default function SignupPage() {
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [currentStep, setCurrentStep] = useState(1)
-  const [isLoading, setIsLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
+  const router = useRouter();
 
   const {
     register,
@@ -78,53 +115,100 @@ export default function SignupPage() {
       language: "en",
       agreeToTerms: false,
     },
-  })
+  });
 
-  const stepTitles = ["Personal Information", "Account Setup", "Company Details", "Preferences & Terms"]
-  const progress = (currentStep / 4) * 100
+  const stepTitles = [
+    "Personal Information",
+    "Account Setup",
+    "Company Details",
+    "Preferences & Terms",
+  ];
+  const progress = (currentStep / 4) * 100;
 
   const validateStep = async (step: number) => {
-    let isValid = false
+    let isValid = false;
 
     if (step === 1) {
-      isValid = await trigger(["fullName", "email", "phoneNumber"])
+      isValid = await trigger(["fullName", "email", "phoneNumber"]);
     } else if (step === 2) {
-      isValid = await trigger(["username", "password", "confirmPassword", "role"])
+      isValid = await trigger([
+        "username",
+        "password",
+        "confirmPassword",
+        "role",
+      ]);
     } else if (step === 3) {
       if (watch("role") === "fleet_manager") {
-        isValid = await trigger(["fleetSize"])
+        isValid = await trigger(["fleetSize"]);
       } else {
-        isValid = true
+        isValid = true;
       }
     } else if (step === 4) {
-      isValid = await trigger(["agreeToTerms"])
+      isValid = await trigger(["agreeToTerms"]);
     }
 
-    return isValid
-  }
+    return isValid;
+  };
 
   const handleNext = async () => {
-    const isValid = await validateStep(currentStep)
+    const isValid = await validateStep(currentStep);
     if (isValid) {
-      setCurrentStep((prev) => prev + 1)
+      setCurrentStep((prev) => prev + 1);
     }
-  }
+  };
 
   const handlePrevious = () => {
-    setCurrentStep((prev) => prev - 1)
-  }
+    setCurrentStep((prev) => prev - 1);
+  };
+
+  const handleGoogleSignup = async () => {
+    setIsGoogleLoading(true);
+    setFormError(null);
+
+    try {
+      await authService.initiateGoogleLogin();
+    } catch (error: any) {
+      setFormError(error.message);
+      setIsGoogleLoading(false);
+    }
+  };
 
   const onSubmit = async (data: FormData) => {
-    setIsLoading(true)
+    setIsLoading(true);
+    setFormError(null);
+
     try {
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-      console.log("Registration successful", data)
-    } catch (error) {
-      console.error("Registration failed", error)
+      // Transform form data to match API expectations
+      const signupData: SignupData = {
+        fullName: data.fullName,
+        email: data.email,
+        phoneNumber: data.phoneNumber,
+        nationalId: data.nationalId || undefined,
+        username: data.username,
+        password: data.password,
+        role: data.role,
+        companyName: data.companyName || undefined,
+        companyRegNo: data.companyRegNo || undefined,
+        businessSector: data.businessSector || undefined,
+        fleetSize: data.fleetSize || undefined,
+        notificationPreference: data.notificationPreference,
+        language: data.language,
+      };
+
+      const response = await authService.signup(signupData);
+
+      if (response.success) {
+        // Redirect to dashboard or verification page
+        router.push("/dashboard");
+      } else {
+        setFormError(response.message || "Registration failed");
+      }
+    } catch (error: any) {
+      setFormError(error.message);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const renderStepContent = () => {
     switch (currentStep) {
@@ -133,7 +217,10 @@ export default function SignupPage() {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="fullName" className="text-sm font-medium text-gray-700">
+                <Label
+                  htmlFor="fullName"
+                  className="text-sm font-medium text-gray-700"
+                >
                   Full Name *
                 </Label>
                 <div className="relative">
@@ -141,7 +228,11 @@ export default function SignupPage() {
                   <Input
                     id="fullName"
                     placeholder="Enter your full name"
-                    className={`pl-12 h-12 ${errors.fullName ? "border-red-500" : "border-gray-300 focus:border-green-500"}`}
+                    className={`pl-12 h-12 ${
+                      errors.fullName
+                        ? "border-red-500"
+                        : "border-gray-300 focus:border-green-500"
+                    }`}
                     {...register("fullName", {
                       required: "Full name is required",
                       pattern: {
@@ -151,11 +242,18 @@ export default function SignupPage() {
                     })}
                   />
                 </div>
-                {errors.fullName && <p className="text-sm text-red-500">{errors.fullName.message}</p>}
+                {errors.fullName && (
+                  <p className="text-sm text-red-500">
+                    {errors.fullName.message}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+                <Label
+                  htmlFor="email"
+                  className="text-sm font-medium text-gray-700"
+                >
                   Email Address *
                 </Label>
                 <div className="relative">
@@ -164,7 +262,11 @@ export default function SignupPage() {
                     id="email"
                     type="email"
                     placeholder="Enter your email"
-                    className={`pl-12 h-12 ${errors.email ? "border-red-500" : "border-gray-300 focus:border-green-500"}`}
+                    className={`pl-12 h-12 ${
+                      errors.email
+                        ? "border-red-500"
+                        : "border-gray-300 focus:border-green-500"
+                    }`}
                     {...register("email", {
                       required: "Email is required",
                       pattern: {
@@ -174,13 +276,18 @@ export default function SignupPage() {
                     })}
                   />
                 </div>
-                {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
+                {errors.email && (
+                  <p className="text-sm text-red-500">{errors.email.message}</p>
+                )}
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="phoneNumber" className="text-sm font-medium text-gray-700">
+                <Label
+                  htmlFor="phoneNumber"
+                  className="text-sm font-medium text-gray-700"
+                >
                   Phone Number *
                 </Label>
                 <div className="relative">
@@ -188,7 +295,11 @@ export default function SignupPage() {
                   <Input
                     id="phoneNumber"
                     placeholder="+250 xxx xxx xxx"
-                    className={`pl-12 h-12 ${errors.phoneNumber ? "border-red-500" : "border-gray-300 focus:border-green-500"}`}
+                    className={`pl-12 h-12 ${
+                      errors.phoneNumber
+                        ? "border-red-500"
+                        : "border-gray-300 focus:border-green-500"
+                    }`}
                     {...register("phoneNumber", {
                       required: "Phone number is required",
                       pattern: {
@@ -198,11 +309,18 @@ export default function SignupPage() {
                     })}
                   />
                 </div>
-                {errors.phoneNumber && <p className="text-sm text-red-500">{errors.phoneNumber.message}</p>}
+                {errors.phoneNumber && (
+                  <p className="text-sm text-red-500">
+                    {errors.phoneNumber.message}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="nationalId" className="text-sm font-medium text-gray-700">
+                <Label
+                  htmlFor="nationalId"
+                  className="text-sm font-medium text-gray-700"
+                >
                   National ID / Passport (Optional)
                 </Label>
                 <Input
@@ -214,20 +332,27 @@ export default function SignupPage() {
               </div>
             </div>
           </div>
-        )
+        );
 
       case 2:
         return (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="username" className="text-sm font-medium text-gray-700">
+                <Label
+                  htmlFor="username"
+                  className="text-sm font-medium text-gray-700"
+                >
                   Username *
                 </Label>
                 <Input
                   id="username"
                   placeholder="6-10 characters"
-                  className={`h-12 ${errors.username ? "border-red-500" : "border-gray-300 focus:border-green-500"}`}
+                  className={`h-12 ${
+                    errors.username
+                      ? "border-red-500"
+                      : "border-gray-300 focus:border-green-500"
+                  }`}
                   {...register("username", {
                     required: "Username is required",
                     minLength: {
@@ -240,11 +365,17 @@ export default function SignupPage() {
                     },
                   })}
                 />
-                {errors.username && <p className="text-sm text-red-500">{errors.username.message}</p>}
+                {errors.username && (
+                  <p className="text-sm text-red-500">
+                    {errors.username.message}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-700">Role *</Label>
+                <Label className="text-sm font-medium text-gray-700">
+                  Role *
+                </Label>
                 <Controller
                   name="role"
                   control={control}
@@ -253,14 +384,18 @@ export default function SignupPage() {
                     <Select
                       value={field.value}
                       onValueChange={(value) => {
-                        field.onChange(value)
+                        field.onChange(value);
                         if (errors.role) {
-                          trigger("role")
+                          trigger("role");
                         }
                       }}
                     >
                       <SelectTrigger
-                        className={`h-12 ${errors.role ? "border-red-500" : "border-gray-300 focus:border-green-500"}`}
+                        className={`h-12 ${
+                          errors.role
+                            ? "border-red-500"
+                            : "border-gray-300 focus:border-green-500"
+                        }`}
                       >
                         <SelectValue placeholder="Select your role" />
                       </SelectTrigger>
@@ -269,7 +404,9 @@ export default function SignupPage() {
                           <SelectItem key={role.value} value={role.value}>
                             <div>
                               <div className="font-medium">{role.label}</div>
-                              <div className="text-sm text-gray-500">{role.description}</div>
+                              <div className="text-sm text-gray-500">
+                                {role.description}
+                              </div>
                             </div>
                           </SelectItem>
                         ))}
@@ -277,13 +414,18 @@ export default function SignupPage() {
                     </Select>
                   )}
                 />
-                {errors.role && <p className="text-sm text-red-500">{errors.role.message}</p>}
+                {errors.role && (
+                  <p className="text-sm text-red-500">{errors.role.message}</p>
+                )}
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+                <Label
+                  htmlFor="password"
+                  className="text-sm font-medium text-gray-700"
+                >
                   Password *
                 </Label>
                 <div className="relative">
@@ -291,7 +433,11 @@ export default function SignupPage() {
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="Min 6 chars, uppercase & symbol"
-                    className={`pr-12 h-12 ${errors.password ? "border-red-500" : "border-gray-300 focus:border-green-500"}`}
+                    className={`pr-12 h-12 ${
+                      errors.password
+                        ? "border-red-500"
+                        : "border-gray-300 focus:border-green-500"
+                    }`}
                     {...register("password", {
                       required: "Password is required",
                       minLength: {
@@ -300,7 +446,8 @@ export default function SignupPage() {
                       },
                       pattern: {
                         value: /(?=.*[A-Z])(?=.*[!@#$%^&*])/,
-                        message: "Password must include uppercase letter and symbol",
+                        message:
+                          "Password must include uppercase letter and symbol",
                       },
                     })}
                   />
@@ -309,14 +456,25 @@ export default function SignupPage() {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
-                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
                   </button>
                 </div>
-                {errors.password && <p className="text-sm text-red-500">{errors.password.message}</p>}
+                {errors.password && (
+                  <p className="text-sm text-red-500">
+                    {errors.password.message}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">
+                <Label
+                  htmlFor="confirmPassword"
+                  className="text-sm font-medium text-gray-700"
+                >
                   Confirm Password *
                 </Label>
                 <div className="relative">
@@ -324,7 +482,11 @@ export default function SignupPage() {
                     id="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
                     placeholder="Confirm your password"
-                    className={`pr-12 h-12 ${errors.confirmPassword ? "border-red-500" : "border-gray-300 focus:border-green-500"}`}
+                    className={`pr-12 h-12 ${
+                      errors.confirmPassword
+                        ? "border-red-500"
+                        : "border-gray-300 focus:border-green-500"
+                    }`}
                     {...register("confirmPassword", {
                       required: "Please confirm your password",
                       validate: (value) =>
@@ -336,30 +498,39 @@ export default function SignupPage() {
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
-                    {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
                   </button>
                 </div>
                 {errors.confirmPassword && (
-                  <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>
+                  <p className="text-sm text-red-500">
+                    {errors.confirmPassword.message}
+                  </p>
                 )}
               </div>
             </div>
           </div>
-        )
+        );
 
       case 3:
         return (
           <div className="space-y-6">
             <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
               <p className="text-sm text-blue-800">
-                <strong>Optional:</strong> Company information is required for fleet managers and helpful for
-                organizational accounts.
+                <strong>Optional:</strong> Company information is required for
+                fleet managers and helpful for organizational accounts.
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="companyName" className="text-sm font-medium text-gray-700">
+                <Label
+                  htmlFor="companyName"
+                  className="text-sm font-medium text-gray-700"
+                >
                   Company Name
                 </Label>
                 <div className="relative">
@@ -374,7 +545,10 @@ export default function SignupPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="companyRegNo" className="text-sm font-medium text-gray-700">
+                <Label
+                  htmlFor="companyRegNo"
+                  className="text-sm font-medium text-gray-700"
+                >
                   Company Registration Number
                 </Label>
                 <Input
@@ -388,7 +562,9 @@ export default function SignupPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-700">Business Sector</Label>
+                <Label className="text-sm font-medium text-gray-700">
+                  Business Sector
+                </Label>
                 <Controller
                   name="businessSector"
                   control={control}
@@ -396,7 +572,7 @@ export default function SignupPage() {
                     <Select
                       value={field.value}
                       onValueChange={(value) => {
-                        field.onChange(value)
+                        field.onChange(value);
                       }}
                     >
                       <SelectTrigger className="h-12 border-gray-300 focus:border-green-500">
@@ -415,8 +591,12 @@ export default function SignupPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="fleetSize" className="text-sm font-medium text-gray-700">
-                  Fleet Size (Number of Vehicles) {watch("role") === "fleet_manager" && "*"}
+                <Label
+                  htmlFor="fleetSize"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Fleet Size (Number of Vehicles){" "}
+                  {watch("role") === "fleet_manager" && "*"}
                 </Label>
                 <div className="relative">
                   <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -424,24 +604,37 @@ export default function SignupPage() {
                     id="fleetSize"
                     type="number"
                     placeholder="Enter number of vehicles"
-                    className={`pl-12 h-12 ${errors.fleetSize ? "border-red-500" : "border-gray-300 focus:border-green-500"}`}
+                    className={`pl-12 h-12 ${
+                      errors.fleetSize
+                        ? "border-red-500"
+                        : "border-gray-300 focus:border-green-500"
+                    }`}
                     {...register("fleetSize", {
-                      required: watch("role") === "fleet_manager" ? "Fleet size is required for fleet managers" : false,
+                      required:
+                        watch("role") === "fleet_manager"
+                          ? "Fleet size is required for fleet managers"
+                          : false,
                     })}
                   />
                 </div>
-                {errors.fleetSize && <p className="text-sm text-red-500">{errors.fleetSize.message}</p>}
+                {errors.fleetSize && (
+                  <p className="text-sm text-red-500">
+                    {errors.fleetSize.message}
+                  </p>
+                )}
               </div>
             </div>
           </div>
-        )
+        );
 
       case 4:
         return (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-4">
-                <Label className="text-base font-medium text-gray-900">Notification Preference</Label>
+                <Label className="text-base font-medium text-gray-900">
+                  Notification Preference
+                </Label>
                 <Controller
                   name="notificationPreference"
                   control={control}
@@ -453,23 +646,38 @@ export default function SignupPage() {
                     >
                       <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50">
                         <RadioGroupItem value="email" id="email-notif" />
-                        <Label htmlFor="email-notif" className="flex-1 cursor-pointer">
+                        <Label
+                          htmlFor="email-notif"
+                          className="flex-1 cursor-pointer"
+                        >
                           <div className="font-medium">Email</div>
-                          <div className="text-sm text-gray-500">Receive notifications via email</div>
+                          <div className="text-sm text-gray-500">
+                            Receive notifications via email
+                          </div>
                         </Label>
                       </div>
                       <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50">
                         <RadioGroupItem value="sms" id="sms-notif" />
-                        <Label htmlFor="sms-notif" className="flex-1 cursor-pointer">
+                        <Label
+                          htmlFor="sms-notif"
+                          className="flex-1 cursor-pointer"
+                        >
                           <div className="font-medium">SMS</div>
-                          <div className="text-sm text-gray-500">Receive notifications via SMS</div>
+                          <div className="text-sm text-gray-500">
+                            Receive notifications via SMS
+                          </div>
                         </Label>
                       </div>
                       <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50">
                         <RadioGroupItem value="whatsapp" id="whatsapp-notif" />
-                        <Label htmlFor="whatsapp-notif" className="flex-1 cursor-pointer">
+                        <Label
+                          htmlFor="whatsapp-notif"
+                          className="flex-1 cursor-pointer"
+                        >
                           <div className="font-medium">WhatsApp</div>
-                          <div className="text-sm text-gray-500">Receive notifications via WhatsApp</div>
+                          <div className="text-sm text-gray-500">
+                            Receive notifications via WhatsApp
+                          </div>
                         </Label>
                       </div>
                     </RadioGroup>
@@ -479,7 +687,9 @@ export default function SignupPage() {
 
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label className="text-base font-medium text-gray-900">Language</Label>
+                  <Label className="text-base font-medium text-gray-900">
+                    Language
+                  </Label>
                   <Controller
                     name="language"
                     control={control}
@@ -516,33 +726,49 @@ export default function SignupPage() {
                       id="agreeToTerms"
                       checked={field.value}
                       onCheckedChange={field.onChange}
-                      className={`mt-1 ${errors.agreeToTerms ? "border-red-500" : ""}`}
+                      className={`mt-1 ${
+                        errors.agreeToTerms ? "border-red-500" : ""
+                      }`}
                     />
                   )}
                 />
                 <div className="flex-1">
-                  <Label htmlFor="agreeToTerms" className="text-sm cursor-pointer">
+                  <Label
+                    htmlFor="agreeToTerms"
+                    className="text-sm cursor-pointer"
+                  >
                     I agree to the{" "}
-                    <Link href="/terms" className="text-green-600 hover:underline font-medium">
+                    <Link
+                      href="/terms"
+                      className="text-green-600 hover:underline font-medium"
+                    >
                       Terms of Service
                     </Link>{" "}
                     and{" "}
-                    <Link href="/privacy" className="text-green-600 hover:underline font-medium">
+                    <Link
+                      href="/privacy"
+                      className="text-green-600 hover:underline font-medium"
+                    >
                       Privacy Policy
                     </Link>
-                    . I understand that my account will be reviewed and approved within 24 hours.
+                    . I understand that my account will be reviewed and approved
+                    within 24 hours.
                   </Label>
                 </div>
               </div>
-              {errors.agreeToTerms && <p className="text-sm text-red-500 mt-2">{errors.agreeToTerms.message}</p>}
+              {errors.agreeToTerms && (
+                <p className="text-sm text-red-500 mt-2">
+                  {errors.agreeToTerms.message}
+                </p>
+              )}
             </div>
           </div>
-        )
+        );
 
       default:
-        return null
+        return null;
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-emerald-50">
@@ -557,14 +783,19 @@ export default function SignupPage() {
                   <div className="relative z-10 h-full flex flex-col">
                     <div className="mb-8">
                       <Image
-                        src="/images/logo.png"
+                        src="/placeholder.svg?height=80&width=160"
                         alt="Greenalytic Logo"
                         width={160}
                         height={80}
                         className="object-contain mb-6 brightness-0 invert"
                       />
-                      <h1 className="text-3xl font-bold mb-2">Join Greenalytic</h1>
-                      <p className="text-green-100">Create your account to start monitoring vehicle emissions</p>
+                      <h1 className="text-3xl font-bold mb-2">
+                        Join Greenalytic
+                      </h1>
+                      <p className="text-green-100">
+                        Create your account to start monitoring vehicle
+                        emissions
+                      </p>
                     </div>
 
                     {/* Progress Section */}
@@ -574,26 +805,39 @@ export default function SignupPage() {
                         <span>{Math.round(progress)}% Complete</span>
                       </div>
                       <Progress value={progress} className="h-2 bg-white/20" />
-                      <p className="text-sm text-green-100 mt-2">{stepTitles[currentStep - 1]}</p>
+                      <p className="text-sm text-green-100 mt-2">
+                        {stepTitles[currentStep - 1]}
+                      </p>
                     </div>
 
                     {/* Steps List */}
                     <div className="space-y-4 flex-1">
                       {stepTitles.map((title, index) => (
-                        <div key={index} className="flex items-center space-x-3">
+                        <div
+                          key={index}
+                          className="flex items-center space-x-3"
+                        >
                           <div
                             className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
                               index + 1 < currentStep
                                 ? "bg-white text-green-600"
                                 : index + 1 === currentStep
-                                  ? "bg-green-400 text-white"
-                                  : "bg-white/20 text-white"
+                                ? "bg-green-400 text-white"
+                                : "bg-white/20 text-white"
                             }`}
                           >
-                            {index + 1 < currentStep ? <CheckCircle className="h-5 w-5" /> : index + 1}
+                            {index + 1 < currentStep ? (
+                              <CheckCircle className="h-5 w-5" />
+                            ) : (
+                              index + 1
+                            )}
                           </div>
                           <span
-                            className={`text-sm ${index + 1 <= currentStep ? "text-white font-medium" : "text-green-200"}`}
+                            className={`text-sm ${
+                              index + 1 <= currentStep
+                                ? "text-white font-medium"
+                                : "text-green-200"
+                            }`}
                           >
                             {title}
                           </span>
@@ -603,7 +847,8 @@ export default function SignupPage() {
 
                     <div className="mt-8 p-4 bg-white/10 rounded-lg backdrop-blur-sm">
                       <p className="text-sm text-green-100">
-                        <strong>Need help?</strong> Contact our support team at support@greenalytic.com
+                        <strong>Need help?</strong> Contact our support team at
+                        support@greenalytic.com
                       </p>
                     </div>
                   </div>
@@ -613,16 +858,71 @@ export default function SignupPage() {
                 <div className="lg:col-span-3 p-8 bg-white">
                   <div className="max-w-4xl mx-auto">
                     <div className="mb-8">
-                      <h2 className="text-2xl font-bold text-gray-900 mb-2">{stepTitles[currentStep - 1]}</h2>
+                      <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                        {stepTitles[currentStep - 1]}
+                      </h2>
                       <p className="text-gray-600">
-                        {currentStep === 1 && "Let's start with your basic information"}
-                        {currentStep === 2 && "Set up your login credentials and role"}
-                        {currentStep === 3 && "Tell us about your organization (optional)"}
-                        {currentStep === 4 && "Almost done! Set your preferences"}
+                        {currentStep === 1 &&
+                          "Let's start with your basic information"}
+                        {currentStep === 2 &&
+                          "Set up your login credentials and role"}
+                        {currentStep === 3 &&
+                          "Tell us about your organization (optional)"}
+                        {currentStep === 4 &&
+                          "Almost done! Set your preferences"}
                       </p>
                     </div>
 
+                    {/* Google Signup Option - Show only on first step */}
+                    {currentStep === 1 && (
+                      <div className="mb-6">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="w-full flex items-center justify-center gap-3 border border-gray-300 hover:bg-gray-50 text-gray-700 h-12 bg-transparent"
+                          onClick={handleGoogleSignup}
+                          disabled={isGoogleLoading}
+                        >
+                          {isGoogleLoading ? (
+                            <div className="flex items-center">
+                              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-600 mr-2" />
+                              <span className="text-sm font-medium">
+                                Redirecting to Google...
+                              </span>
+                            </div>
+                          ) : (
+                            <>
+                              <Image
+                                src="/placeholder.svg?height=20&width=20"
+                                alt="Google"
+                                width={20}
+                                height={20}
+                                className="h-5 w-5"
+                              />
+                              <span className="text-sm font-medium">
+                                Sign up with Google
+                              </span>
+                            </>
+                          )}
+                        </Button>
+
+                        <div className="flex items-center my-6">
+                          <div className="flex-grow border-t border-gray-300" />
+                          <span className="mx-3 text-sm text-gray-400">
+                            or continue with email
+                          </span>
+                          <div className="flex-grow border-t border-gray-300" />
+                        </div>
+                      </div>
+                    )}
+
                     <form onSubmit={handleSubmit(onSubmit)}>
+                      {formError && (
+                        <Alert variant="destructive" className="mb-6">
+                          <AlertDescription>{formError}</AlertDescription>
+                        </Alert>
+                      )}
+
                       {renderStepContent()}
 
                       <div className="flex justify-between items-center mt-8 pt-6 border-t">
@@ -689,5 +989,5 @@ export default function SignupPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
