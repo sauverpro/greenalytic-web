@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import authService, { LoginCredentials } from "@/services/authservice";
+import { useAuth } from "@/lib/use-auth";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -36,8 +37,8 @@ export default function LoginPage() {
     handleSubmit,
     formState: { errors },
   } = useForm<LoginCredentials>();
+const { login, initiateGoogleLogin, handleGoogleCallback } = useAuth();
 
-  // Handle Google OAuth callback
   useEffect(() => {
     const token = searchParams.get("token");
     if (token) {
@@ -45,42 +46,21 @@ export default function LoginPage() {
     }
   }, [searchParams]);
 
-  const handleGoogleCallback = async (token: string) => {
-    setIsGoogleLoading(true);
-    try {
-      const url = new URL(window.location.href);
-      url.searchParams.delete("token");
-      window.history.replaceState({}, "", url.toString());
 
-      await authService.handleGoogleCallback(token);
-      router.push("/dashboard");
-    } catch (error: any) {
-      setFormError(error.message || "Google authentication failed");
-      router.push("/login");
-    } finally {
-      setIsGoogleLoading(false);
-    }
-  };
+const onSubmit = async (data: LoginCredentials) => {
+  setIsLoading(true);
+  setFormError(null);
 
-  const onSubmit = async (data: LoginCredentials) => {
-    setIsLoading(true);
-    setFormError(null);
+  try {
+    await login(data); // ✅ useAuth login returns void
+    router.push("/dashboard"); // ✅ navigate if successful
+  } catch (error: any) {
+    setFormError(error.message || "Login failed");
+  } finally {
+    setIsLoading(false);
+  }
+};
 
-    try {
-      const response = await authService.login(data);
-
-      if (response.success) {
-        // Redirect to dashboard or intended page
-        router.push("/dashboard");
-      } else {
-        setFormError(response.message || "Login failed");
-      }
-    } catch (error: any) {
-      setFormError(error.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleGoogleLogin = async () => {
     setIsGoogleLoading(true);

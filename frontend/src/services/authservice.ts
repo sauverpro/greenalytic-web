@@ -7,7 +7,7 @@ export interface LoginCredentials {
 }
 
 export interface SignupData {
-  fullName: string;
+
   email: string;
   phoneNumber: string;
   nationalId?: string;
@@ -15,9 +15,9 @@ export interface SignupData {
   password: string;
   role: string;
   companyName?: string;
-  companyRegNo?: string;
+   companyRegistrationNumber?: string;
   businessSector?: string;
-  fleetSize?: string;
+  fleetSize?: number;
   notificationPreference: "email" | "sms" | "whatsapp";
   language: string;
 }

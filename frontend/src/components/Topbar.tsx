@@ -94,7 +94,7 @@ export const Topbar = () => {
       initial={{ y: -50, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
-      className={`flex justify-between items-center px-4 md:px-6 py-3 sticky top-0 z-50 bg-secondary-light sticky overflow-hidden w-full
+      className={`flex justify-between items-center px-4 md:px-6 py-3  top-0 z-50 bg-secondary-light sticky overflow-hidden w-full
         ${
           scrolled
             ? "bg-secondary-light dark:bg-emerald-950/90 backdrop-blur-md shadow-md"

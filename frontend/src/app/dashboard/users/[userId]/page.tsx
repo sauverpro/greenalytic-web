@@ -21,10 +21,11 @@ import {
   FileText,
   Bell,
 } from "lucide-react"
-import { type GetUserByIdResponse, UserStatus } from "@/types"
+import { type GetUserByIdResponse } from "@/types"
 import apiClient from "@/lib/api/axios"
 import { UpdateAndAddUserSheet } from "../_UserComponents/UpdateAndAddUser"
 import { DeleteUserDialog } from "../_UserComponents/DeleteUserDialog"
+import { UserStatus } from "@/types/EnumTypes"
 
 interface UserDetailPageProps {
   params: Promise<{

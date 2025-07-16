@@ -28,8 +28,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2, AlertCircle, CheckCircle2 } from "lucide-react"
 import { toast } from "sonner"
-import { UserRole, UserStatus, type UserCreateDTO, type UserUpdateDTO, type GetUserByIdResponse } from "@/types"
+import { type UserCreateDTO, type UserUpdateDTO, type GetUserByIdResponse } from "@/types"
 import { createUser, updateUser, getUserById } from "../_UserActions/actions"
+import { UserRole, UserStatus } from "@/types/EnumTypes"
 
 
 

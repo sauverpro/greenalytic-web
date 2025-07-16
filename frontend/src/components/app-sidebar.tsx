@@ -140,11 +140,11 @@ export function AppSidebar() {
   const [isLogoHovered, setIsLogoHovered] = useState(false);
 
   const [activeItem, setActiveItem] = useState("");
-const sidebarItems = navigationItems.filter(item =>
-  currentUser && (item.roles.includes("*") || item.roles.includes(currentUser.role))
-)
-
-
+  
+// const sidebarItems = navigationItems.filter(item =>
+//   currentUser && (item.roles.includes("*") || item.roles.includes(currentUser.role))
+// )
+const sidebarItems = navigationItems
   useEffect(() => {
     const token = getCookie("access_token");
     const userData = getCookie("user");

@@ -3,6 +3,7 @@ import './globals.css';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import PageTransition from '@/components/PageTransition';
+import { AuthProvider } from '@/lib/use-auth';
 
 export const metadata: Metadata = {
   title: 'Greenalytic Motors – Clean Mobility Monitoring & Emissions Analytics',
@@ -88,18 +89,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     rel="stylesheet"
   />
 </head>
-
+    <AuthProvider>
       <body className="font-body text-midnight_text bg-white dark:bg-darkmode transition-all duration-300 antialiased">
         {/* ✅ Client-side Navbar */}
-        <Navbar />
+        {/* <Navbar /> */}
 
         {/* ✅ Page Content with Transitions */}
-        <main className="px-4 md:px-8">
+        <main className="">
           <PageTransition>{children}</PageTransition>
         </main>
 
 
-        <footer className="bg-gray-900 text-white">
+        {/* <footer className="bg-gray-900 text-white">
      
           <div className="max-w-7xl mx-auto px-4 py-10">
             <div className="grid md:grid-cols-4 gap-8">
@@ -185,8 +186,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </div>
             </div>
           </div>
-        </footer>
+        </footer> */}
       </body>
+          </AuthProvider>
     </html>
   );
 }

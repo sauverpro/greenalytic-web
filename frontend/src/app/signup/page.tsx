@@ -34,24 +34,25 @@ import { Progress } from "@/components/ui/progress";
 import { useState } from "react";
 import authService, { type SignupData } from "@/services/authservice";
 
+
 const USER_ROLES = [
   {
-    value: "fleet_manager",
+    value: "FLEET_MANAGER",
     label: "Fleet Manager",
     description: "Manage fleet operations and view analytics",
   },
   {
-    value: "technician",
+    value: "TECHNICIAN",
     label: "Technician",
     description: "Handle device installation and diagnostics",
   },
   {
-    value: "analyst",
+    value: "ANALYST",
     label: "Analyst",
     description: "Access reports and data analysis tools",
   },
   {
-    value: "support_agent",
+    value: "SUPPORT_AGENT",
     label: "Support Agent",
     description: "Provide customer support and assistance",
   },
@@ -75,7 +76,7 @@ const LANGUAGES = [
 ];
 
 type FormData = {
-  fullName: string;
+
   email: string;
   phoneNumber: string;
   nationalId: string;
@@ -84,9 +85,9 @@ type FormData = {
   confirmPassword: string;
   role: string;
   companyName: string;
-  companyRegNo: string;
+   companyRegistrationNumber: string;
   businessSector: string;
-  fleetSize: string;
+  fleetSize: number;
   notificationPreference: "email" | "sms" | "whatsapp";
   language: string;
   agreeToTerms: boolean;
@@ -129,7 +130,7 @@ export default function SignupPage() {
     let isValid = false;
 
     if (step === 1) {
-      isValid = await trigger(["fullName", "email", "phoneNumber"]);
+      isValid = await trigger([ "email", "phoneNumber"]);
     } else if (step === 2) {
       isValid = await trigger([
         "username",
@@ -137,8 +138,9 @@ export default function SignupPage() {
         "confirmPassword",
         "role",
       ]);
-    } else if (step === 3) {
-      if (watch("role") === "fleet_manager") {
+      
+  } else if (step === 3) {
+      if (watch("role") === "FLEET_MANAGER") {
         isValid = await trigger(["fleetSize"]);
       } else {
         isValid = true;
@@ -180,7 +182,7 @@ export default function SignupPage() {
     try {
       // Transform form data to match API expectations
       const signupData: SignupData = {
-        fullName: data.fullName,
+
         email: data.email,
         phoneNumber: data.phoneNumber,
         nationalId: data.nationalId || undefined,
@@ -188,7 +190,7 @@ export default function SignupPage() {
         password: data.password,
         role: data.role,
         companyName: data.companyName || undefined,
-        companyRegNo: data.companyRegNo || undefined,
+        companyRegistrationNumber: data.companyRegistrationNumber || undefined,
         businessSector: data.businessSector || undefined,
         fleetSize: data.fleetSize || undefined,
         notificationPreference: data.notificationPreference,
@@ -216,38 +218,7 @@ export default function SignupPage() {
         return (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label
-                  htmlFor="fullName"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  Full Name *
-                </Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <Input
-                    id="fullName"
-                    placeholder="Enter your full name"
-                    className={`pl-12 h-12 ${
-                      errors.fullName
-                        ? "border-red-500"
-                        : "border-gray-300 focus:border-green-500"
-                    }`}
-                    {...register("fullName", {
-                      required: "Full name is required",
-                      pattern: {
-                        value: /^[a-zA-Z\s]+$/,
-                        message: "Full name should contain only letters",
-                      },
-                    })}
-                  />
-                </div>
-                {errors.fullName && (
-                  <p className="text-sm text-red-500">
-                    {errors.fullName.message}
-                  </p>
-                )}
-              </div>
+  
 
               <div className="space-y-2">
                 <Label
@@ -546,16 +517,16 @@ export default function SignupPage() {
 
               <div className="space-y-2">
                 <Label
-                  htmlFor="companyRegNo"
+                  htmlFor=" companyRegistrationNumber"
                   className="text-sm font-medium text-gray-700"
                 >
                   Company Registration Number
                 </Label>
                 <Input
-                  id="companyRegNo"
+                  id=" companyRegistrationNumber"
                   placeholder="Enter registration number"
                   className="h-12 border-gray-300 focus:border-green-500"
-                  {...register("companyRegNo")}
+                  {...register("companyRegistrationNumber")}
                 />
               </div>
             </div>
@@ -590,39 +561,50 @@ export default function SignupPage() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label
-                  htmlFor="fleetSize"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  Fleet Size (Number of Vehicles){" "}
-                  {watch("role") === "fleet_manager" && "*"}
-                </Label>
-                <div className="relative">
-                  <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <Input
-                    id="fleetSize"
-                    type="number"
-                    placeholder="Enter number of vehicles"
-                    className={`pl-12 h-12 ${
-                      errors.fleetSize
-                        ? "border-red-500"
-                        : "border-gray-300 focus:border-green-500"
-                    }`}
-                    {...register("fleetSize", {
-                      required:
-                        watch("role") === "fleet_manager"
-                          ? "Fleet size is required for fleet managers"
-                          : false,
-                    })}
-                  />
-                </div>
-                {errors.fleetSize && (
-                  <p className="text-sm text-red-500">
-                    {errors.fleetSize.message}
-                  </p>
-                )}
-              </div>
+        <div className="space-y-2">
+  <Label
+    htmlFor="fleetSize"
+    className="text-sm font-medium text-gray-700"
+  >
+    Fleet Size (Number of Vehicles){" "}
+    {watch("role") === "fleet_manager" && "*"}
+  </Label>
+
+  <div className="relative">
+    <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+    <Input
+      id="fleetSize"
+      type="number"
+      step="1" // only allows whole numbers from UI
+      placeholder="Enter number of vehicles"
+      className={`pl-12 h-12 ${
+        errors.fleetSize
+          ? "border-red-500"
+          : "border-gray-300 focus:border-green-500"
+      }`}
+      {...register("fleetSize", {
+        required:
+          watch("role") === "fleet_manager"
+            ? "Fleet size is required for fleet managers"
+            : false,
+        valueAsNumber: true,
+        validate: (value) => {
+          if (watch("role") === "fleet_manager" && !Number.isInteger(value)) {
+            return "Fleet size must be an integer";
+          }
+          return true;
+        },
+      })}
+    />
+  </div>
+
+  {errors.fleetSize && (
+    <p className="text-sm text-red-500">
+      {errors.fleetSize.message}
+    </p>
+  )}
+</div>
+
             </div>
           </div>
         );
