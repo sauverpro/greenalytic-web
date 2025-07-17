@@ -76,7 +76,7 @@ export const navigationItems = [
   },
   {
     title: "Tracking Devices",
-    url: "/dashboard/tracking-devices",
+    url: "/dashboard/TrackingDevice",
     icon: RadioReceiver,
     roles: ["TECHNICIAN", "ADMIN"],
   },
@@ -128,7 +128,7 @@ export const navigationItems = [
     icon: Settings,
     roles: ["ADMIN"],
   },
-]
+];
 
 
 export function AppSidebar() {

@@ -1,61 +1,540 @@
-// app/(dashboard)/tracking-devices/page.tsx or wherever you need it
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
+import { useState, useCallback, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import type { GridColDef } from "@mui/x-data-grid";
+import { DataTable } from "@/components/dashboard/data-table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Filter,
+  RotateCcw,
+  Eye,
+  Edit,
+  Trash2,
+  Smartphone,
+  Battery,
+  Signal,
+  Activity,
+} from "lucide-react";
+import type {
+  TrackingDeviceListItem,
+} from "@/types/trackingDevicesTypes";
+import {
+  listTrackingDevices,
+  countDevicesByStatus,
+} from "@/services/trackingDeviceService";
+import { UpdateAndAddDeviceSheet } from "./_DeviceComponents/UpdateAndAddDevice";
+import { DeleteDeviceDialog } from "./_DeviceComponents/DeleteDeviceDialog";
+import { DeviceStatusSheet } from "./_DeviceComponents/DeviceStatusSheet";
+import { ViewDeviceModal } from "./_DeviceComponents/ViewDeviceModal";
+import { PaginationParams } from "@/types";
 
-import type { GridColDef } from "@mui/x-data-grid"
-
-import { PaginationParams } from "@/types"
-import { TrackingDeviceListItem, TrackingDeviceListResponse } from "@/types/trackingDevicesTypes"
-import { DataTable } from "@/components/dashboard/data-table"
-
-const columns: GridColDef[] = [
-  { field: "serialNumber", headerName: "Serial", flex: 1 },
-  { field: "model", headerName: "Model", flex: 1 },
-  { field: "type", headerName: "Type", flex: 1 },
-  { field: "deviceCategory", headerName: "Category", flex: 1 },
-  { field: "plateNumber", headerName: "Plate", flex: 1 },
-  { field: "batteryLevel", headerName: "Battery", flex: 1 },
-  { field: "signalStrength", headerName: "Signal", flex: 1 },
-  { field: "status", headerName: "Status", flex: 1 },
-]
+const STORAGE_KEY = "tracking-devices-pagination";
 
 export default function TrackingDevicesPage() {
-  const [data, setData] = useState<TrackingDeviceListItem[]>([])
-  const [loading, setLoading] = useState(false)
-  const [totalRows, setTotalRows] = useState(0)
+  const router = useRouter();
+  const [paginationParams, setPaginationParams] = useState<PaginationParams>({
+    page: 1,
+    limit: 25,
+    sortBy: "createdAt",
+    sortOrder: "desc",
+    filters: {
+      status: "all",
+      deviceCategory: "all",
+      protocol: "all",
+    },
+  });
 
-  const fetchDevices = async (params: PaginationParams) => {
-    setLoading(true)
+  const [data, setData] = useState<TrackingDeviceListItem[]>([]);
+  const [totalItems, setTotalItems] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedDevice, setSelectedDevice] =
+    useState<TrackingDeviceListItem | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false);
+  const [deviceStats, setDeviceStats] = useState({
+    total: 0,
+    active: 0,
+    inactive: 0,
+    disconnected: 0,
+  });
+  const [viewDeviceId, setViewDeviceId] = useState<number | null>(null);
+
+  const fetchDevices = useCallback(async () => {
+    setIsLoading(true);
     try {
-      const query = new URLSearchParams({
-        page: params.page?.toString() || "1",
-        limit: params.limit?.toString() || "10",
-        sortBy: params.sortBy || "createdAt",
-        sortOrder: params.sortOrder || "desc",
-        ...(params.search ? { search: params.search } : {}),
-      }).toString()
-
-      const res = await fetch(`http://localhost:4000/api/tracking-devices?${query}`)
-      const json: TrackingDeviceListResponse = await res.json()
-      setData(json.data.data)
-      setTotalRows(json.data.meta.totalItems)
+      const response = await listTrackingDevices(paginationParams);
+      setData(response.data.data || []);
+      setTotalItems(response.data.meta?.totalItems || 0);
     } catch (error) {
-      console.error("Failed to fetch devices:", error)
+      console.error("Failed to fetch tracking devices:", error);
     } finally {
-      setLoading(false)
+      setIsLoading(false);
     }
-  }
+  }, [paginationParams]);
+
+  const fetchDeviceStats = useCallback(async () => {
+    try {
+      const [totalCount, activeCount, inactiveCount, disconnectedCount] =
+        await Promise.all([
+          countDevicesByStatus(),
+          countDevicesByStatus("ACTIVE"),
+          countDevicesByStatus("INACTIVE"),
+          countDevicesByStatus("DISCONNECTED"),
+        ]);
+
+      setDeviceStats({
+        total: totalCount.count,
+        active: activeCount.count,
+        inactive: inactiveCount.count,
+        disconnected: disconnectedCount.count,
+      });
+    } catch (error) {
+      console.error("Failed to fetch device stats:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchDevices();
+    fetchDeviceStats();
+  }, [fetchDevices, fetchDeviceStats]);
+
+  const handlePaginationChange = useCallback((params: PaginationParams) => {
+    setPaginationParams((prev) => {
+      const merged = { ...prev, ...params };
+      return JSON.stringify(prev) === JSON.stringify(merged) ? prev : merged;
+    });
+  }, []);
+
+  const handleViewDetails = (deviceId: number) => {
+    setViewDeviceId(deviceId);
+  };
+
+  const resetFilters = () => {
+    setPaginationParams((prev) => ({
+      ...prev,
+      page: 1,
+      filters: {
+        status: "all",
+        deviceCategory: "all",
+        protocol: "all",
+      },
+    }));
+    setFilterSheetOpen(false);
+  };
+
+  const applyFilters = () => {
+    setFilterSheetOpen(false);
+  };
+
+  const getBatteryColor = (level: number) => {
+    if (level > 60) return "text-green-600";
+    if (level > 30) return "text-yellow-600";
+    return "text-red-600";
+  };
+
+  const getSignalColor = (strength: number) => {
+    if (strength > 70) return "text-green-600";
+    if (strength > 40) return "text-yellow-600";
+    return "text-red-600";
+  };
+
+  const columns: GridColDef[] = [
+    {
+      field: "serial",
+      headerName: "ID",
+      width: 70,
+      sortable: false,
+      filterable: false,
+      renderCell: (params) => {
+        const page = paginationParams.page || 1;
+        const limit = paginationParams.limit || 25;
+        const rowIndex = params.api.getSortedRowIds().indexOf(params.id);
+        const serialNumber = (page - 1) * limit + rowIndex + 1;
+        return (
+          <span className="font-medium text-muted-foreground">
+            {serialNumber}
+          </span>
+        );
+      },
+    },
+    {
+      field: "serialNumber",
+      headerName: "Serial Number",
+      width: 150,
+      renderCell: (params) => <div className="font-medium">{params.value}</div>,
+    },
+    {
+      field: "model",
+      headerName: "Model",
+      width: 120,
+      renderCell: (params) => (
+        <div className="text-muted-foreground">{params.value}</div>
+      ),
+    },
+    { field: "type", headerName: "Type", width: 100 },
+    { field: "plateNumber", headerName: "Plate", width: 120 },
+    {
+      field: "batteryLevel",
+      headerName: "Battery",
+      width: 100,
+      renderCell: (params) => (
+        <div
+          className={`flex items-center gap-1 ${getBatteryColor(params.value)}`}
+        >
+          <Battery className="h-4 w-4" />
+          <span className="font-medium">{params.value}%</span>
+        </div>
+      ),
+    },
+    {
+      field: "signalStrength",
+      headerName: "Signal",
+      width: 100,
+      renderCell: (params) => (
+        <div
+          className={`flex items-center gap-1 ${getSignalColor(params.value)}`}
+        >
+          <Signal className="h-4 w-4" />
+          <span className="font-medium">{params.value}%</span>
+        </div>
+      ),
+    },
+    {
+      field: "status",
+      headerName: "Status",
+      width: 120,
+      renderCell: (params) => {
+        const variant =
+          params.value === "ACTIVE"
+            ? "default"
+            : params.value === "INACTIVE"
+            ? "secondary"
+            : "destructive";
+        return <Badge variant={variant}>{params.value}</Badge>;
+      },
+    },
+    {
+      field: "deviceCategory",
+      headerName: "Category",
+      width: 120,
+      renderCell: (params) => (
+        <Badge variant="outline" className="font-medium">
+          {params.value}
+        </Badge>
+      ),
+    },
+    {
+      field: "lastPing",
+      headerName: "Last Ping",
+      width: 120,
+      renderCell: (params) => (
+        <div className="text-muted-foreground text-sm">
+          {params.value ? new Date(params.value).toLocaleDateString() : "Never"}
+        </div>
+      ),
+    },
+    {
+      field: "actions",
+      headerName: "Actions",
+      width: 200,
+      sortable: false,
+      filterable: false,
+      renderCell: (params) => {
+        const device = params.row as TrackingDeviceListItem;
+        return (
+          <div className="flex gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleViewDetails(device.id)}
+              className="h-8 w-8 p-0"
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setSelectedDevice(device);
+                setEditDialogOpen(true);
+              }}
+              className="h-8 w-8 p-0"
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setSelectedDevice(device);
+                setStatusDialogOpen(true);
+              }}
+              className="h-8 w-8 p-0"
+            >
+              <Activity className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setSelectedDevice(device);
+                setDeleteDialogOpen(true);
+              }}
+              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        );
+      },
+    },
+  ];
+
+  const FilterSheet = () => (
+    <Sheet open={filterSheetOpen} onOpenChange={setFilterSheetOpen}>
+      <SheetTrigger asChild>
+        <Button variant="outline" size="sm" className="gap-2 bg-transparent">
+          <Filter className="h-4 w-4" />
+          Filters
+        </Button>
+      </SheetTrigger>
+      <SheetContent
+        side="left"
+        className="w-[400px] sm:w-[540px] max-h-[500px]"
+      >
+        <SheetHeader>
+          <SheetTitle>Filter Tracking Devices</SheetTitle>
+        </SheetHeader>
+        <div className="space-y-6 py-6">
+          {/* Status Filter */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Status</Label>
+            <Select
+              value={paginationParams.filters?.status || "all"}
+              onValueChange={(value) =>
+                setPaginationParams((prev) => ({
+                  ...prev,
+                  page: 1,
+                  filters: {
+                    ...prev.filters,
+                    status: value,
+                  },
+                }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="ACTIVE">Active</SelectItem>
+                <SelectItem value="INACTIVE">Inactive</SelectItem>
+                <SelectItem value="DISCONNECTED">Disconnected</SelectItem>
+                <SelectItem value="MAINTENANCE">Maintenance</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Device Category Filter */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Device Category</Label>
+            <Select
+              value={paginationParams.filters?.deviceCategory || "all"}
+              onValueChange={(value) =>
+                setPaginationParams((prev) => ({
+                  ...prev,
+                  page: 1,
+                  filters: {
+                    ...prev.filters,
+                    deviceCategory: value,
+                  },
+                }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="GPS_TRACKER">GPS Tracker</SelectItem>
+                <SelectItem value="OBD_DEVICE">OBD Device</SelectItem>
+                <SelectItem value="FUEL_SENSOR">Fuel Sensor</SelectItem>
+                <SelectItem value="EMISSION_MONITOR">
+                  Emission Monitor
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Communication Protocol Filter */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Protocol</Label>
+            <Select
+              value={paginationParams.filters?.protocol || "all"}
+              onValueChange={(value) =>
+                setPaginationParams((prev) => ({
+                  ...prev,
+                  page: 1,
+                  filters: {
+                    ...prev.filters,
+                    protocol: value,
+                  },
+                }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select protocol" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Protocols</SelectItem>
+                <SelectItem value="HTTP">HTTP</SelectItem>
+                <SelectItem value="MQTT">MQTT</SelectItem>
+                <SelectItem value="TCP">TCP</SelectItem>
+                <SelectItem value="UDP">UDP</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-2 pt-4">
+            <Button onClick={applyFilters} className="flex-1">
+              Apply Filters
+            </Button>
+            <Button
+              variant="outline"
+              onClick={resetFilters}
+              className="gap-2 bg-transparent"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Reset
+            </Button>
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
 
   return (
-    <DataTable
-      title="Tracking Devices"
-      columns={columns}
-      data={data}
-      loading={loading}
-      totalRows={totalRows}
-      onPaginationChange={fetchDevices}
-      searchPlaceholder="Search by serial/model/plate"
-    />
-  )
+    <div className="space-y-6">
+      {/* Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Devices</CardTitle>
+            <Smartphone className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{deviceStats.total}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active</CardTitle>
+            <Activity className="h-4 w-4 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">
+              {deviceStats.active}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Inactive</CardTitle>
+            <Battery className="h-4 w-4 text-yellow-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-yellow-600">
+              {deviceStats.inactive}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Disconnected</CardTitle>
+            <Signal className="h-4 w-4 text-red-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">
+              {deviceStats.disconnected}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardContent className="p-0">
+          <DataTable
+            title="Tracking Devices"
+            columns={columns}
+            data={data}
+            loading={isLoading}
+            totalRows={totalItems}
+            onPaginationChange={handlePaginationChange}
+            searchPlaceholder="Search by serial/model/plate..."
+            filters={paginationParams.filters}
+            customFilters={
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div className="flex gap-2">
+                  <FilterSheet />
+                  <UpdateAndAddDeviceSheet onDeviceCreated={fetchDevices} />
+                </div>
+              </div>
+            }
+          />
+        </CardContent>
+      </Card>
+
+      {selectedDevice && (
+        <>
+          <UpdateAndAddDeviceSheet
+            deviceId={selectedDevice.id}
+            isEditing={true}
+            open={editDialogOpen}
+            onOpenChange={setEditDialogOpen}
+            onDeviceUpdated={fetchDevices}
+          />
+          <DeleteDeviceDialog
+            device={selectedDevice}
+            open={deleteDialogOpen}
+            onOpenChange={setDeleteDialogOpen}
+            onDeleted={fetchDevices}
+          />
+          <DeviceStatusSheet
+            device={selectedDevice}
+            open={statusDialogOpen}
+            onOpenChange={setStatusDialogOpen}
+            onStatusUpdated={fetchDevices}
+          />
+        </>
+      )}
+      <ViewDeviceModal
+        deviceId={viewDeviceId}
+        open={viewDeviceId !== null}
+        onOpenChange={(open) => {
+          if (!open) setViewDeviceId(null);
+        }}
+      />
+    </div>
+  );
 }
