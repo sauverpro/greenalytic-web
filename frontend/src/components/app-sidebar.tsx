@@ -27,26 +27,25 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 
 import {
-  Home,
+
   Users,
-  LocateFixed,
-  Fuel,
-  Router,
+
   Settings,
-  MessageSquare,
+
 
   Leaf,
-  Sparkles,  ChevronRight,
-  Truck,
 
-  HelpCircle,
+   ChevronRight,
+
+
+
     LayoutDashboard,
   Car,
   RadioReceiver,
   Cloud,
   AlertTriangle,
   FileText,
-Gauge,
+
   Bell,
   BarChart2,
   Activity,
@@ -70,13 +69,13 @@ export const navigationItems = [
   },
   {
     title: "Vehicles",
-    url: "/admin/vehicles",
+    url: "/dashboard/vehicles",
     icon: Car,
     roles: ["FLEET_MANAGER", "TECHNICIAN", "ADMIN", "MANAGER"],
   },
   {
     title: "Tracking Devices",
-    url: "/dashboard/TrackingDevice",
+    url: "/dashboard/trackingDevices",
     icon: RadioReceiver,
     roles: ["TECHNICIAN", "ADMIN"],
   },
@@ -148,7 +147,7 @@ const sidebarItems = navigationItems
   useEffect(() => {
     const token = getCookie("access_token");
     const userData = getCookie("user");
-console.log("here  am having the_______ ",userData)
+
     if (!token || !userData) {
       alert("go back to login from the  app side bar")
       router.push("/login");

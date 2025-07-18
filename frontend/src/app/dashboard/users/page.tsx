@@ -17,7 +17,13 @@ import apiClient from "@/lib/api/axios"
 import { UpdateAndAddUserSheet } from "./_UserComponents/UpdateAndAddUser"
 import { DeleteUserDialog } from "./_UserComponents/DeleteUserDialog"
 import { UserStatus } from "@/types/EnumTypes"
-import VehicleDrawer from "../Vehicle/_VehicleComponents/VehicleDrawer"
+
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover"
+import VehicleDrawer from "../vehicles/_components/vehicle-drawer"
 
 const STORAGE_KEY = "users-pagination"
 
@@ -226,7 +232,7 @@ asChild
                <UpdateAndAddUserSheet  userId={user.id} isEditing={true} />
             
             </Button>
-            <Button >
+            <Button asChild>
               
                <VehicleDrawer userId={user.id}/>
             </Button>
@@ -246,41 +252,38 @@ asChild
       },
     },
   ]
+const FilterPopover = () => (
+  <Popover>
+    <PopoverTrigger asChild>
+      <Button variant="outline" size="sm" className="gap-2 bg-transparent">
+        <Filter className="h-4 w-4" />
+        Filters
+      </Button>
+    </PopoverTrigger>
 
-  const FilterSheet = () => (
-    <Sheet open={filterSheetOpen} onOpenChange={setFilterSheetOpen}>
-      <SheetTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2 bg-transparent">
-          <Filter className="h-4 w-4" />
-          Filters
-        </Button>
-      </SheetTrigger>
-      <SheetContent side="left" className="w-[400px] sm:w-[540px] max-h-[500px]">
-        <SheetHeader>
-          <SheetTitle>Filter Users</SheetTitle>
-        </SheetHeader>
-        <div className="space-y-6 py-6">
-          {/* Role Filter */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Role</Label>
-            <Select
-              value={paginationParams.filters?.role || "all"}
-              onValueChange={(value) =>
-                setPaginationParams((prev) => ({
-                  ...prev,
-                  page: 1,
-                  filters: {
-                    ...prev.filters,
-                    role: value,
-                  },
-                }))
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Roles</SelectItem>
+    <PopoverContent className="w-72" side="bottom" align="start">
+      <div className="space-y-4">
+        {/* Role Filter */}
+        <div className="space-y-1">
+          <Label className="text-sm">Role</Label>
+          <Select
+            value={paginationParams.filters?.role || "all"}
+            onValueChange={(value) =>
+              setPaginationParams((prev) => ({
+                ...prev,
+                page: 1,
+                filters: {
+                  ...prev.filters,
+                  role: value,
+                },
+              }))
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select role" />
+            </SelectTrigger>
+            <SelectContent>
+          <SelectItem value="all">All Roles</SelectItem>
                 <SelectItem value="ADMIN">Admin</SelectItem>
                 <SelectItem value="USER">User</SelectItem>
                 <SelectItem value="TECHNICIAN">Technician</SelectItem>
@@ -288,40 +291,42 @@ asChild
                 <SelectItem value="FLEET_MANAGER">Fleet Manager</SelectItem>
                 <SelectItem value="ANALYST">Analyst</SelectItem>
                 <SelectItem value="SUPPORT_AGENT">Support Agent</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+    
+            </SelectContent>
+          </Select>
+        </div>
 
-          {/* Status Filter */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Status</Label>
-            <Select
-              value={paginationParams.filters?.status || "all"}
-              onValueChange={(value) =>
-                setPaginationParams((prev) => ({
-                  ...prev,
-                  page: 1,
-                  filters: {
-                    ...prev.filters,
-                    status: value,
-                  },
-                }))
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value={UserStatus.ACTIVE}>Active</SelectItem>
-                <SelectItem value={UserStatus.PENDING_APPROVAL}>Pending Approval</SelectItem>
-                <SelectItem value={UserStatus.SUSPENDED}>Suspended</SelectItem>
-                <SelectItem value={UserStatus.DEACTIVATED}>Deactivated</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        {/* Status Filter */}
+        <div className="space-y-1">
+          <Label className="text-sm">Status</Label>
+          <Select
+            value={paginationParams.filters?.status || "all"}
+            onValueChange={(value) =>
+              setPaginationParams((prev) => ({
+                ...prev,
+                page: 1,
+                filters: {
+                  ...prev.filters,
+                  status: value,
+                },
+              }))
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value={UserStatus.ACTIVE}>Active</SelectItem>
+              <SelectItem value={UserStatus.PENDING_APPROVAL}>Pending</SelectItem>
+              <SelectItem value={UserStatus.SUSPENDED}>Suspended</SelectItem>
+              <SelectItem value={UserStatus.DEACTIVATED}>Deactivated</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-          {/* Include Deleted Toggle */}
+        {/* Deleted toggles */}
+        <div className="space-y-2">
           <div className="flex items-center space-x-2">
             <Checkbox
               id="includeDeleted"
@@ -335,12 +340,9 @@ asChild
                 }))
               }
             />
-            <Label htmlFor="includeDeleted" className="text-sm font-medium">
-              Include Deleted Users
-            </Label>
+            <Label htmlFor="includeDeleted" className="text-sm">Include Deleted</Label>
           </div>
 
-          {/* Deleted Only Toggle */}
           <div className="flex items-center space-x-2">
             <Checkbox
               id="deletedOnly"
@@ -354,25 +356,23 @@ asChild
                 }))
               }
             />
-            <Label htmlFor="deletedOnly" className="text-sm font-medium">
-              Show Only Deleted Users
-            </Label>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-2 pt-4">
-            <Button onClick={applyFilters} className="flex-1">
-              Apply Filters
-            </Button>
-            <Button variant="outline" onClick={resetFilters} className="gap-2 bg-transparent">
-              <RotateCcw className="h-4 w-4" />
-              Reset
-            </Button>
+            <Label htmlFor="deletedOnly" className="text-sm">Only Deleted</Label>
           </div>
         </div>
-      </SheetContent>
-    </Sheet>
-  )
+
+        <div className="flex gap-2 pt-2">
+          <Button onClick={applyFilters} className="flex-1">
+            Apply
+          </Button>
+          <Button variant="outline" onClick={resetFilters} className="flex-1">
+            Reset
+          </Button>
+        </div>
+      </div>
+    </PopoverContent>
+  </Popover>
+)
+
 
   return (
     <div className="space-y-6">
@@ -433,7 +433,8 @@ asChild
             filters={paginationParams.filters}
             customFilters={      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex gap-2">
-          <FilterSheet />
+   
+             <FilterPopover />
           <UpdateAndAddUserSheet onUserCreated={fetchUsers} />
         </div>
       </div>

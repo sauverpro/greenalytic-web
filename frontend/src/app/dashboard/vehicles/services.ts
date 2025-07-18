@@ -3,6 +3,7 @@ import { PaginatedVehicleList, VehicleCreateRequest, VehicleFullDetails, Vehicle
 import apiClient from "@/lib/api/axios";
 
 
+
 class VehicleService {
   private baseUrl = "/vehicles";
 
@@ -17,7 +18,7 @@ class VehicleService {
 
   async getVehicleById(id: number): Promise<VehicleFullDetails> {
     const response = await apiClient.get(`${this.baseUrl}/${id}`);
-    return response.data;
+    return response.data.data;
   }
 
   async createVehicle(data: VehicleCreateRequest) {

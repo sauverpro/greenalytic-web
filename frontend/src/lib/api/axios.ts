@@ -1,5 +1,5 @@
 import axios from "axios"
-import { getCookie, deleteCookie } from "cookies-next"
+import { getCookie} from "cookies-next"
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000/api"
 
@@ -14,6 +14,7 @@ export const apiClient = axios.create({
 apiClient.interceptors.request.use(
   (config) => {
     const token = getCookie("access_token")
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }

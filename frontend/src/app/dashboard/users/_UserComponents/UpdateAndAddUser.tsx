@@ -119,7 +119,8 @@ type UserFormData = z.infer<typeof userSchema>
             status: data.status,
           })
         } catch (error: any) {
-          const errorMsg = error?.response?.data?.message || error.message || "Failed to fetch user info"
+          const errorMsg = error?.
+          response?.data?.data?.message || error.message || "Failed to fetch user info"
           setSubmitError(errorMsg)
           toast.error(errorMsg)
         } finally {

@@ -1,7 +1,5 @@
-"use server"
 
-import { revalidatePath } from "next/cache"
-import apiClient from "@/lib/api/axios"
+
 import type {
   SignupRequest,
   LoginRequest,
@@ -10,14 +8,14 @@ import type {
   ResetPasswordDTO,
   ChangePasswordDTO,
   ChangeRoleDTO,
-
   UserCreateDTO,
   UserUpdateDTO,
   User,
   GetUserByIdResponse,
   PaginationParams
 } from "@/types"
-import { Params } from "next/dist/server/request/params"
+
+import apiClient from "@/lib/api/axios"
 
 // -------------------------
 // ✅ Public Auth Actions
@@ -45,7 +43,7 @@ export async function resetPassword(data: ResetPasswordDTO) {
 
 export async function changePassword(data: ChangePasswordDTO) {
   const res = await apiClient.put<ApiResponse<null>>("/users/change-password", data)
-  revalidatePath("/dashboard/users") // optional if password change affects display
+
   return res
 }
 
@@ -55,18 +53,17 @@ export async function changePassword(data: ChangePasswordDTO) {
 
 export async function createUser(data: UserCreateDTO) {
   const res = await apiClient.post<ApiResponse<GetUserByIdResponse>>("/users", data)
-  revalidatePath("/dashboard/users")
+
   return res.data.data
 }
 
 export async function updateUser(id: number, data: UserUpdateDTO) {
   const res = await apiClient.put<ApiResponse<GetUserByIdResponse>>(`/users/${id}`, data)
-  revalidatePath("/dashboard/users")
-  revalidatePath(`/dashboard/users/${id}`)
+
   return res.data.data
 }
 
-export async function listUsers(params?:PaginationParams) {
+export async function listUsers(params?: PaginationParams) {
   const res = await apiClient.get<ApiResponse<User>>("/users", { params })
   return res.data.data
 }
@@ -78,25 +75,24 @@ export async function getUserById(id: number) {
 
 export async function softDeleteUser(id: string) {
   const res = await apiClient.delete<ApiResponse<null>>(`/users/${id}/soft`)
-  revalidatePath("/dashboard/users")
+
   return res
 }
 
 export async function hardDeleteUser(id: string) {
   const res = await apiClient.delete<ApiResponse<null>>(`/users/${id}/hard`)
-  revalidatePath("/dashboard/User")
+
   return res
 }
 
 export async function restoreUser(id: string) {
   const res = await apiClient.put<ApiResponse<null>>(`/users/${id}/restore`)
-  revalidatePath("/dashboard/users")
+
   return res
 }
 
 export async function changeUserRole(id: string, data: ChangeRoleDTO) {
   const res = await apiClient.put<ApiResponse<null>>(`/users/${id}/role`, data)
-  revalidatePath("/dashboard/users")
-  revalidatePath(`/dashboard/users/${id}`)
+
   return res
 }

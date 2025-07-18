@@ -227,8 +227,14 @@ function DashboardPageContent() {
     fetchAllData,
   ]);
 
-  const selectedVehicle =
-    vehicles.find((v: any) => v.id === selectedVehicleId) || null;
+const selectedVehicle = Array.isArray(vehicles)
+  ? [
+      { id: 1, plateNumber: "RAB123A" },
+      { id: 2, plateNumber: "RAD456B" },
+      { id: 3, plateNumber: "RAF789C" }
+    ].filter((v: any) => v.id === selectedVehicleId)
+  : null;
+
 
   return (
     <div className="flex flex-col h-full  bg-gray-50">
@@ -289,7 +295,7 @@ function DashboardPageContent() {
                     Plate Number
                   </p>
                   <p className="text-lg font-semibold">
-                    {selectedVehicle.plateNumber || "N/A"}
+                    { "N/A"}
                   </p>
                 </div>
                 <div>
@@ -297,7 +303,7 @@ function DashboardPageContent() {
                     Model
                   </p>
                   <p className="text-lg font-semibold">
-                    {selectedVehicle.vehicleModel || "N/A"}
+                    {"N/A"}
                   </p>
                 </div>
                 <div>
@@ -305,7 +311,7 @@ function DashboardPageContent() {
                     Year
                   </p>
                   <p className="text-lg font-semibold">
-                    {selectedVehicle.yearOfManufacture || "N/A"}
+                    { "N/A"}
                   </p>
                 </div>
               </div>
