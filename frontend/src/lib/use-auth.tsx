@@ -25,15 +25,16 @@ import { UserRole, UserStatus } from "@/types/EnumTypes";
 
 interface AuthContextType {
   user: User | null;
-  login: (credentials: LoginRequest) => Promise<void>;
-  signup: (data: SignupRequest) => Promise<void>;
+  login: (credentials: LoginRequest) => Promise<ApiResponse<AuthResponse>>;
+  signup: (data: SignupRequest) => Promise<ApiResponse<AuthResponse>>;
   logout: () => void;
   handleGoogleCallback: (token: string) => Promise<void>;
   initiateGoogleLogin: () => void;
   isLoading: boolean;
-  hasRole: (roles: string | string[]) => boolean;
+  hasRole: (roles: UserRole | UserRole[]) => boolean;
   isAuthenticated: boolean;
 }
+
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -41,23 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Dummy for dev testing
-  const dummyUser: User = {
-    id: 1006,
-    username: "imanariyo baptiste",
-    email: "imanariyobaptiste@gmail.com",
-    role: UserRole.ADMIN,
-    status: UserStatus.ACTIVE,
-    phoneNumber: "+250788123456",
-    companyName: "Greenalytic Inc.",
-    location: "Kigali, Rwanda",
-    image:
-      "https://st3.depositphotos.com/15648834/17930/v/450/depositphotos_179308454-stock-illustration-unknown-person-silhouette-glasses-profile.jpg",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
 
-  const dummyToken = "DUMMY_JWT_TOKEN";
 
   // Load user from cookies
   useEffect(() => {
@@ -73,44 +58,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error("Invalid user cookie", error);
       }
     } else {
-      // Dev fallback (optional)
-      setCookie("access_token", dummyToken, { maxAge: 60 * 60 * 24 * 7 });
-      setCookie("user", JSON.stringify(dummyUser), { maxAge: 60 * 60 * 24 * 7 });
-      setUser(dummyUser);
+  
+
     }
 
     setIsLoading(false);
   }, []);
 
-  const login = async (credentials: LoginRequest) => {
-    try {
-      const response = await apiClient.post<ApiResponse<AuthResponse>>(
-        "/users/login",
-        credentials
-      );
-      const { token, user } = response.data.data;
-      setCookie("access_token", token, { maxAge: 60 * 60 * 24 * 7 });
-      setCookie("user", JSON.stringify(user), { maxAge: 60 * 60 * 24 * 7 });
-      setUser(user);
-    } catch (error) {
-      throw error;
-    }
-  };
+const login = async (credentials: LoginRequest): Promise<ApiResponse<AuthResponse>> => {
+  try {
+    const response = await apiClient.post<ApiResponse<AuthResponse>>(
+      "/users/login",
+      credentials
+    );
+    const { token, user } = response.data.data;
+    setCookie("access_token", token, { maxAge: 60 * 60 * 24 * 7 });
+    setCookie("user", JSON.stringify(user), { maxAge: 60 * 60 * 24 * 7 });
+    setUser(user);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
 
-  const signup = async (data: SignupRequest) => {
-    try {
-      const response = await apiClient.post<ApiResponse<AuthResponse>>(
-        "/users/signup",
-        data
-      );
-      const { token, user } = response.data.data;
-      setCookie("access_token", token, { maxAge: 60 * 60 * 24 * 7 });
-      setCookie("user", JSON.stringify(user), { maxAge: 60 * 60 * 24 * 7 });
-      setUser(user);
-    } catch (error) {
-      throw error;
-    }
-  };
+
+const signup = async (data: SignupRequest): Promise<ApiResponse<AuthResponse>> => {
+  try {
+    const response = await apiClient.post<ApiResponse<AuthResponse>>(
+      "/users/signup",
+      data
+    );
+    const { token, user } = response.data.data;
+    setCookie("access_token", token, { maxAge: 60 * 60 * 24 * 7 });
+    setCookie("user", JSON.stringify(user), { maxAge: 60 * 60 * 24 * 7 });
+    setUser(user);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 
   const logout = () => {
     deleteCookie("access_token");
@@ -119,7 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.location.href = "/login";
   };
 
-  const hasRole = (roles: string | string[]): boolean => {
+  const hasRole = (roles: UserRole | UserRole[]): boolean => {
     if (!user) return false;
     const arr = Array.isArray(roles) ? roles : [roles];
     return arr.includes(user.role);

@@ -23,12 +23,13 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import authService, { LoginCredentials } from "@/services/authservice";
 import { useAuth } from "@/lib/use-auth";
 
+
 export default function LoginContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-
+  const [formSuccess, setFormSuccess] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -52,10 +53,18 @@ const onSubmit = async (data: LoginCredentials) => {
   setFormError(null);
 
   try {
-    await login(data); // ✅ useAuth login returns void
-    router.push("/dashboard"); // ✅ navigate if successful
+    const response=await login(data); 
+    console.log("the reponse",response)
+ 
+      if (response?.message) {
+        setFormSuccess(response.message);
+        
+      }
+    router.push("/dashboard"); 
   } catch (error: any) {
-    setFormError(error.message || "Login failed");
+        const message =
+     error?.response?.data?.message || error.message || "Login failed";
+         setFormError(message);
   } finally {
     setIsLoading(false);
   }
@@ -170,7 +179,11 @@ const onSubmit = async (data: LoginCredentials) => {
                           <AlertDescription>{formError}</AlertDescription>
                         </Alert>
                       )}
-
+       {formSuccess && (
+          <Alert variant="default" className="bg-green-100 text-green-900">
+            <AlertDescription>{formSuccess}</AlertDescription>
+          </Alert>
+        )}
                       {/* email */}
                       <div className="space-y-2">
                         <Label htmlFor="email">Email</Label>
