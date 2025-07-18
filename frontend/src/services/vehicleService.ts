@@ -4,7 +4,7 @@ import { Vehicle, EmissionData } from "@/types/types";
 
 
 export const addVehicleToUser = async (
-  userId: number,
+  userId: string,
   vehicleData: Vehicle
 ) => {
   try {
@@ -15,7 +15,7 @@ export const addVehicleToUser = async (
   }
 };
 
-export const getVehiclesForUser = async (userId: number) => {
+export const getVehiclesForUser = async (userId: string) => {
   try {
     const response = await apiClient.get(`/vehicles/user/${userId}/vehicles`);
     return response.data;

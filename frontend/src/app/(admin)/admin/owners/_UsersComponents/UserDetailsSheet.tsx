@@ -11,8 +11,9 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GetUserByIdResponse, User, UserStatus } from "@/types";
+import { GetUserByIdResponse, User } from "@/types";
 import { CalendarDays, Mail, Phone, MapPin, Building, Hash, Globe, Bell } from "lucide-react";
+import { UserStatus } from "@/types/EnumTypes";
 
 interface UserDetailsSheetProps {
   user: GetUserByIdResponse;

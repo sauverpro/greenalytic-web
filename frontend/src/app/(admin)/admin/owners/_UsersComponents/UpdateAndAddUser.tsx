@@ -34,8 +34,9 @@ import {
 } from "@/components/ui/form";
 import { toast } from "sonner";
 
-import { GetUserByIdResponse, User, UserRole, UserStatus } from "@/types";
+import { GetUserByIdResponse, User} from "@/types";
 import { useDynamicCrud } from "@/hooks/use-dynamic-crud";
+import { UserRole, UserStatus } from "@/types/EnumTypes";
 
 
 // Validation schema
