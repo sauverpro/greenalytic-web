@@ -1,31 +1,45 @@
-"use client"
+"use client";
+
 import {
   Popover,
   PopoverTrigger,
   PopoverContent,
-} from "@/components/ui/popover"
-import { useState, useCallback, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import type { GridColDef } from "@mui/x-data-grid"
-import { DataTable } from "@/components/dashboard/data-table"
-import { Button } from "@/components/ui/button"
-import { Filter, RotateCcw, Plus, Eye } from "lucide-react"
-import type { PaginationParams } from "@/types"
-import apiClient from "@/lib/api/axios"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent } from "@/components/ui/card"
-import { VehicleListItemWithUser } from "./VehicleTypes"
-import { VehicleStats } from "./_components/vehicle-stats"
-import VehicleDrawer from "./_components/vehicle-drawer"
-
-
-
+} from "@/components/ui/popover";
+import { useState, useCallback, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import type { GridColDef } from "@mui/x-data-grid";
+import { DataTable } from "@/components/dashboard/data-table";
+import { Button } from "@/components/ui/button";
+import {
+  Filter,
+  RotateCcw,
+  Plus,
+  Eye,
+  Edit,
+  Trash2,
+  Smartphone,
+} from "lucide-react";
+import type { PaginationParams } from "@/types";
+import apiClient from "@/lib/api/axios";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import type { VehicleListItemWithUser } from "./VehicleTypes";
+import { VehicleStats } from "./_components/vehicle-stats";
+import { UpdateAndAddVehicleSheet } from "./_components/UpdateAndAddVehicleSheet";
+import { ViewVehicleModal } from "./_components/ViewVehicleModal";
+import { DeleteVehicleDialog } from "./_components/DeleteVehicleDialog";
+import { AddDeviceToVehicleSheet } from "./_components/AddDeviceToVehicleSheet";
 
 export default function EnhancedVehiclesPage() {
-  const router = useRouter()
+  const router = useRouter();
   const [paginationParams, setPaginationParams] = useState<PaginationParams>({
     page: 1,
     limit: 25,
@@ -35,38 +49,50 @@ export default function EnhancedVehiclesPage() {
       status: "all",
       emissionStatus: "all",
     },
-  })
+  });
 
-  const [vehicles, setVehicles] = useState<VehicleListItemWithUser[]>([])
-  const [totalItems, setTotalItems] = useState(0)
-  const [isLoading, setIsLoading] = useState(false)
-  const [filterSheetOpen, setFilterSheetOpen] = useState(false)
-  const [createDrawerOpen, setCreateDrawerOpen] = useState(false)
-  const [updateDrawerOpen, setUpdateDrawerOpen] = useState(false)
-  const [selectedVehicleId, setSelectedVehicleId] = useState<number | undefined>()
+  const [vehicles, setVehicles] = useState<VehicleListItemWithUser[]>([]);
+  const [totalItems, setTotalItems] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false);
+  const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
+  const [updateDrawerOpen, setUpdateDrawerOpen] = useState(false);
+  const [selectedVehicleId, setSelectedVehicleId] = useState<
+    number | undefined
+  >();
+
+  // New state for modal and delete dialog
+  const [viewVehicleId, setViewVehicleId] = useState<number | null>(null);
+  const [selectedVehicleForDelete, setSelectedVehicleForDelete] =
+    useState<VehicleListItemWithUser | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  const [addDeviceSheetOpen, setAddDeviceSheetOpen] = useState(false);
+  const [selectedVehicleForDevice, setSelectedVehicleForDevice] =
+    useState<VehicleListItemWithUser | null>(null);
 
   const fetchVehicles = useCallback(async () => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
       const res = await apiClient.get("/vehicles", {
         params: paginationParams,
-      })
-      setVehicles(res.data.data.data || [])
-      setTotalItems(res.data.data.pagination?.totalItems || 0)
+      });
+      setVehicles(res.data.data.data || []);
+      setTotalItems(res.data.data.pagination?.totalItems || 0);
     } catch (error) {
-      console.error("Failed to fetch vehicles:", error)
+      console.error("Failed to fetch vehicles:", error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [paginationParams])
+  }, [paginationParams]);
 
   useEffect(() => {
-    fetchVehicles()
-  }, [fetchVehicles])
+    fetchVehicles();
+  }, [fetchVehicles]);
 
   const handlePaginationChange = useCallback((params: PaginationParams) => {
-    setPaginationParams((prev) => ({ ...prev, ...params }))
-  }, [])
+    setPaginationParams((prev) => ({ ...prev, ...params }));
+  }, []);
 
   const resetFilters = () => {
     setPaginationParams((prev) => ({
@@ -78,36 +104,52 @@ export default function EnhancedVehiclesPage() {
       },
       includeDeleted: false,
       deletedOnly: false,
-    }))
-    setFilterSheetOpen(false)
-  }
+    }));
+    setFilterSheetOpen(false);
+  };
 
   const applyFilters = () => {
-    setFilterSheetOpen(false)
-  }
+    setFilterSheetOpen(false);
+  };
 
+  // Updated to open modal instead of navigation
   const handleViewDetails = (vehicleId: number) => {
-    router.push(`/dashboard/vehicles/${vehicleId}`)
-  }
+    setViewVehicleId(vehicleId);
+  };
 
   const handleEditVehicle = (vehicleId: number) => {
-    setSelectedVehicleId(vehicleId)
-    setUpdateDrawerOpen(true)
-  }
+    setSelectedVehicleId(vehicleId);
+    setUpdateDrawerOpen(true);
+  };
+
+  // New delete handler
+  const handleDeleteVehicle = (vehicle: VehicleListItemWithUser) => {
+    setSelectedVehicleForDelete(vehicle);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleAddDevice = (vehicle: VehicleListItemWithUser) => {
+    setSelectedVehicleForDevice(vehicle);
+    setAddDeviceSheetOpen(true);
+  };
 
   const columns: GridColDef[] = [
-        {
+    {
       field: "serial",
       headerName: "ID",
       width: 70,
       sortable: false,
       filterable: false,
       renderCell: (params) => {
-        const page = paginationParams.page || 1
-        const limit = paginationParams.limit || 25
-        const rowIndex = params.api.getSortedRowIds().indexOf(params.id)
-        const serialNumber = (page - 1) * limit + rowIndex + 1
-        return <span className="font-medium text-muted-foreground">{serialNumber}</span>
+        const page = paginationParams.page || 1;
+        const limit = paginationParams.limit || 25;
+        const rowIndex = params.api.getSortedRowIds().indexOf(params.id);
+        const serialNumber = (page - 1) * limit + rowIndex + 1;
+        return (
+          <span className="font-medium text-muted-foreground">
+            {serialNumber}
+          </span>
+        );
       },
     },
     { field: "plateNumber", headerName: "Plate", width: 130 },
@@ -125,10 +167,10 @@ export default function EnhancedVehiclesPage() {
             params.value === "NORMAL_EMISSION"
               ? "bg-green-100 text-green-800"
               : params.value === "TOP_POLLUTING"
-                ? "bg-red-100 text-red-800"
-                : params.value === "UNDER_MAINTENANCE"
-                  ? "bg-yellow-100 text-yellow-800"
-                  : "bg-gray-100 text-gray-800"
+              ? "bg-red-100 text-red-800"
+              : params.value === "UNDER_MAINTENANCE"
+              ? "bg-yellow-100 text-yellow-800"
+              : "bg-gray-100 text-gray-800"
           }`}
         >
           {params.value?.replace(/_/g, " ")}
@@ -145,10 +187,10 @@ export default function EnhancedVehiclesPage() {
             params.value === "LOW"
               ? "bg-green-100 text-green-800"
               : params.value === "NORMAL"
-                ? "bg-blue-100 text-blue-800"
-                : params.value === "HIGH"
-                  ? "bg-red-100 text-red-800"
-                  : "bg-gray-100 text-gray-800"
+              ? "bg-blue-100 text-blue-800"
+              : params.value === "HIGH"
+              ? "bg-red-100 text-red-800"
+              : "bg-gray-100 text-gray-800"
           }`}
         >
           {params.value}
@@ -166,132 +208,171 @@ export default function EnhancedVehiclesPage() {
       headerName: "Created",
       width: 150,
       renderCell: (params) => (
-        <span className="text-muted-foreground text-sm">{new Date(params.value).toLocaleDateString()}</span>
+        <span className="text-muted-foreground text-sm">
+          {new Date(params.value).toLocaleDateString()}
+        </span>
       ),
     },
     {
       field: "actions",
       headerName: "Actions",
-      width: 120,
+      width: 200,
       sortable: false,
       renderCell: (params) => (
         <div className="flex gap-1">
-          <Button size="sm" variant="ghost" onClick={() => handleViewDetails(params.row.id)}>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => handleViewDetails(params.row.id)}
+          >
             <Eye className="h-4 w-4" />
           </Button>
-          <Button size="sm" variant="ghost" onClick={() => handleEditVehicle(params.row.id)}>
-            <Filter className="h-4 w-4" />
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => handleEditVehicle(params.row.id)}
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => handleAddDevice(params.row)}
+          >
+            <Smartphone className="h-4 w-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => handleDeleteVehicle(params.row)}
+            className="text-destructive hover:text-destructive"
+          >
+            <Trash2 className="h-4 w-4" />
           </Button>
         </div>
       ),
     },
-  ]
+  ];
 
-const FilterPopover = () => (
-  <Popover>
-    <PopoverTrigger asChild>
-      <Button variant="outline" size="sm" className="gap-2 bg-transparent">
-        <Filter className="h-4 w-4" />
-        Filters
-      </Button>
-    </PopoverTrigger>
-    <PopoverContent className="w-80">
-      <div className="space-y-6 py-2">
-        {/* Status Filter */}
-        <div className="space-y-1">
-          <Label>Status</Label>
-          <Select
-            value={paginationParams.filters?.status || "all"}
-            onValueChange={(value) =>
-              setPaginationParams((prev) => ({
-                ...prev,
-                page: 1,
-                filters: { ...prev.filters, status: value },
-              }))
-            }
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="NORMAL_EMISSION">Normal Emission</SelectItem>
-              <SelectItem value="TOP_POLLUTING">Top Polluting</SelectItem>
-              <SelectItem value="INACTIVE_DISCONNECTED">Inactive/Disconnected</SelectItem>
-              <SelectItem value="UNDER_MAINTENANCE">Under Maintenance</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Emission Filter */}
-        <div className="space-y-1">
-          <Label>Emission Status</Label>
-          <Select
-            value={paginationParams.filters?.emissionStatus || "all"}
-            onValueChange={(value) =>
-              setPaginationParams((prev) => ({
-                ...prev,
-                page: 1,
-                filters: { ...prev.filters, emissionStatus: value },
-              }))
-            }
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select emission" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="LOW">Low</SelectItem>
-              <SelectItem value="NORMAL">Normal</SelectItem>
-              <SelectItem value="HIGH">High</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Deleted Filters */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="includeDeleted"
-              checked={paginationParams.includeDeleted || false}
-              onCheckedChange={(checked) =>
+  const FilterPopover = () => (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="outline" size="sm" className="gap-2 bg-transparent">
+          <Filter className="h-4 w-4" />
+          Filters
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-80">
+        <div className="space-y-6 py-2">
+          {/* Status Filter */}
+          <div className="space-y-1">
+            <Label>Status</Label>
+            <Select
+              value={paginationParams.filters?.status || "all"}
+              onValueChange={(value) =>
                 setPaginationParams((prev) => ({
                   ...prev,
-                  includeDeleted: checked as boolean,
-                  deletedOnly: checked ? false : prev.deletedOnly,
+                  page: 1,
+                  filters: { ...prev.filters, status: value },
                 }))
               }
-            />
-            <Label htmlFor="includeDeleted" className="text-sm">Include Deleted</Label>
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="NORMAL_EMISSION">Normal Emission</SelectItem>
+                <SelectItem value="TOP_POLLUTING">Top Polluting</SelectItem>
+                <SelectItem value="INACTIVE_DISCONNECTED">
+                  Inactive/Disconnected
+                </SelectItem>
+                <SelectItem value="UNDER_MAINTENANCE">
+                  Under Maintenance
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="deletedOnly"
-              checked={paginationParams.deletedOnly || false}
-              onCheckedChange={(checked) =>
+
+          {/* Emission Filter */}
+          <div className="space-y-1">
+            <Label>Emission Status</Label>
+            <Select
+              value={paginationParams.filters?.emissionStatus || "all"}
+              onValueChange={(value) =>
                 setPaginationParams((prev) => ({
                   ...prev,
-                  deletedOnly: checked as boolean,
-                  includeDeleted: checked ? false : prev.includeDeleted,
+                  page: 1,
+                  filters: { ...prev.filters, emissionStatus: value },
                 }))
               }
-            />
-            <Label htmlFor="deletedOnly" className="text-sm">Only Deleted</Label>
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select emission" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="LOW">Low</SelectItem>
+                <SelectItem value="NORMAL">Normal</SelectItem>
+                <SelectItem value="HIGH">High</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Deleted Filters */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="includeDeleted"
+                checked={paginationParams.includeDeleted || false}
+                onCheckedChange={(checked) =>
+                  setPaginationParams((prev) => ({
+                    ...prev,
+                    includeDeleted: checked as boolean,
+                    deletedOnly: checked ? false : prev.deletedOnly,
+                  }))
+                }
+              />
+              <Label htmlFor="includeDeleted" className="text-sm">
+                Include Deleted
+              </Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="deletedOnly"
+                checked={paginationParams.deletedOnly || false}
+                onCheckedChange={(checked) =>
+                  setPaginationParams((prev) => ({
+                    ...prev,
+                    deletedOnly: checked as boolean,
+                    includeDeleted: checked ? false : prev.includeDeleted,
+                  }))
+                }
+              />
+              <Label htmlFor="deletedOnly" className="text-sm">
+                Only Deleted
+              </Label>
+            </div>
+          </div>
+
+          {/* Apply + Reset Buttons */}
+          <div className="flex gap-2 pt-2">
+            <Button onClick={applyFilters} className="flex-1">
+              Apply
+            </Button>
+            <Button
+              variant="outline"
+              onClick={resetFilters}
+              className="flex-1 bg-transparent"
+            >
+              <RotateCcw className="h-4 w-4 mr-1" />
+              Reset
+            </Button>
           </div>
         </div>
-
-        {/* Apply + Reset Buttons */}
-        <div className="flex gap-2 pt-2">
-          <Button onClick={applyFilters} className="flex-1">Apply</Button>
-          <Button variant="outline" onClick={resetFilters} className="flex-1">
-            <RotateCcw className="h-4 w-4 mr-1" />
-            Reset
-          </Button>
-        </div>
-      </div>
-    </PopoverContent>
-  </Popover>
-)
+      </PopoverContent>
+    </Popover>
+  );
 
   return (
     <div className="space-y-6">
@@ -323,20 +404,54 @@ const FilterPopover = () => (
         </CardContent>
       </Card>
 
-
-      <VehicleDrawer
-   
-   
-
-        userId={1} 
+      {/* Create/Edit Vehicle Sheets */}
+      <UpdateAndAddVehicleSheet
+        isEditing={false}
+        open={createDrawerOpen}
+        onOpenChange={setCreateDrawerOpen}
+        onVehicleCreated={fetchVehicles}
       />
 
-
-      <VehicleDrawer
-     
+      <UpdateAndAddVehicleSheet
+        isEditing={true}
         vehicleId={selectedVehicleId}
+        open={updateDrawerOpen}
+        onOpenChange={setUpdateDrawerOpen}
+        onVehicleUpdated={fetchVehicles}
+      />
 
+      {/* View Vehicle Modal */}
+      <ViewVehicleModal
+        vehicleId={viewVehicleId}
+        open={viewVehicleId !== null}
+        onOpenChange={(open) => {
+          if (!open) setViewVehicleId(null);
+        }}
+      />
+
+      {/* Delete Vehicle Dialog */}
+      {selectedVehicleForDelete && (
+        <DeleteVehicleDialog
+          vehicle={selectedVehicleForDelete}
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          onDeleted={() => {
+            fetchVehicles();
+            setSelectedVehicleForDelete(null);
+          }}
+        />
+      )}
+
+      {/* Add Device to Vehicle Sheet */}
+      <AddDeviceToVehicleSheet
+        vehicle={selectedVehicleForDevice}
+        open={addDeviceSheetOpen}
+        onOpenChange={setAddDeviceSheetOpen}
+        onDeviceAdded={() => {
+          fetchVehicles();
+          setSelectedVehicleForDevice(null);
+        }}
       />
     </div>
-  )
+  );
 }

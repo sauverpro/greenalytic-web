@@ -147,3 +147,17 @@ export interface PaginatedVehicleList {
     sortOrder?: "asc" | "desc";
   };
 }
+
+export interface AssignDeviceToVehicleRequest {
+  serialNumber: string;
+  model: string;
+  type: string;
+  plateNumber: string;
+  deviceCategory: string;
+  firmwareVersion?: string;
+  simCardNumber?: string;
+  installationDate?: string;
+  communicationProtocol: string;
+  dataTransmissionInterval: string;
+  vehicleId: number;
+}

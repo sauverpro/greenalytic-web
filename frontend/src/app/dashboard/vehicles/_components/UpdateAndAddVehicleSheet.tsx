@@ -35,138 +35,137 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
-import {
-  createTrackingDevice,
-  updateTrackingDevice,
-  getTrackingDeviceById,
-  type TrackingDeviceCreateDTO,
-  type TrackingDeviceUpdateDTO,
-} from "@/services/trackingDeviceService";
-import type { TrackingDeviceListItem } from "@/types/trackingDevicesTypes";
-import { DeviceCategory, CommunicationProtocol } from "@/types/EnumTypes";
+import { FuelType } from "@/types/EnumTypes";
+import vehicleService from "../services";
+import type {
+  VehicleCreateRequest,
+  VehicleUpdateRequest,
+  VehicleFullDetails,
+} from "../VehicleTypes";
 
-interface UpdateAndAddDeviceProps {
-  deviceId?: number;
+interface UpdateAndAddVehicleProps {
+  vehicleId?: number;
   isEditing?: boolean;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
-  onDeviceCreated?: () => void;
-  onDeviceUpdated?: () => void;
+  onVehicleCreated?: () => void;
+  onVehicleUpdated?: () => void;
 }
 
-const deviceSchema = z.object({
-  serialNumber: z.string().min(1, "Serial number is required"),
-  model: z.string().min(1, "Model is required"),
-  type: z.string().min(1, "Type is required"),
-  plateNumber: z.string().min(1, "Plate number is required"),
-  deviceCategory: z.string().min(1, "Device category is required"),
-  firmwareVersion: z.string().optional(),
-  simCardNumber: z.string().optional(),
-  communicationProtocol: z
-    .string()
-    .min(1, "Communication protocol is required"),
-  dataTransmissionInterval: z
-    .string()
-    .min(1, "Data transmission interval is required"),
+const vehicleSchema = z.object({
+  plateNumber: z.string().min(3, "Plate number is required"),
+  vehicleModel: z.string().min(1, "Vehicle model is required"),
+  vehicleType: z.string().min(1, "Vehicle type is required"),
+  fuelType: z.nativeEnum(FuelType, {
+    errorMap: () => ({ message: "Fuel type is required and must be valid" }),
+  }),
+  registrationNumber: z.string().optional(),
+  chassisNumber: z.string().optional(),
+  yearOfManufacture: z
+    .number({
+      required_error: "Year is required",
+      invalid_type_error: "Year must be a number",
+    })
+    .min(1900, "Too old")
+    .max(new Date().getFullYear(), "Future years not allowed"),
+  usage: z.string().min(1, "Usage is required"),
   userId: z.number().optional(),
-  vehicleId: z.number().optional(),
 });
 
-type DeviceFormData = z.infer<typeof deviceSchema>;
+type VehicleFormData = z.infer<typeof vehicleSchema>;
 
-export function UpdateAndAddDeviceSheet({
-  deviceId,
+export function UpdateAndAddVehicleSheet({
+  vehicleId,
   isEditing = false,
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
-  onDeviceCreated,
-  onDeviceUpdated,
-}: UpdateAndAddDeviceProps) {
+  onVehicleCreated,
+  onVehicleUpdated,
+}: UpdateAndAddVehicleProps) {
   const [internalOpen, setInternalOpen] = useState(false);
-  const [loadingDevice, setLoadingDevice] = useState(false);
+  const [loadingVehicle, setLoadingVehicle] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const setOpen = controlledOnOpenChange || setInternalOpen;
 
-  const form = useForm<DeviceFormData>({
-    resolver: zodResolver(deviceSchema),
+  const form = useForm<VehicleFormData>({
+    resolver: zodResolver(vehicleSchema),
     defaultValues: {
-      serialNumber: "",
-      model: "",
-      type: "",
       plateNumber: "",
-      deviceCategory: "",
-      firmwareVersion: "",
-      simCardNumber: "",
-      communicationProtocol: "",
-      dataTransmissionInterval: "",
+      vehicleModel: "",
+      vehicleType: "",
+      fuelType: undefined,
+      registrationNumber: "",
+      chassisNumber: "",
+      yearOfManufacture: new Date().getFullYear(),
+      usage: "",
       userId: undefined,
-      vehicleId: undefined,
     },
   });
 
   const isSubmitting = form.formState.isSubmitting;
   const hasErrors = Object.keys(form.formState.errors).length > 0;
-  const isFormDisabled = isSubmitting || loadingDevice;
+  const isFormDisabled = isSubmitting || loadingVehicle;
 
-  // Fetch device data when editing
+  // Fetch vehicle data when editing
   useEffect(() => {
-    const fetchDevice = async () => {
-      if (isEditing && deviceId && open) {
-        setLoadingDevice(true);
+    const fetchVehicle = async () => {
+      if (isEditing && vehicleId && open) {
+        setLoadingVehicle(true);
         setSubmitError(null);
         try {
-          const data: TrackingDeviceListItem = await getTrackingDeviceById(
-            deviceId
+          const data: VehicleFullDetails = await vehicleService.getVehicleById(
+            vehicleId
           );
           form.reset({
-            serialNumber: data.serialNumber,
-            model: data.model,
-            type: data.type,
             plateNumber: data.plateNumber,
-            deviceCategory: data.deviceCategory,
-            firmwareVersion: data.firmwareVersion || "",
-            simCardNumber: data.simCardNumber || "",
-            communicationProtocol: data.communicationProtocol,
-            dataTransmissionInterval: data.dataTransmissionInterval,
-            userId: data.userId || undefined,
-            vehicleId: data.vehicleId || undefined,
+            vehicleModel: data.vehicleModel,
+            vehicleType: data.vehicleType,
+            fuelType: data.fuelType,
+            registrationNumber: data.registrationNumber || "",
+            chassisNumber: data.chassisNumber || "",
+            yearOfManufacture: data.yearOfManufacture,
+            usage: data.usage,
+            userId: data.user?.id || undefined,
           });
         } catch (error: any) {
           const errorMsg =
             error?.response?.data?.message ||
             error.message ||
-            "Failed to fetch device info";
+            "Failed to fetch vehicle info";
           setSubmitError(errorMsg);
           toast.error(errorMsg);
         } finally {
-          setLoadingDevice(false);
+          setLoadingVehicle(false);
         }
       }
     };
 
-    fetchDevice();
-  }, [deviceId, isEditing, open, form]);
+    fetchVehicle();
+  }, [vehicleId, isEditing, open, form]);
 
-  const onSubmit = async (data: DeviceFormData) => {
+  const onSubmit = async (data: VehicleFormData) => {
     setSubmitError(null);
     setSubmitSuccess(false);
 
     try {
-      if (isEditing && deviceId) {
-        const payload: TrackingDeviceUpdateDTO = { ...data };
-        await updateTrackingDevice(deviceId, payload);
-        toast.success("Device updated successfully");
+      if (isEditing && vehicleId) {
+        const payload: VehicleUpdateRequest = { ...data };
+        await vehicleService.updateVehicle(vehicleId, payload);
+        toast.success("Vehicle updated successfully");
         setSubmitSuccess(true);
-        onDeviceUpdated?.();
+        onVehicleUpdated?.();
       } else {
-        const payload: TrackingDeviceCreateDTO = { ...data };
-        await createTrackingDevice(payload);
-        toast.success("Device created successfully");
+        const payload: VehicleCreateRequest = {
+          ...data,
+          userId: data.userId || 1,
+        };
+        await vehicleService.createVehicle(payload);
+        toast.success("Vehicle created successfully");
         setSubmitSuccess(true);
-        onDeviceCreated?.();
+        onVehicleCreated?.();
       }
 
       // Close sheet after a brief delay to show success state
@@ -196,7 +195,7 @@ export function UpdateAndAddDeviceSheet({
 
   const TriggerButton = () => (
     <Button size="sm" disabled={isSubmitting}>
-      {isEditing ? "Edit Device" : "+ Add New"}
+      {isEditing ? "Edit Vehicle" : "+ Add New"}
     </Button>
   );
 
@@ -210,19 +209,21 @@ export function UpdateAndAddDeviceSheet({
 
       <SheetContent className="sm:max-w-[600px]" side="left">
         <SheetHeader>
-          <SheetTitle>{isEditing ? "Edit Device" : "Create Device"}</SheetTitle>
+          <SheetTitle>
+            {isEditing ? "Edit Vehicle" : "Create Vehicle"}
+          </SheetTitle>
           <SheetDescription>
             {isEditing
-              ? "Update the device information."
-              : "Fill in the new device details."}
+              ? "Update the vehicle information."
+              : "Fill in the new vehicle details."}
           </SheetDescription>
         </SheetHeader>
 
         {/* Loading State */}
-        {loadingDevice && (
+        {loadingVehicle && (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-6 w-6 animate-spin mr-2" />
-            <span>Loading device data...</span>
+            <span>Loading vehicle data...</span>
           </div>
         )}
 
@@ -239,7 +240,7 @@ export function UpdateAndAddDeviceSheet({
           <Alert className="mb-4 border-green-200 bg-green-50">
             <CheckCircle2 className="h-4 w-4 text-green-600" />
             <AlertDescription className="text-green-800">
-              Device {isEditing ? "updated" : "created"} successfully!
+              Vehicle {isEditing ? "updated" : "created"} successfully!
             </AlertDescription>
           </Alert>
         )}
@@ -247,93 +248,6 @@ export function UpdateAndAddDeviceSheet({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto pr-2">
-              {/* Serial Number */}
-              <FormField
-                control={form.control}
-                name="serialNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel
-                      className={
-                        form.formState.errors.serialNumber
-                          ? "text-destructive"
-                          : ""
-                      }
-                    >
-                      Serial Number *
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        disabled={isFormDisabled || isEditing} // Disable editing serial number when updating
-                        className={
-                          form.formState.errors.serialNumber
-                            ? "border-destructive"
-                            : ""
-                        }
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Model */}
-              <FormField
-                control={form.control}
-                name="model"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel
-                      className={
-                        form.formState.errors.model ? "text-destructive" : ""
-                      }
-                    >
-                      Model *
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        disabled={isFormDisabled}
-                        className={
-                          form.formState.errors.model
-                            ? "border-destructive"
-                            : ""
-                        }
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Type */}
-              <FormField
-                control={form.control}
-                name="type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel
-                      className={
-                        form.formState.errors.type ? "text-destructive" : ""
-                      }
-                    >
-                      Type *
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        disabled={isFormDisabled}
-                        className={
-                          form.formState.errors.type ? "border-destructive" : ""
-                        }
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
               {/* Plate Number */}
               <FormField
                 control={form.control}
@@ -365,126 +279,27 @@ export function UpdateAndAddDeviceSheet({
                 )}
               />
 
-              {/* Device Category */}
+              {/* Vehicle Model */}
               <FormField
                 control={form.control}
-                name="deviceCategory"
+                name="vehicleModel"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel
                       className={
-                        form.formState.errors.deviceCategory
+                        form.formState.errors.vehicleModel
                           ? "text-destructive"
                           : ""
                       }
                     >
-                      Device Category *
-                    </FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      disabled={isFormDisabled}
-                    >
-                      <FormControl>
-                        <SelectTrigger
-                          className={
-                            form.formState.errors.deviceCategory
-                              ? "border-destructive"
-                              : ""
-                          }
-                        >
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectLabel>Device Categories</SelectLabel>
-                          {Object.entries(DeviceCategory).map(
-                            ([key, value]) => (
-                              <SelectItem key={value} value={value}>
-                                {value.replace("_", " ")}
-                              </SelectItem>
-                            )
-                          )}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Communication Protocol */}
-              <FormField
-                control={form.control}
-                name="communicationProtocol"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel
-                      className={
-                        form.formState.errors.communicationProtocol
-                          ? "text-destructive"
-                          : ""
-                      }
-                    >
-                      Communication Protocol *
-                    </FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      disabled={isFormDisabled}
-                    >
-                      <FormControl>
-                        <SelectTrigger
-                          className={
-                            form.formState.errors.communicationProtocol
-                              ? "border-destructive"
-                              : ""
-                          }
-                        >
-                          <SelectValue placeholder="Select protocol" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectLabel>Protocols</SelectLabel>
-                          {Object.entries(CommunicationProtocol).map(
-                            ([key, value]) => (
-                              <SelectItem key={value} value={value}>
-                                {value}
-                              </SelectItem>
-                            )
-                          )}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Data Transmission Interval */}
-              <FormField
-                control={form.control}
-                name="dataTransmissionInterval"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel
-                      className={
-                        form.formState.errors.dataTransmissionInterval
-                          ? "text-destructive"
-                          : ""
-                      }
-                    >
-                      Data Transmission Interval *
+                      Vehicle Model *
                     </FormLabel>
                     <FormControl>
                       <Input
                         {...field}
-                        placeholder="e.g., 30s, 1m, 5m"
                         disabled={isFormDisabled}
                         className={
-                          form.formState.errors.dataTransmissionInterval
+                          form.formState.errors.vehicleModel
                             ? "border-destructive"
                             : ""
                         }
@@ -495,13 +310,90 @@ export function UpdateAndAddDeviceSheet({
                 )}
               />
 
-              {/* Firmware Version */}
+              {/* Vehicle Type */}
               <FormField
                 control={form.control}
-                name="firmwareVersion"
+                name="vehicleType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Firmware Version</FormLabel>
+                    <FormLabel
+                      className={
+                        form.formState.errors.vehicleType
+                          ? "text-destructive"
+                          : ""
+                      }
+                    >
+                      Vehicle Type *
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        disabled={isFormDisabled}
+                        className={
+                          form.formState.errors.vehicleType
+                            ? "border-destructive"
+                            : ""
+                        }
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Fuel Type */}
+              <FormField
+                control={form.control}
+                name="fuelType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel
+                      className={
+                        form.formState.errors.fuelType ? "text-destructive" : ""
+                      }
+                    >
+                      Fuel Type *
+                    </FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      disabled={isFormDisabled}
+                    >
+                      <FormControl>
+                        <SelectTrigger
+                          className={
+                            form.formState.errors.fuelType
+                              ? "border-destructive"
+                              : ""
+                          }
+                        >
+                          <SelectValue placeholder="Select fuel type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectLabel>Fuel Types</SelectLabel>
+                          {Object.values(FuelType).map((fuelType) => (
+                            <SelectItem key={fuelType} value={fuelType}>
+                              {fuelType.charAt(0) +
+                                fuelType.slice(1).toLowerCase()}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Registration Number */}
+              <FormField
+                control={form.control}
+                name="registrationNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Registration Number</FormLabel>
                     <FormControl>
                       <Input {...field} disabled={isFormDisabled} />
                     </FormControl>
@@ -510,15 +402,77 @@ export function UpdateAndAddDeviceSheet({
                 )}
               />
 
-              {/* SIM Card Number */}
+              {/* Chassis Number */}
               <FormField
                 control={form.control}
-                name="simCardNumber"
+                name="chassisNumber"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>SIM Card Number</FormLabel>
+                    <FormLabel>Chassis Number</FormLabel>
                     <FormControl>
                       <Input {...field} disabled={isFormDisabled} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Year of Manufacture */}
+              <FormField
+                control={form.control}
+                name="yearOfManufacture"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel
+                      className={
+                        form.formState.errors.yearOfManufacture
+                          ? "text-destructive"
+                          : ""
+                      }
+                    >
+                      Year of Manufacture *
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        value={field.value ?? ""}
+                        onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                        disabled={isFormDisabled}
+                        className={
+                          form.formState.errors.yearOfManufacture
+                            ? "border-destructive"
+                            : ""
+                        }
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Usage */}
+              <FormField
+                control={form.control}
+                name="usage"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel
+                      className={
+                        form.formState.errors.usage ? "text-destructive" : ""
+                      }
+                    >
+                      Usage *
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        disabled={isFormDisabled}
+                        className={
+                          form.formState.errors.usage
+                            ? "border-destructive"
+                            : ""
+                        }
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -543,8 +497,8 @@ export function UpdateAndAddDeviceSheet({
                   : submitSuccess
                   ? "Success!"
                   : isEditing
-                  ? "Update Device"
-                  : "Save Device"}
+                  ? "Update Vehicle"
+                  : "Save Vehicle"}
               </Button>
 
               <Button

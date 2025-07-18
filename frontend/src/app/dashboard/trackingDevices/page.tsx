@@ -30,6 +30,7 @@ import {
   Battery,
   Signal,
   Activity,
+  Undo,
 } from "lucide-react";
 import type {
   TrackingDeviceListItem,
@@ -37,15 +38,20 @@ import type {
 import {
   listTrackingDevices,
   countDevicesByStatus,
+  restoreTrackingDevice,
 } from "@/services/trackingDeviceService";
 import { UpdateAndAddDeviceSheet } from "./_DeviceComponents/UpdateAndAddDevice";
 import { DeleteDeviceDialog } from "./_DeviceComponents/DeleteDeviceDialog";
 import { DeviceStatusSheet } from "./_DeviceComponents/DeviceStatusSheet";
 import { ViewDeviceModal } from "./_DeviceComponents/ViewDeviceModal";
+import {
+  DeviceCategory,
+  CommunicationProtocol,
+  DeviceStatus,
+} from "@/types/EnumTypes";
+import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from "sonner";
 import { PaginationParams } from "@/types";
-import { CommunicationProtocol, DeviceCategory, DeviceStatus } from "@/types/EnumTypes";
-
-const STORAGE_KEY = "tracking-devices-pagination";
 
 export default function TrackingDevicesPage() {
   const router = useRouter();
@@ -59,6 +65,8 @@ export default function TrackingDevicesPage() {
       deviceCategory: "all",
       protocol: "all",
     },
+    includeDeleted: false,
+    deletedOnly: false,
   });
 
   const [data, setData] = useState<TrackingDeviceListItem[]>([]);
@@ -137,6 +145,8 @@ export default function TrackingDevicesPage() {
         deviceCategory: "all",
         protocol: "all",
       },
+      includeDeleted: false,
+      deletedOnly: false,
     }));
     setFilterSheetOpen(false);
   };
@@ -223,6 +233,13 @@ export default function TrackingDevicesPage() {
       headerName: "Status",
       width: 120,
       renderCell: (params) => {
+        const device = params.row as TrackingDeviceListItem;
+        const isDeleted = device.deletedAt !== null;
+
+        if (isDeleted) {
+          return <Badge variant="destructive">DELETED</Badge>;
+        }
+
         const variant =
           params.value === "ACTIVE"
             ? "default"
@@ -253,13 +270,25 @@ export default function TrackingDevicesPage() {
       ),
     },
     {
+      field: "deletedAt",
+      headerName: "Deleted",
+      width: 120,
+      renderCell: (params) => (
+        <div className="text-muted-foreground text-sm">
+          {params.value ? new Date(params.value).toLocaleDateString() : "—"}
+        </div>
+      ),
+    },
+    {
       field: "actions",
       headerName: "Actions",
-      width: 200,
+      width: 240,
       sortable: false,
       filterable: false,
       renderCell: (params) => {
         const device = params.row as TrackingDeviceListItem;
+        const isDeleted = device.deletedAt !== null;
+
         return (
           <div className="flex gap-1">
             <Button
@@ -270,293 +299,239 @@ export default function TrackingDevicesPage() {
             >
               <Eye className="h-4 w-4" />
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setSelectedDevice(device);
-                setEditDialogOpen(true);
-              }}
-              className="h-8 w-8 p-0"
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setSelectedDevice(device);
-                setStatusDialogOpen(true);
-              }}
-              className="h-8 w-8 p-0"
-            >
-              <Activity className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setSelectedDevice(device);
-                setDeleteDialogOpen(true);
-              }}
-              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+
+            {!isDeleted && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedDevice(device);
+                    setEditDialogOpen(true);
+                  }}
+                  className="h-8 w-8 p-0"
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedDevice(device);
+                    setStatusDialogOpen(true);
+                  }}
+                  className="h-8 w-8 p-0"
+                >
+                  <Activity className="h-4 w-4" />
+                </Button>
+              </>
+            )}
+
+            {isDeleted ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleRestoreDevice(device)}
+                className="h-8 w-8 p-0 text-green-600 hover:text-green-700"
+                title="Restore Device"
+              >
+                <Undo className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSelectedDevice(device);
+                  setDeleteDialogOpen(true);
+                }}
+                className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         );
       },
     },
   ];
 
-  
+  const FilterPopover = () => (
+    <Popover open={filterSheetOpen} onOpenChange={setFilterSheetOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" size="sm" className="gap-2 bg-transparent">
+          <Filter className="h-4 w-4" />
+          Filters
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[360px] sm:w-[440px] max-h-[500px] overflow-y-auto">
+        <div className="space-y-6">
+          <h3 className="text-lg font-semibold">Filter Tracking Devices</h3>
 
+          {/* Status Filter */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Status</Label>
+            <Select
+              value={paginationParams.filters?.status || "all"}
+              onValueChange={(value) =>
+                setPaginationParams((prev) => ({
+                  ...prev,
+                  page: 1,
+                  filters: {
+                    ...prev.filters,
+                    status: value,
+                  },
+                }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                {Object.entries(DeviceStatus).map(([key, value]) => (
+                  <SelectItem key={value} value={value}>
+                    {value.replace("_", " ")}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-const FilterPopover = () => (
-  <Popover open={filterSheetOpen} onOpenChange={setFilterSheetOpen}>
-    <PopoverTrigger asChild>
-      <Button variant="outline" size="sm" className="gap-2 bg-transparent">
-        <Filter className="h-4 w-4" />
-        Filters
-      </Button>
-    </PopoverTrigger>
+          {/* Device Category Filter */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Device Category</Label>
+            <Select
+              value={paginationParams.filters?.deviceCategory || "all"}
+              onValueChange={(value) =>
+                setPaginationParams((prev) => ({
+                  ...prev,
+                  page: 1,
+                  filters: {
+                    ...prev.filters,
+                    deviceCategory: value,
+                  },
+                }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {Object.entries(DeviceCategory).map(([key, value]) => (
+                  <SelectItem key={value} value={value}>
+                    {value.replace("_", " ")}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-    <PopoverContent className="w-[360px] sm:w-[440px] max-h-[500px] overflow-y-auto">
-      <div className="space-y-6">
-        <h3 className="text-lg font-semibold">Filter Tracking Devices</h3>
+          {/* Communication Protocol Filter */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Protocol</Label>
+            <Select
+              value={paginationParams.filters?.protocol || "all"}
+              onValueChange={(value) =>
+                setPaginationParams((prev) => ({
+                  ...prev,
+                  page: 1,
+                  filters: {
+                    ...prev.filters,
+                    protocol: value,
+                  },
+                }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select protocol" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Protocols</SelectItem>
+                {Object.entries(CommunicationProtocol).map(([key, value]) => (
+                  <SelectItem key={value} value={value}>
+                    {value}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-        {/* Status Filter */}
-        <div className="space-y-2">
-          <Label className="text-sm font-medium">Status</Label>
-          <Select
-            value={paginationParams.filters?.status || "all"}
-            onValueChange={(value) =>
-              setPaginationParams((prev) => ({
-                ...prev,
-                page: 1,
-                filters: {
-                  ...prev.filters,
-                  status: value,
-                },
-              }))
-            }
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              {Object.entries(DeviceStatus).map(([key, value]) => (
-                <SelectItem key={value} value={value}>
-                  {value.replace("_", " ")}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {/* Deleted Filters */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Deleted Items</Label>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="includeDeleted"
+                  checked={paginationParams.includeDeleted || false}
+                  onCheckedChange={(checked) =>
+                    setPaginationParams((prev) => ({
+                      ...prev,
+                      page: 1,
+                      includeDeleted: checked as boolean,
+                      deletedOnly: checked ? false : prev.deletedOnly,
+                    }))
+                  }
+                />
+                <Label htmlFor="includeDeleted" className="text-sm">
+                  Include Deleted Devices
+                </Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="deletedOnly"
+                  checked={paginationParams.deletedOnly || false}
+                  onCheckedChange={(checked) =>
+                    setPaginationParams((prev) => ({
+                      ...prev,
+                      page: 1,
+                      deletedOnly: checked as boolean,
+                      includeDeleted: checked ? false : prev.includeDeleted,
+                    }))
+                  }
+                />
+                <Label htmlFor="deletedOnly" className="text-sm">
+                  Only Deleted Devices
+                </Label>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-2 pt-4">
+            <Button onClick={applyFilters} className="flex-1">
+              Apply
+            </Button>
+            <Button
+              variant="outline"
+              onClick={resetFilters}
+              className="gap-2 bg-transparent"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Reset
+            </Button>
+          </div>
         </div>
+      </PopoverContent>
+    </Popover>
+  );
 
-        {/* Device Category Filter */}
-        <div className="space-y-2">
-          <Label className="text-sm font-medium">Device Category</Label>
-          <Select
-            value={paginationParams.filters?.deviceCategory || "all"}
-            onValueChange={(value) =>
-              setPaginationParams((prev) => ({
-                ...prev,
-                page: 1,
-                filters: {
-                  ...prev.filters,
-                  deviceCategory: value,
-                },
-              }))
-            }
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              {Object.entries(DeviceCategory).map(([key, value]) => (
-                <SelectItem key={value} value={value}>
-                  {value}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Communication Protocol Filter */}
-        <div className="space-y-2">
-          <Label className="text-sm font-medium">Protocol</Label>
-          <Select
-            value={paginationParams.filters?.protocol || "all"}
-            onValueChange={(value) =>
-              setPaginationParams((prev) => ({
-                ...prev,
-                page: 1,
-                filters: {
-                  ...prev.filters,
-                  protocol: value,
-                },
-              }))
-            }
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select protocol" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Protocols</SelectItem>
-              {Object.entries(CommunicationProtocol).map(([key, value]) => (
-                <SelectItem key={value} value={value}>
-                  {value}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex gap-2 pt-4">
-          <Button onClick={applyFilters} className="flex-1">
-            Apply
-          </Button>
-          <Button
-            variant="outline"
-            onClick={resetFilters}
-            className="gap-2 bg-transparent"
-          >
-            <RotateCcw className="h-4 w-4" />
-            Reset
-          </Button>
-        </div>
-      </div>
-    </PopoverContent>
-  </Popover>
-);
-
-  // const FilterSheet = () => (
-  //   <Sheet open={filterSheetOpen} onOpenChange={setFilterSheetOpen}>
-  //     <SheetTrigger asChild>
-  //       <Button variant="outline" size="sm" className="gap-2 bg-transparent">
-  //         <Filter className="h-4 w-4" />
-  //         Filters
-  //       </Button>
-  //     </SheetTrigger>
-  //     <SheetContent
-  //       side="left"
-  //       className="w-[400px] sm:w-[540px] max-h-[500px]"
-  //     >
-  //       <SheetHeader>
-  //         <SheetTitle>Filter Tracking Devices</SheetTitle>
-  //       </SheetHeader>
-  //       <div className="space-y-6 py-6">
-  //         {/* Status Filter */}
-  //         <div className="space-y-2">
-  //           <Label className="text-sm font-medium">Status</Label>
-  //           <Select
-  //             value={paginationParams.filters?.status || "all"}
-  //             onValueChange={(value) =>
-  //               setPaginationParams((prev) => ({
-  //                 ...prev,
-  //                 page: 1,
-  //                 filters: {
-  //                   ...prev.filters,
-  //                   status: value,
-  //                 },
-  //               }))
-  //             }
-  //           >
-  //             <SelectTrigger>
-  //               <SelectValue placeholder="Select status" />
-  //             </SelectTrigger>
-  //             <SelectContent>
-  //               <SelectItem value="all">All Statuses</SelectItem>
-  //               <SelectItem value="ACTIVE">Active</SelectItem>
-  //               <SelectItem value="INACTIVE">Inactive</SelectItem>
-  //               <SelectItem value="DISCONNECTED">Disconnected</SelectItem>
-  //               <SelectItem value="MAINTENANCE">Maintenance</SelectItem>
-  //             </SelectContent>
-  //           </Select>
-  //         </div>
-
-  //         {/* Device Category Filter */}
-  //         <div className="space-y-2">
-  //           <Label className="text-sm font-medium">Device Category</Label>
-  //           <Select
-  //             value={paginationParams.filters?.deviceCategory || "all"}
-  //             onValueChange={(value) =>
-  //               setPaginationParams((prev) => ({
-  //                 ...prev,
-  //                 page: 1,
-  //                 filters: {
-  //                   ...prev.filters,
-  //                   deviceCategory: value,
-  //                 },
-  //               }))
-  //             }
-  //           >
-  //             <SelectTrigger>
-  //               <SelectValue placeholder="Select category" />
-  //             </SelectTrigger>
-  //             <SelectContent>
-  //               <SelectItem value="all">All Categories</SelectItem>
-  //               <SelectItem value="GPS_TRACKER">GPS Tracker</SelectItem>
-  //               <SelectItem value="OBD_DEVICE">OBD Device</SelectItem>
-  //               <SelectItem value="FUEL_SENSOR">Fuel Sensor</SelectItem>
-  //               <SelectItem value="EMISSION_MONITOR">
-  //                 Emission Monitor
-  //               </SelectItem>
-  //             </SelectContent>
-  //           </Select>
-  //         </div>
-
-  //         {/* Communication Protocol Filter */}
-  //         <div className="space-y-2">
-  //           <Label className="text-sm font-medium">Protocol</Label>
-  //           <Select
-  //             value={paginationParams.filters?.protocol || "all"}
-  //             onValueChange={(value) =>
-  //               setPaginationParams((prev) => ({
-  //                 ...prev,
-  //                 page: 1,
-  //                 filters: {
-  //                   ...prev.filters,
-  //                   protocol: value,
-  //                 },
-  //               }))
-  //             }
-  //           >
-  //             <SelectTrigger>
-  //               <SelectValue placeholder="Select protocol" />
-  //             </SelectTrigger>
-  //             <SelectContent>
-  //               <SelectItem value="all">All Protocols</SelectItem>
-  //               <SelectItem value="HTTP">HTTP</SelectItem>
-  //               <SelectItem value="MQTT">MQTT</SelectItem>
-  //               <SelectItem value="TCP">TCP</SelectItem>
-  //               <SelectItem value="UDP">UDP</SelectItem>
-  //             </SelectContent>
-  //           </Select>
-  //         </div>
-
-  //         {/* Action Buttons */}
-  //         <div className="flex gap-2 pt-4">
-  //           <Button onClick={applyFilters} className="flex-1">
-  //             Apply Filters
-  //           </Button>
-  //           <Button
-  //             variant="outline"
-  //             onClick={resetFilters}
-  //             className="gap-2 bg-transparent"
-  //           >
-  //             <RotateCcw className="h-4 w-4" />
-  //             Reset
-  //           </Button>
-  //         </div>
-  //       </div>
-  //     </SheetContent>
-  //   </Sheet>
-  // );
+  const handleRestoreDevice = async (device: TrackingDeviceListItem) => {
+    try {
+      await restoreTrackingDevice(device.id);
+      toast.success(`Device ${device.serialNumber} restored successfully`);
+      fetchDevices();
+      fetchDeviceStats();
+    } catch (error: any) {
+      const errorMsg =
+        error?.response?.data?.message ||
+        error.message ||
+        "Failed to restore device";
+      toast.error(errorMsg);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -620,7 +595,7 @@ const FilterPopover = () => (
             customFilters={
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div className="flex gap-2">
-                  <FilterPopover  />
+                  <FilterPopover />
                   <UpdateAndAddDeviceSheet onDeviceCreated={fetchDevices} />
                 </div>
               </div>

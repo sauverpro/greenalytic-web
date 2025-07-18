@@ -1,8 +1,28 @@
-import { PaginationParams } from "@/types";
-import { PaginatedVehicleList, VehicleCreateRequest, VehicleFullDetails, VehicleListItemWithUser, VehicleUpdateRequest } from "./VehicleTypes";
+import type { PaginationParams } from "@/types";
+import type {
+  PaginatedVehicleList,
+  VehicleCreateRequest,
+  VehicleFullDetails,
+  VehicleListItemWithUser,
+  VehicleUpdateRequest,
+} from "./VehicleTypes";
 import apiClient from "@/lib/api/axios";
 
-
+// Device assignment interface - matching your Prisma schema exactly
+export interface AssignDeviceToVehicleRequest {
+  serialNumber: string;
+  model: string;
+  type: string;
+  plateNumber: string;
+  deviceCategory: "MOTORCYCLE" | "CAR" | "TRUCK" | "TRICYCLE" | "OTHER"; // From your enum
+  firmwareVersion?: string;
+  simCardNumber?: string;
+  installationDate?: string; // ISO string format
+  communicationProtocol: "MQTT" | "HTTP" | "SMS"; // From your enum
+  dataTransmissionInterval: string;
+  vehicleId: number;
+  userId?: number; // Optional, can be set from vehicle owner
+}
 
 class VehicleService {
   private baseUrl = "/vehicles";
@@ -59,7 +79,9 @@ class VehicleService {
   }
 
   async getTopPolluters(): Promise<VehicleListItemWithUser[]> {
-    const response = await apiClient.get(`${this.baseUrl}/analytics/top-polluters`);
+    const response = await apiClient.get(
+      `${this.baseUrl}/analytics/top-polluters`
+    );
     return response.data;
   }
 
@@ -73,6 +95,35 @@ class VehicleService {
       `${this.baseUrl}/analytics/count/${status}`
     );
     return response.data.count;
+  }
+
+  // NEW: Add device to vehicle - using the tracking-devices endpoint
+  async addDeviceToVehicle(data: AssignDeviceToVehicleRequest): Promise<any> {
+    // Format the date properly for the API
+    const payload = {
+      ...data,
+      installationDate: data.installationDate
+        ? new Date(data.installationDate).toISOString()
+        : new Date().toISOString(),
+    };
+
+    console.log("Sending device payload:", payload); // Debug log
+
+    const response = await apiClient.post("/tracking-devices", payload);
+    return response.data.data;
+  }
+
+  // NEW: Get available devices (not assigned to any vehicle)
+  async getAvailableDevices(): Promise<any[]> {
+    const response = await apiClient.get(
+      "/tracking-devices?filters[vehicleId]=null"
+    );
+    return response.data.data.data || [];
+  }
+
+  // NEW: Remove device from vehicle
+  async removeDeviceFromVehicle(deviceId: number): Promise<void> {
+    await apiClient.patch(`/tracking-devices/${deviceId}/unassign`);
   }
 }
 

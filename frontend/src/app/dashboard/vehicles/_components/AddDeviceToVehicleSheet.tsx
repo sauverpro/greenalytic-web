@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -11,7 +11,6 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -33,62 +32,47 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Loader2, AlertCircle, CheckCircle2, Smartphone } from "lucide-react";
 import { toast } from "sonner";
-import {
-  createTrackingDevice,
-  updateTrackingDevice,
-  getTrackingDeviceById,
-  type TrackingDeviceCreateDTO,
-  type TrackingDeviceUpdateDTO,
-} from "@/services/trackingDeviceService";
-import type { TrackingDeviceListItem } from "@/types/trackingDevicesTypes";
-import { DeviceCategory, CommunicationProtocol } from "@/types/EnumTypes";
+import vehicleService from "../services";
+import type { AssignDeviceToVehicleRequest, VehicleListItemWithUser } from "../VehicleTypes";
 
-interface UpdateAndAddDeviceProps {
-  deviceId?: number;
-  isEditing?: boolean;
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
-  onDeviceCreated?: () => void;
-  onDeviceUpdated?: () => void;
+interface AddDeviceToVehicleSheetProps {
+  vehicle: VehicleListItemWithUser | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onDeviceAdded?: () => void;
 }
 
+// Schema matching your Prisma enums exactly
 const deviceSchema = z.object({
   serialNumber: z.string().min(1, "Serial number is required"),
   model: z.string().min(1, "Model is required"),
   type: z.string().min(1, "Type is required"),
-  plateNumber: z.string().min(1, "Plate number is required"),
-  deviceCategory: z.string().min(1, "Device category is required"),
+  deviceCategory: z.enum(["MOTORCYCLE", "CAR", "TRUCK", "TRICYCLE", "OTHER"], {
+    errorMap: () => ({ message: "Device category is required" }),
+  }),
   firmwareVersion: z.string().optional(),
   simCardNumber: z.string().optional(),
-  communicationProtocol: z
-    .string()
-    .min(1, "Communication protocol is required"),
+  installationDate: z.string().optional(),
+  communicationProtocol: z.enum(["MQTT", "HTTP", "SMS"], {
+    errorMap: () => ({ message: "Communication protocol is required" }),
+  }),
   dataTransmissionInterval: z
     .string()
     .min(1, "Data transmission interval is required"),
-  userId: z.number().optional(),
-  vehicleId: z.number().optional(),
 });
 
 type DeviceFormData = z.infer<typeof deviceSchema>;
 
-export function UpdateAndAddDeviceSheet({
-  deviceId,
-  isEditing = false,
-  open: controlledOpen,
-  onOpenChange: controlledOnOpenChange,
-  onDeviceCreated,
-  onDeviceUpdated,
-}: UpdateAndAddDeviceProps) {
-  const [internalOpen, setInternalOpen] = useState(false);
-  const [loadingDevice, setLoadingDevice] = useState(false);
+export function AddDeviceToVehicleSheet({
+  vehicle,
+  open,
+  onOpenChange,
+  onDeviceAdded,
+}: AddDeviceToVehicleSheetProps) {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
-
-  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
-  const setOpen = controlledOnOpenChange || setInternalOpen;
 
   const form = useForm<DeviceFormData>({
     resolver: zodResolver(deviceSchema),
@@ -96,87 +80,61 @@ export function UpdateAndAddDeviceSheet({
       serialNumber: "",
       model: "",
       type: "",
-      plateNumber: "",
-      deviceCategory: "",
+      deviceCategory: undefined,
       firmwareVersion: "",
       simCardNumber: "",
-      communicationProtocol: "",
+      installationDate: new Date().toISOString().slice(0, 16), // Format for datetime-local input
+      communicationProtocol: undefined,
       dataTransmissionInterval: "",
-      userId: undefined,
-      vehicleId: undefined,
     },
   });
 
   const isSubmitting = form.formState.isSubmitting;
   const hasErrors = Object.keys(form.formState.errors).length > 0;
-  const isFormDisabled = isSubmitting || loadingDevice;
-
-  // Fetch device data when editing
-  useEffect(() => {
-    const fetchDevice = async () => {
-      if (isEditing && deviceId && open) {
-        setLoadingDevice(true);
-        setSubmitError(null);
-        try {
-          const data: TrackingDeviceListItem = await getTrackingDeviceById(
-            deviceId
-          );
-          form.reset({
-            serialNumber: data.serialNumber,
-            model: data.model,
-            type: data.type,
-            plateNumber: data.plateNumber,
-            deviceCategory: data.deviceCategory,
-            firmwareVersion: data.firmwareVersion || "",
-            simCardNumber: data.simCardNumber || "",
-            communicationProtocol: data.communicationProtocol,
-            dataTransmissionInterval: data.dataTransmissionInterval,
-            userId: data.userId || undefined,
-            vehicleId: data.vehicleId || undefined,
-          });
-        } catch (error: any) {
-          const errorMsg =
-            error?.response?.data?.message ||
-            error.message ||
-            "Failed to fetch device info";
-          setSubmitError(errorMsg);
-          toast.error(errorMsg);
-        } finally {
-          setLoadingDevice(false);
-        }
-      }
-    };
-
-    fetchDevice();
-  }, [deviceId, isEditing, open, form]);
 
   const onSubmit = async (data: DeviceFormData) => {
+    if (!vehicle) {
+      setSubmitError("No vehicle selected");
+      return;
+    }
+
     setSubmitError(null);
     setSubmitSuccess(false);
 
     try {
-      if (isEditing && deviceId) {
-        const payload: TrackingDeviceUpdateDTO = { ...data };
-        await updateTrackingDevice(deviceId, payload);
-        toast.success("Device updated successfully");
-        setSubmitSuccess(true);
-        onDeviceUpdated?.();
-      } else {
-        const payload: TrackingDeviceCreateDTO = { ...data };
-        await createTrackingDevice(payload);
-        toast.success("Device created successfully");
-        setSubmitSuccess(true);
-        onDeviceCreated?.();
-      }
+      // Prepare payload with auto-filled data from selected vehicle
+      const payload = {
+        serialNumber: data.serialNumber,
+        model: data.model,
+        type: data.type,
+        plateNumber: vehicle.plateNumber, // Auto-filled from selected vehicle
+        deviceCategory: data.deviceCategory as "MOTORCYCLE" | "CAR" | "TRUCK" | "TRICYCLE" | "OTHER",
+        firmwareVersion: data.firmwareVersion || undefined,
+        simCardNumber: data.simCardNumber || undefined,
+        installationDate: data.installationDate || new Date().toISOString(),
+        communicationProtocol: data.communicationProtocol,
+        dataTransmissionInterval: data.dataTransmissionInterval,
+        vehicleId: vehicle.id, 
+      };
+
+      console.log("Submitting device with payload:", payload); // Debug log
+
+      await vehicleService.addDeviceToVehicle(payload);
+      toast.success("Device added to vehicle successfully");
+      setSubmitSuccess(true);
+      onDeviceAdded?.();
 
       // Close sheet after a brief delay to show success state
       setTimeout(() => {
-        setOpen(false);
+        onOpenChange(false);
         setSubmitSuccess(false);
       }, 1000);
     } catch (error: any) {
+      console.error("Error adding device:", error); // Debug log
       const errorMsg =
-        error?.response?.data?.message || error.message || "An error occurred";
+        error?.response?.data?.message ||
+        error.message ||
+        "Failed to add device";
       setSubmitError(errorMsg);
       toast.error(errorMsg);
     }
@@ -184,7 +142,7 @@ export function UpdateAndAddDeviceSheet({
 
   const handleOpenChange = (newOpen: boolean) => {
     if (!isSubmitting) {
-      setOpen(newOpen);
+      onOpenChange(newOpen);
       if (!newOpen) {
         // Reset form and states when closing
         form.reset();
@@ -194,37 +152,20 @@ export function UpdateAndAddDeviceSheet({
     }
   };
 
-  const TriggerButton = () => (
-    <Button size="sm" disabled={isSubmitting}>
-      {isEditing ? "Edit Device" : "+ Add New"}
-    </Button>
-  );
-
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
-      {!controlledOpen && (
-        <SheetTrigger asChild>
-          <TriggerButton />
-        </SheetTrigger>
-      )}
-
-      <SheetContent className="sm:max-w-[600px]" side="left">
+      <SheetContent className="sm:max-w-[600px]" side="right">
         <SheetHeader>
-          <SheetTitle>{isEditing ? "Edit Device" : "Create Device"}</SheetTitle>
+          <SheetTitle className="flex items-center gap-2">
+            <Smartphone className="h-5 w-5" />
+            Add Device to Vehicle
+          </SheetTitle>
           <SheetDescription>
-            {isEditing
-              ? "Update the device information."
-              : "Fill in the new device details."}
+            {vehicle
+              ? `Add a new tracking device to vehicle ${vehicle.plateNumber}`
+              : "Loading..."}
           </SheetDescription>
         </SheetHeader>
-
-        {/* Loading State */}
-        {loadingDevice && (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin mr-2" />
-            <span>Loading device data...</span>
-          </div>
-        )}
 
         {/* Error Alert */}
         {submitError && (
@@ -239,7 +180,7 @@ export function UpdateAndAddDeviceSheet({
           <Alert className="mb-4 border-green-200 bg-green-50">
             <CheckCircle2 className="h-4 w-4 text-green-600" />
             <AlertDescription className="text-green-800">
-              Device {isEditing ? "updated" : "created"} successfully!
+              Device added successfully!
             </AlertDescription>
           </Alert>
         )}
@@ -247,6 +188,23 @@ export function UpdateAndAddDeviceSheet({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto pr-2">
+              {/* Vehicle Info Display - Auto-filled */}
+              {vehicle && (
+                <div className="bg-muted p-3 rounded-md">
+                  <p className="text-sm font-medium">Target Vehicle:</p>
+                  <p className="text-sm text-muted-foreground">
+                    <strong>Plate:</strong> {vehicle.plateNumber} |{" "}
+                    <strong>Model:</strong> {vehicle.vehicleModel} |{" "}
+                    <strong>Owner:</strong>{" "}
+                    {vehicle.user?.username || "Not assigned"}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Vehicle ID: {vehicle.id} | User ID:{" "}
+                    {vehicle.user?.id || "N/A"}
+                  </p>
+                </div>
+              )}
+
               {/* Serial Number */}
               <FormField
                 control={form.control}
@@ -265,7 +223,8 @@ export function UpdateAndAddDeviceSheet({
                     <FormControl>
                       <Input
                         {...field}
-                        disabled={isFormDisabled || isEditing} // Disable editing serial number when updating
+                        disabled={isSubmitting}
+                        placeholder="e.g., RAA1011B"
                         className={
                           form.formState.errors.serialNumber
                             ? "border-destructive"
@@ -294,7 +253,8 @@ export function UpdateAndAddDeviceSheet({
                     <FormControl>
                       <Input
                         {...field}
-                        disabled={isFormDisabled}
+                        disabled={isSubmitting}
+                        placeholder="e.g., GT-2000"
                         className={
                           form.formState.errors.model
                             ? "border-destructive"
@@ -323,7 +283,8 @@ export function UpdateAndAddDeviceSheet({
                     <FormControl>
                       <Input
                         {...field}
-                        disabled={isFormDisabled}
+                        disabled={isSubmitting}
+                        placeholder="e.g., GPS, OBD, FUEL_SENSOR"
                         className={
                           form.formState.errors.type ? "border-destructive" : ""
                         }
@@ -334,38 +295,7 @@ export function UpdateAndAddDeviceSheet({
                 )}
               />
 
-              {/* Plate Number */}
-              <FormField
-                control={form.control}
-                name="plateNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel
-                      className={
-                        form.formState.errors.plateNumber
-                          ? "text-destructive"
-                          : ""
-                      }
-                    >
-                      Plate Number *
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        disabled={isFormDisabled}
-                        className={
-                          form.formState.errors.plateNumber
-                            ? "border-destructive"
-                            : ""
-                        }
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Device Category */}
+              {/* Device Category - Using your Prisma enum */}
               <FormField
                 control={form.control}
                 name="deviceCategory"
@@ -383,7 +313,7 @@ export function UpdateAndAddDeviceSheet({
                     <Select
                       onValueChange={field.onChange}
                       value={field.value}
-                      disabled={isFormDisabled}
+                      disabled={isSubmitting}
                     >
                       <FormControl>
                         <SelectTrigger
@@ -398,14 +328,12 @@ export function UpdateAndAddDeviceSheet({
                       </FormControl>
                       <SelectContent>
                         <SelectGroup>
-                          <SelectLabel>Device Categories</SelectLabel>
-                          {Object.entries(DeviceCategory).map(
-                            ([key, value]) => (
-                              <SelectItem key={value} value={value}>
-                                {value.replace("_", " ")}
-                              </SelectItem>
-                            )
-                          )}
+                          <SelectLabel>Categories</SelectLabel>
+                          <SelectItem value="CAR">Car</SelectItem>
+                          <SelectItem value="TRUCK">Truck</SelectItem>
+                          <SelectItem value="MOTORCYCLE">Motorcycle</SelectItem>
+                          <SelectItem value="TRICYCLE">Tricycle</SelectItem>
+                          <SelectItem value="OTHER">Other</SelectItem>
                         </SelectGroup>
                       </SelectContent>
                     </Select>
@@ -414,7 +342,7 @@ export function UpdateAndAddDeviceSheet({
                 )}
               />
 
-              {/* Communication Protocol */}
+              {/* Communication Protocol - Using your Prisma enum */}
               <FormField
                 control={form.control}
                 name="communicationProtocol"
@@ -432,7 +360,7 @@ export function UpdateAndAddDeviceSheet({
                     <Select
                       onValueChange={field.onChange}
                       value={field.value}
-                      disabled={isFormDisabled}
+                      disabled={isSubmitting}
                     >
                       <FormControl>
                         <SelectTrigger
@@ -448,13 +376,9 @@ export function UpdateAndAddDeviceSheet({
                       <SelectContent>
                         <SelectGroup>
                           <SelectLabel>Protocols</SelectLabel>
-                          {Object.entries(CommunicationProtocol).map(
-                            ([key, value]) => (
-                              <SelectItem key={value} value={value}>
-                                {value}
-                              </SelectItem>
-                            )
-                          )}
+                          <SelectItem value="MQTT">MQTT</SelectItem>
+                          <SelectItem value="HTTP">HTTP</SelectItem>
+                          <SelectItem value="SMS">SMS</SelectItem>
                         </SelectGroup>
                       </SelectContent>
                     </Select>
@@ -481,8 +405,8 @@ export function UpdateAndAddDeviceSheet({
                     <FormControl>
                       <Input
                         {...field}
+                        disabled={isSubmitting}
                         placeholder="e.g., 30s, 1m, 5m"
-                        disabled={isFormDisabled}
                         className={
                           form.formState.errors.dataTransmissionInterval
                             ? "border-destructive"
@@ -503,7 +427,11 @@ export function UpdateAndAddDeviceSheet({
                   <FormItem>
                     <FormLabel>Firmware Version</FormLabel>
                     <FormControl>
-                      <Input {...field} disabled={isFormDisabled} />
+                      <Input
+                        {...field}
+                        disabled={isSubmitting}
+                        placeholder="e.g., 2.3.1"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -518,7 +446,30 @@ export function UpdateAndAddDeviceSheet({
                   <FormItem>
                     <FormLabel>SIM Card Number</FormLabel>
                     <FormControl>
-                      <Input {...field} disabled={isFormDisabled} />
+                      <Input
+                        {...field}
+                        disabled={isSubmitting}
+                        placeholder="e.g., 250783456789"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Installation Date */}
+              <FormField
+                control={form.control}
+                name="installationDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Installation Date</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="datetime-local"
+                        disabled={isSubmitting}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -529,7 +480,7 @@ export function UpdateAndAddDeviceSheet({
             <SheetFooter className="mt-4 flex justify-between gap-2">
               <Button
                 type="submit"
-                disabled={isFormDisabled || submitSuccess}
+                disabled={isSubmitting || submitSuccess}
                 className="flex-1"
               >
                 {isSubmitting && (
@@ -537,14 +488,10 @@ export function UpdateAndAddDeviceSheet({
                 )}
                 {submitSuccess && <CheckCircle2 className="mr-2 h-4 w-4" />}
                 {isSubmitting
-                  ? isEditing
-                    ? "Updating..."
-                    : "Saving..."
+                  ? "Adding Device..."
                   : submitSuccess
                   ? "Success!"
-                  : isEditing
-                  ? "Update Device"
-                  : "Save Device"}
+                  : "Add Device"}
               </Button>
 
               <Button
