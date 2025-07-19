@@ -244,7 +244,7 @@ export default function TrackingDevicesPage() {
     {
       field: "monitoring",
       headerName: "Monitoring",
-      width: 280,
+      width: 320,
       sortable: false,
       filterable: false,
       renderCell: (params) => {
@@ -252,6 +252,17 @@ export default function TrackingDevicesPage() {
         return renderMonitoringStatus(device)
       },
     },
+    {
+      field:"communicationProtocol",
+      headerName:"communicationProtocol",
+      
+      
+      
+      
+      
+      
+    },
+    
     {
       field: "status",
       headerName: "Status",
