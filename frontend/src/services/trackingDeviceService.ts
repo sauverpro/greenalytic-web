@@ -121,25 +121,10 @@ export const deleteTrackingDevicePermanently = async (
 export const listTrackingDevices = async (
   params: PaginationParams
 ): Promise<TrackingDeviceListResponse> => {
-  const queryParams = new URLSearchParams();
-
-  if (params.page) queryParams.append("page", params.page.toString());
-  if (params.limit) queryParams.append("limit", params.limit.toString());
-  if (params.search) queryParams.append("search", params.search);
-  if (params.sortBy) queryParams.append("sortBy", params.sortBy);
-  if (params.sortOrder) queryParams.append("sortOrder", params.sortOrder);
-
-  // Add filters
-  if (params.filters) {
-    Object.entries(params.filters).forEach(([key, value]) => {
-      if (value && value !== "all") {
-        queryParams.append(key, value.toString());
-      }
-    });
-  }
+  console.log("fetching tracking devices  using the ",params)
 
   const response = await apiClient.get(
-    `/tracking-devices?${queryParams.toString()}`
+    "/tracking-devices",{params:params}
   );
   return response.data;
 };

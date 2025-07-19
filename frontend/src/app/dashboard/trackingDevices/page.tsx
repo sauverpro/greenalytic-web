@@ -74,6 +74,7 @@ export default function TrackingDevicesPage() {
   const fetchDevices = useCallback(async () => {
     setIsLoading(true)
     try {
+          console.log("params of devices are  the ",paginationParams)
       const response = await listTrackingDevices(paginationParams)
       setData(response.data.data || [])
       setTotalItems(response.data.meta?.totalItems || 0)

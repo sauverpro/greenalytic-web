@@ -44,12 +44,14 @@ export default function UsersPage() {
   const [totalItems, setTotalItems] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
   const [selectedUser, setSelectedUser] = useState<GetUserByIdResponse | null>(null)
-  const [editDialogOpen, setEditDialogOpen] = useState(false)
+
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
 
   const fetchUsers = useCallback(async () => {
     setIsLoading(true)
+    
+    console.log("params of users  are  the ",paginationParams)
     try {
       const response = await apiClient.get("/users", {
         params: paginationParams,
@@ -93,7 +95,7 @@ export default function UsersPage() {
       includeDeleted: false,
       deletedOnly: false,
     }))
-    setFilterSheetOpen(false)
+
   }
 
   const applyFilters = () => {
