@@ -3,9 +3,9 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { FaRegEnvelope } from "react-icons/fa";
-import AuthLayout from "../../components/authLayout";
-import { TextInput } from "../login/TextInput";
-import Button from "../login/Button";
+import AuthLayout from "../../../../components/authLayout";
+import { TextInput } from "../../../(auth)/login/TextInput";
+import Button from "../../../(auth)/login/Button";
 import Link from "next/link";
 import useAxiosClient from "@/hooks/axiosClient";
 

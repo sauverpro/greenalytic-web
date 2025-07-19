@@ -114,7 +114,8 @@ export default function EnhancedVehiclesPage() {
 
   // Updated to open modal instead of navigation
   const handleViewDetails = (vehicleId: number) => {
-    setViewVehicleId(vehicleId);
+    // setViewVehicleId(vehicleId);
+        router.push(`/dashboard/vehicles/${vehicleId}`)
   };
 
   const handleEditVehicle = (vehicleId: number) => {
@@ -421,13 +422,13 @@ export default function EnhancedVehiclesPage() {
       />
 
       {/* View Vehicle Modal */}
-      <ViewVehicleModal
+      {/* <ViewVehicleModal
         vehicleId={viewVehicleId}
         open={viewVehicleId !== null}
         onOpenChange={(open) => {
           if (!open) setViewVehicleId(null);
         }}
-      />
+      /> */}
 
       {/* Delete Vehicle Dialog */}
       {selectedVehicleForDelete && (

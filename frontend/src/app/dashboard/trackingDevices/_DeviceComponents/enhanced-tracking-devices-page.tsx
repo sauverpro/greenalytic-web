@@ -2,21 +2,19 @@
 
 import { useState, useCallback, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import type { GridColDef } from "@mui/x-data-grid"
+import type { GridColDef, GridRowSelectionModel } from "@mui/x-data-grid"
 import { DataTable } from "@/components/dashboard/data-table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import {
   Filter,
   RotateCcw,
-  Eye,
   Edit,
   Trash2,
-  Smartphone,
   Battery,
   Signal,
   Activity,
@@ -24,21 +22,26 @@ import {
   Settings,
   CheckCircle,
   Circle,
+  Download,
+  Upload,
+  Users,
+  BarChart3,
+  ExternalLink,
 } from "lucide-react"
 import type { TrackingDeviceListItem } from "@/types/trackingDevicesTypes"
-import { listTrackingDevices, countDevicesByStatus, restoreTrackingDevice } from "@/services/trackingDeviceService"
-import { UpdateAndAddDeviceSheet } from "./_DeviceComponents/UpdateAndAddDevice"
-import { DeleteDeviceDialog } from "./_DeviceComponents/DeleteDeviceDialog"
-import { DeviceStatusSheet } from "./_DeviceComponents/DeviceStatusSheet"
-import { ViewDeviceModal } from "./_DeviceComponents/ViewDeviceModal"
-
+import { listTrackingDevices, restoreTrackingDevice } from "@/services/trackingDeviceService"
+import { UpdateAndAddDeviceSheet } from "../_DeviceComponents/UpdateAndAddDevice"
+import { DeleteDeviceDialog } from "../_DeviceComponents/DeleteDeviceDialog"
+import { DeviceStatusSheet } from "../_DeviceComponents/DeviceStatusSheet"
+import { MonitoringFeaturesDialog } from "./monitoring-features-dialog"
+import { BulkActionsDialog } from "./bulk-actions-dialog"
+import { DeviceAnalyticsCards } from "./device-analytics-cards"
 import { DeviceCategory, CommunicationProtocol, DeviceStatus } from "@/types/EnumTypes"
 import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "sonner"
 import type { PaginationParams } from "@/types"
-import { MonitoringFeaturesDialog } from "./_DeviceComponents/monitoring-features-dialog"
 
-export default function TrackingDevicesPage() {
+export default function EnhancedTrackingDevicesPage() {
   const router = useRouter()
   const [paginationParams, setPaginationParams] = useState<PaginationParams>({
     page: 1,
@@ -58,18 +61,16 @@ export default function TrackingDevicesPage() {
   const [totalItems, setTotalItems] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
   const [selectedDevice, setSelectedDevice] = useState<TrackingDeviceListItem | null>(null)
+  const [selectedDevices, setSelectedDevices] = useState<TrackingDeviceListItem[]>([])
+  const [rowSelectionModel, setRowSelectionModel] = useState<GridRowSelectionModel>([])
+
+  // Dialog states
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [statusDialogOpen, setStatusDialogOpen] = useState(false)
   const [monitoringDialogOpen, setMonitoringDialogOpen] = useState(false)
+  const [bulkActionsDialogOpen, setBulkActionsDialogOpen] = useState(false)
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
-  const [deviceStats, setDeviceStats] = useState({
-    total: 0,
-    active: 0,
-    inactive: 0,
-    disconnected: 0,
-  })
-  const [viewDeviceId, setViewDeviceId] = useState<number | null>(null)
 
   const fetchDevices = useCallback(async () => {
     setIsLoading(true)
@@ -79,39 +80,21 @@ export default function TrackingDevicesPage() {
       setTotalItems(response.data.meta?.totalItems || 0)
     } catch (error) {
       console.error("Failed to fetch tracking devices:", error)
+      toast.error("Failed to fetch tracking devices")
     } finally {
       setIsLoading(false)
     }
   }, [paginationParams])
 
-  const fetchDeviceStats = useCallback(async () => {
-    try {
-      const [totalCount, activeCount, inactiveCount, disconnectedCount] = await Promise.all([
-        countDevicesByStatus(),
-        countDevicesByStatus("ACTIVE"),
-        countDevicesByStatus("INACTIVE"),
-        countDevicesByStatus("DISCONNECTED"),
-      ])
-
-      setDeviceStats({
-        total: totalCount.count,
-        active: activeCount.count,
-        inactive: inactiveCount.count,
-        disconnected: disconnectedCount.count,
-      })
-    } catch (error) {
-      console.error("Failed to fetch device stats:", error)
-    }
-  }, [])
-
-
-  
-    useEffect(() => {
-  fetchDeviceStats()
-  }, [])
   useEffect(() => {
     fetchDevices()
   }, [fetchDevices])
+
+  // Update selected devices when row selection changes
+  useEffect(() => {
+    const selected = data.filter((device) => rowSelectionModel.includes(device.id))
+    setSelectedDevices(selected)
+  }, [rowSelectionModel, data])
 
   const handlePaginationChange = useCallback((params: PaginationParams) => {
     setPaginationParams((prev) => {
@@ -121,7 +104,7 @@ export default function TrackingDevicesPage() {
   }, [])
 
   const handleViewDetails = (deviceId: number) => {
-    router.push(`/dashboard/trackingDevices/${deviceId}`)
+    router.push(`/dashboard/tracking-devices/${deviceId}`)
   }
 
   const resetFilters = () => {
@@ -136,10 +119,6 @@ export default function TrackingDevicesPage() {
       includeDeleted: false,
       deletedOnly: false,
     }))
-    setFilterSheetOpen(false)
-  }
-
-  const applyFilters = () => {
     setFilterSheetOpen(false)
   }
 
@@ -164,7 +143,6 @@ export default function TrackingDevicesPage() {
     ]
 
     const enabledCount = features.filter((f) => f.enabled).length
-    const totalCount = features.length
 
     return (
       <div className="flex items-center gap-2">
@@ -183,7 +161,7 @@ export default function TrackingDevicesPage() {
           ))}
         </div>
         <Badge variant={enabledCount > 0 ? "default" : "secondary"} className="text-xs">
-          {enabledCount}/{totalCount}
+          {enabledCount}/4
         </Badge>
       </div>
     )
@@ -208,7 +186,11 @@ export default function TrackingDevicesPage() {
       field: "serialNumber",
       headerName: "Serial Number",
       width: 150,
-      renderCell: (params) => <div className="font-medium">{params.value}</div>,
+      renderCell: (params) => (
+        <div className="font-medium cursor-pointer hover:text-primary" onClick={() => handleViewDetails(params.row.id)}>
+          {params.value}
+        </div>
+      ),
     },
     {
       field: "model",
@@ -287,19 +269,9 @@ export default function TrackingDevicesPage() {
       ),
     },
     {
-      field: "deletedAt",
-      headerName: "Deleted",
-      width: 120,
-      renderCell: (params) => (
-        <div className="text-muted-foreground text-sm">
-          {params.value ? new Date(params.value).toLocaleDateString() : "—"}
-        </div>
-      ),
-    },
-    {
       field: "actions",
       headerName: "Actions",
-      width: 280,
+      width: 320,
       sortable: false,
       filterable: false,
       renderCell: (params) => {
@@ -314,7 +286,7 @@ export default function TrackingDevicesPage() {
               className="h-8 w-8 p-0"
               title="View Details"
             >
-              <Eye className="h-4 w-4" />
+              <ExternalLink className="h-4 w-4" />
             </Button>
             {!isDeleted && (
               <>
@@ -397,6 +369,7 @@ export default function TrackingDevicesPage() {
       <PopoverContent className="w-[360px] sm:w-[440px] max-h-[500px] overflow-y-auto">
         <div className="space-y-6">
           <h3 className="text-lg font-semibold">Filter Tracking Devices</h3>
+
           {/* Status Filter */}
           <div className="space-y-2">
             <Label className="text-sm font-medium">Status</Label>
@@ -406,10 +379,7 @@ export default function TrackingDevicesPage() {
                 setPaginationParams((prev) => ({
                   ...prev,
                   page: 1,
-                  filters: {
-                    ...prev.filters,
-                    status: value,
-                  },
+                  filters: { ...prev.filters, status: value },
                 }))
               }
             >
@@ -426,6 +396,7 @@ export default function TrackingDevicesPage() {
               </SelectContent>
             </Select>
           </div>
+
           {/* Device Category Filter */}
           <div className="space-y-2">
             <Label className="text-sm font-medium">Device Category</Label>
@@ -435,10 +406,7 @@ export default function TrackingDevicesPage() {
                 setPaginationParams((prev) => ({
                   ...prev,
                   page: 1,
-                  filters: {
-                    ...prev.filters,
-                    deviceCategory: value,
-                  },
+                  filters: { ...prev.filters, deviceCategory: value },
                 }))
               }
             >
@@ -455,6 +423,7 @@ export default function TrackingDevicesPage() {
               </SelectContent>
             </Select>
           </div>
+
           {/* Communication Protocol Filter */}
           <div className="space-y-2">
             <Label className="text-sm font-medium">Protocol</Label>
@@ -464,10 +433,7 @@ export default function TrackingDevicesPage() {
                 setPaginationParams((prev) => ({
                   ...prev,
                   page: 1,
-                  filters: {
-                    ...prev.filters,
-                    protocol: value,
-                  },
+                  filters: { ...prev.filters, protocol: value },
                 }))
               }
             >
@@ -484,6 +450,7 @@ export default function TrackingDevicesPage() {
               </SelectContent>
             </Select>
           </div>
+
           {/* Deleted Filters */}
           <div className="space-y-3">
             <Label className="text-sm font-medium">Deleted Items</Label>
@@ -524,9 +491,10 @@ export default function TrackingDevicesPage() {
               </div>
             </div>
           </div>
+
           {/* Action Buttons */}
           <div className="flex gap-2 pt-4">
-            <Button onClick={applyFilters} className="flex-1">
+            <Button onClick={() => setFilterSheetOpen(false)} className="flex-1">
               Apply
             </Button>
             <Button variant="outline" onClick={resetFilters} className="gap-2 bg-transparent">
@@ -544,7 +512,6 @@ export default function TrackingDevicesPage() {
       await restoreTrackingDevice(device.id)
       toast.success(`Device ${device.serialNumber} restored successfully`)
       fetchDevices()
-      fetchDeviceStats()
     } catch (error: any) {
       const errorMsg = error?.response?.data?.message || error.message || "Failed to restore device"
       toast.error(errorMsg)
@@ -553,46 +520,10 @@ export default function TrackingDevicesPage() {
 
   return (
     <div className="space-y-6">
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Devices</CardTitle>
-            <Smartphone className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{deviceStats.total}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active</CardTitle>
-            <Activity className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{deviceStats.active}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Inactive</CardTitle>
-            <Battery className="h-4 w-4 text-yellow-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{deviceStats.inactive}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Disconnected</CardTitle>
-            <Signal className="h-4 w-4 text-red-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">{deviceStats.disconnected}</div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Analytics Cards */}
+      <DeviceAnalyticsCards onRefresh={fetchDevices} />
 
+      {/* Main Data Table */}
       <Card>
         <CardContent className="p-0">
           <DataTable
@@ -604,11 +535,41 @@ export default function TrackingDevicesPage() {
             onPaginationChange={handlePaginationChange}
             searchPlaceholder="Search by serial/model/plate..."
             filters={paginationParams.filters}
+            // checkboxSelection
+            // rowSelectionModel={rowSelectionModel}
+            // onRowSelectionModelChange={setRowSelectionModel}
             customFilters={
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   <FilterPopover />
                   <UpdateAndAddDeviceSheet onDeviceCreated={fetchDevices} />
+
+                  {selectedDevices.length > 0 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setBulkActionsDialogOpen(true)}
+                      className="gap-2"
+                    >
+                      <Users className="h-4 w-4" />
+                      Bulk Actions ({selectedDevices.length})
+                    </Button>
+                  )}
+
+                  <Button variant="outline" size="sm" className="gap-2 bg-transparent">
+                    <Download className="h-4 w-4" />
+                    Export
+                  </Button>
+
+                  <Button variant="outline" size="sm" className="gap-2 bg-transparent">
+                    <Upload className="h-4 w-4" />
+                    Import
+                  </Button>
+
+                  <Button variant="outline" size="sm" className="gap-2 bg-transparent">
+                    <BarChart3 className="h-4 w-4" />
+                    Analytics
+                  </Button>
                 </div>
               </div>
             }
@@ -616,6 +577,7 @@ export default function TrackingDevicesPage() {
         </CardContent>
       </Card>
 
+      {/* Dialogs */}
       {selectedDevice && (
         <>
           <UpdateAndAddDeviceSheet
@@ -646,11 +608,13 @@ export default function TrackingDevicesPage() {
         </>
       )}
 
-      <ViewDeviceModal
-        deviceId={viewDeviceId}
-        open={viewDeviceId !== null}
-        onOpenChange={(open) => {
-          if (!open) setViewDeviceId(null)
+      <BulkActionsDialog
+        selectedDevices={selectedDevices}
+        open={bulkActionsDialogOpen}
+        onOpenChange={setBulkActionsDialogOpen}
+        onSuccess={() => {
+          fetchDevices()
+          setRowSelectionModel([])
         }}
       />
     </div>

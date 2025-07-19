@@ -139,11 +139,14 @@ export function AppSidebar() {
   const [isLogoHovered, setIsLogoHovered] = useState(false);
 
   const [activeItem, setActiveItem] = useState("");
-  
+
 // const sidebarItems = navigationItems.filter(item =>
 //   currentUser && (item.roles.includes("*") || item.roles.includes(currentUser.role))
 // )
 const sidebarItems = navigationItems
+useEffect(()=>{
+  console.log("   checking if the loggin  happens   on ry*************************************")
+},[])
   useEffect(() => {
     const token = getCookie("access_token");
     const userData = getCookie("user");
@@ -226,6 +229,7 @@ const sidebarItems = navigationItems
   );
 
   return (
+    
     <Sidebar
       collapsible="icon"
       className={`fixed top-0 border-r border-emerald-700/30 shadow-xl h-screen overflow-hidden
@@ -381,5 +385,6 @@ const sidebarItems = navigationItems
         </div>
       </SidebarContent>
     </Sidebar>
+    
   );
 }

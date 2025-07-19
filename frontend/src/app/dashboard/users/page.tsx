@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Filter, RotateCcw, Eye, Edit, Trash2, Users, UserCheck, UserX, Clock } from "lucide-react"
+import { Filter, RotateCcw, Eye,  Trash2, Users, UserCheck, UserX, Clock } from "lucide-react"
 import { type User, type PaginationParams, type GetUserByIdResponse } from "@/types"
 import apiClient from "@/lib/api/axios"
 import { UpdateAndAddUserSheet } from "./_UserComponents/UpdateAndAddUser"
