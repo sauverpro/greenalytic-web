@@ -2,7 +2,7 @@
 import axios, { AxiosInstance, AxiosError, AxiosResponse } from "axios";
 
 const useAxiosClient = (): AxiosInstance => {
-  const baseURL = process.env.NEXT_PUBLIC_BACKEND_ULR;
+  const baseURL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 
   const client = axios.create({

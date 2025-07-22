@@ -113,7 +113,7 @@ const signup = async (data: SignupRequest): Promise<ApiResponse<AuthResponse>> =
   };
 
   const initiateGoogleLogin = () => {
-    const base = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000/api";
+    const base = process.env.NEXT_PUBLIC_API_BASE_URL 
     window.location.href = `${base}/auth/google`;
   };
 

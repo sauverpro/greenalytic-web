@@ -108,7 +108,7 @@ class AuthService {
 
   async initiateGoogleLogin(): Promise<void> {
     const googleAuthUrl = `${
-      process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000/api"
+      process.env.NEXT_PUBLIC_API_BASE_URL
     }/auth/google`;
     window.location.href = googleAuthUrl;
   }
