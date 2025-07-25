@@ -109,7 +109,7 @@ export default function TrackingDevicesPage() {
   
     useEffect(() => {
   fetchDeviceStats()
-  }, [])
+  }, [fetchDeviceStats])
   useEffect(() => {
     fetchDevices()
   }, [fetchDevices])
@@ -413,7 +413,7 @@ export default function TrackingDevicesPage() {
           <div className="space-y-2">
             <Label className="text-sm font-medium">Status</Label>
             <Select
-              value={paginationParams.filters?.status || "all"}
+              value={paginationParams.filters?.status as string || "all"}
               onValueChange={(value) =>
                 setPaginationParams((prev) => ({
                   ...prev,
@@ -430,7 +430,7 @@ export default function TrackingDevicesPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
-                {Object.entries(DeviceStatus).map(([key, value]) => (
+                {Object.entries(DeviceStatus).map(([ value]) => (
                   <SelectItem key={value} value={value}>
                     {value.replace("_", " ")}
                   </SelectItem>
@@ -442,7 +442,7 @@ export default function TrackingDevicesPage() {
           <div className="space-y-2">
             <Label className="text-sm font-medium">Device Category</Label>
             <Select
-              value={paginationParams.filters?.deviceCategory || "all"}
+              value={paginationParams.filters?.deviceCategory as string || "all"}
               onValueChange={(value) =>
                 setPaginationParams((prev) => ({
                   ...prev,
@@ -459,7 +459,7 @@ export default function TrackingDevicesPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
-                {Object.entries(DeviceCategory).map(([key, value]) => (
+                {Object.entries(DeviceCategory).map(([ value]) => (
                   <SelectItem key={value} value={value}>
                     {value.replace("_", " ")}
                   </SelectItem>
@@ -471,7 +471,7 @@ export default function TrackingDevicesPage() {
           <div className="space-y-2">
             <Label className="text-sm font-medium">Protocol</Label>
             <Select
-              value={paginationParams.filters?.protocol || "all"}
+              value={paginationParams.filters?.protocol as string|| "all"}
               onValueChange={(value) =>
                 setPaginationParams((prev) => ({
                   ...prev,
@@ -488,7 +488,7 @@ export default function TrackingDevicesPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Protocols</SelectItem>
-                {Object.entries(CommunicationProtocol).map(([key, value]) => (
+                {Object.entries(CommunicationProtocol).map(([ value]) => (
                   <SelectItem key={value} value={value}>
                     {value}
                   </SelectItem>
@@ -557,6 +557,7 @@ export default function TrackingDevicesPage() {
       toast.success(`Device ${device.serialNumber} restored successfully`)
       fetchDevices()
       fetchDeviceStats()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       const errorMsg = error?.response?.data?.message || error.message || "Failed to restore device"
       toast.error(errorMsg)

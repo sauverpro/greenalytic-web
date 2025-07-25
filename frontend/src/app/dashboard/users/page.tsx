@@ -46,7 +46,7 @@ export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<GetUserByIdResponse | null>(null)
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [filterSheetOpen, setFilterSheetOpen] = useState(false)
+
 
   const fetchUsers = useCallback(async () => {
     setIsLoading(true)
@@ -76,9 +76,6 @@ export default function UsersPage() {
     })
   }, [])
 
-  const handleRefresh = useCallback(() => {
-    setPaginationParams((prev) => ({ ...prev }))
-  }, [])
 
   const handleViewDetails = (userId: number) => {
     router.push(`/dashboard/users/${userId}`)
@@ -98,9 +95,7 @@ export default function UsersPage() {
 
   }
 
-  const applyFilters = () => {
-    setFilterSheetOpen(false)
-  }
+
 
   // Get stats for the header cards
   const getStatusStats = () => {
@@ -269,7 +264,7 @@ const FilterPopover = () => (
         <div className="space-y-1">
           <Label className="text-sm">Role</Label>
           <Select
-            value={paginationParams.filters?.role || "all"}
+            value={paginationParams.filters?.role as string|| "all"}
             onValueChange={(value) =>
               setPaginationParams((prev) => ({
                 ...prev,
@@ -302,7 +297,7 @@ const FilterPopover = () => (
         <div className="space-y-1">
           <Label className="text-sm">Status</Label>
           <Select
-            value={paginationParams.filters?.status || "all"}
+            value={paginationParams.filters?.status as string || "all"}
             onValueChange={(value) =>
               setPaginationParams((prev) => ({
                 ...prev,
@@ -363,9 +358,7 @@ const FilterPopover = () => (
         </div>
 
         <div className="flex gap-2 pt-2">
-          <Button onClick={applyFilters} className="flex-1">
-            Apply
-          </Button>
+     
           <Button variant="outline" onClick={resetFilters} className="flex-1">
             Reset
           </Button>

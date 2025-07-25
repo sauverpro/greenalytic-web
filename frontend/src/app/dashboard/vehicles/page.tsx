@@ -34,7 +34,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import type { VehicleListItemWithUser } from "./VehicleTypes";
 import { VehicleStats } from "./_components/vehicle-stats";
 import { UpdateAndAddVehicleSheet } from "./_components/UpdateAndAddVehicleSheet";
-import { ViewVehicleModal } from "./_components/ViewVehicleModal";
+
 import { DeleteVehicleDialog } from "./_components/DeleteVehicleDialog";
 import { AddDeviceToVehicleSheet } from "./_components/AddDeviceToVehicleSheet";
 
@@ -54,15 +54,14 @@ export default function EnhancedVehiclesPage() {
   const [vehicles, setVehicles] = useState<VehicleListItemWithUser[]>([]);
   const [totalItems, setTotalItems] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const [filterSheetOpen, setFilterSheetOpen] = useState(false);
+
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
   const [updateDrawerOpen, setUpdateDrawerOpen] = useState(false);
   const [selectedVehicleId, setSelectedVehicleId] = useState<
     number | undefined
   >();
 
-  // New state for modal and delete dialog
-  const [viewVehicleId, setViewVehicleId] = useState<number | null>(null);
+
   const [selectedVehicleForDelete, setSelectedVehicleForDelete] =
     useState<VehicleListItemWithUser | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -105,11 +104,11 @@ export default function EnhancedVehiclesPage() {
       includeDeleted: false,
       deletedOnly: false,
     }));
-    setFilterSheetOpen(false);
+
   };
 
   const applyFilters = () => {
-    setFilterSheetOpen(false);
+
   };
 
   // Updated to open modal instead of navigation
@@ -269,7 +268,7 @@ export default function EnhancedVehiclesPage() {
           <div className="space-y-1">
             <Label>Status</Label>
             <Select
-              value={paginationParams.filters?.status || "all"}
+              value={paginationParams.filters?.status as string || "all"}
               onValueChange={(value) =>
                 setPaginationParams((prev) => ({
                   ...prev,
@@ -299,7 +298,7 @@ export default function EnhancedVehiclesPage() {
           <div className="space-y-1">
             <Label>Emission Status</Label>
             <Select
-              value={paginationParams.filters?.emissionStatus || "all"}
+              value={paginationParams.filters?.emissionStatus as string || "all"}
               onValueChange={(value) =>
                 setPaginationParams((prev) => ({
                   ...prev,
