@@ -22,6 +22,7 @@ import {
 
 } from "@/types";
 import { UserRole, UserStatus } from "@/types/EnumTypes";
+import axios from "axios";
 
 interface AuthContextType {
   user: User | null;
@@ -67,8 +68,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 const login = async (credentials: LoginRequest): Promise<ApiResponse<AuthResponse>> => {
   try {
-    const response = await apiClient.post<ApiResponse<AuthResponse>>(
-      "/users/login",
+    const response = await axios.post<ApiResponse<AuthResponse>>(
+      "https://greenalytic-vehicle-monitoring-1.onrender.com/api/users/login",
       credentials
     );
     const { token, user } = response.data.data;
