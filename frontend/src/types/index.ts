@@ -20,7 +20,7 @@ export interface PaginationParams {
   sortBy?: string;
   sortOrder?: "asc" | "desc";
   search?: string;
-  filters?: Record<string, any>;
+  filters?: Record<string, unknown>;
   includeDeleted?: boolean;
   deletedOnly?: boolean;
 }

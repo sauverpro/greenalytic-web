@@ -6,12 +6,12 @@ import type { GridColDef } from "@mui/x-data-grid"
 import { DataTable } from "@/components/dashboard/data-table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Filter, RotateCcw, Eye,  Trash2, Users, UserCheck, UserX, Clock } from "lucide-react"
+import { Filter, Eye,  Trash2, Users, UserCheck, UserX, Clock } from "lucide-react"
 import { type User, type PaginationParams, type GetUserByIdResponse } from "@/types"
 import apiClient from "@/lib/api/axios"
 import { UpdateAndAddUserSheet } from "./_UserComponents/UpdateAndAddUser"
@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/popover"
 import VehicleDrawer from "../vehicles/_components/vehicle-drawer"
 
-const STORAGE_KEY = "users-pagination"
+
 
 export default function UsersPage() {
   const router = useRouter()

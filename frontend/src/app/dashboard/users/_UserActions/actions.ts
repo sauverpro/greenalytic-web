@@ -26,7 +26,7 @@ export async function signupUser(data: SignupRequest) {
 }
 
 export async function loginUser(data: LoginRequest) {
-  return await apiClient.post<ApiResponse<{ user: any; token: string }>>("/users/login", data)
+  return await apiClient.post<ApiResponse<{ user:unknown; token: string }>>("/users/login", data)
 }
 
 export async function requestPasswordReset(data: RequestPasswordResetDTO) {

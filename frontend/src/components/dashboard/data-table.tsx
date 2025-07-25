@@ -14,8 +14,8 @@ import {
   CardTitle
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Search, Plus } from "lucide-react"
+
+import { Search } from "lucide-react"
 import { Pagination } from "@mui/material"
 import type { PaginationParams } from "@/types"
 
@@ -29,8 +29,8 @@ interface DataTableProps<T> {
   additionHeaderContent?: React.ReactNode
   customFilters?: React.ReactNode
   searchPlaceholder?: string
-  filters?: Record<string, any>
-  onFilterChange?: (filters: Record<string, any>) => void
+  filters?: Record<string, unknown>
+  onFilterChange?: (filters: Record<string, unknown>) => void
 }
 export function DataTable<T extends { id: number | string }>({
   title,
@@ -51,7 +51,7 @@ export function DataTable<T extends { id: number | string }>({
   const [sortModel, setSortModel] = useState<GridSortModel>([])
   const [searchInput, setSearchInput] = useState("")
   const [searchTerm, setSearchTerm] = useState("")
-  const [appliedFilters, setAppliedFilters] = useState<Record<string, any>>(filters || {})
+  const [appliedFilters, setAppliedFilters] = useState<Record<string,unknown>>(filters || {})
 
   useEffect(() => {
     if (filters) {

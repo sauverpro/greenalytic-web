@@ -5,7 +5,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { Topbar } from "@/components/Topbar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "@/lib/use-auth";

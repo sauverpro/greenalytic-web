@@ -12,14 +12,13 @@ export default function Header() {
       setIsAuthenticated(!!localStorage.getItem("AUTH_TOKEN"));
     }
   }, []);
-
-  const onLogout = async (e: any) => {
-    e.preventDefault();
-    const loggedOut = handleLogout();
-    if (loggedOut) {
-      setIsAuthenticated(false);
-    }
-  };
+const onLogout = async (e: React.MouseEvent<HTMLButtonElement>) => {
+  e.preventDefault();
+  const loggedOut = handleLogout();
+  if (loggedOut) {
+    setIsAuthenticated(false);
+  }
+};
 
   
   return (

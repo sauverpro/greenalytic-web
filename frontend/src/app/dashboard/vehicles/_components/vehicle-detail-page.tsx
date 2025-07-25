@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -22,24 +22,22 @@ export function VehicleDetailPage({ vehicleId }: VehicleDetailPageProps) {
   const router = useRouter()
   const [vehicle, setVehicle] = useState<VehicleFullDetails| null>(null)
   const [loading, setLoading] = useState(true)
-  const [drawerOpen, setDrawerOpen] = useState(false)
 
-  const fetchVehicle = async () => {
-    try {
-      setLoading(true)
-      const data = await vehicleService.getVehicleById(vehicleId)
-      setVehicle(data)
-    } catch (error) {
-      console.error("Failed to fetch vehicle:", error)
-
-    } finally {
-      setLoading(false)
-    }
+const fetchVehicle = useCallback(async () => {
+  try {
+    setLoading(true)
+    const data = await vehicleService.getVehicleById(vehicleId)
+    setVehicle(data)
+  } catch (error) {
+    console.error("Failed to fetch vehicle:", error)
+  } finally {
+    setLoading(false)
   }
+}, [vehicleId])
 
-  useEffect(() => {
-    fetchVehicle()
-  }, [vehicleId])
+useEffect(() => {
+  fetchVehicle()
+}, [fetchVehicle])
 
   const handleDelete = async () => {
     if (!vehicle) return
@@ -128,7 +126,7 @@ export function VehicleDetailPage({ vehicleId }: VehicleDetailPageProps) {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button onClick={() => setDrawerOpen(true)}>
+          <Button >
             <Edit className="h-4 w-4 mr-2" />
             Edit
           </Button>
