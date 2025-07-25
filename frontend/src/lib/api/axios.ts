@@ -1,7 +1,7 @@
 import axios from "axios";
 import { deleteCookie, getCookie } from "cookies-next";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL||"https://greenalytic-vehicle-monitoring-1.onrender.com/api";
 console.log("API_BASE_URL:", API_BASE_URL);
 
 export const apiClient = axios.create({
