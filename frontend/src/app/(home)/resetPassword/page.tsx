@@ -4,8 +4,8 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { FaRegEnvelope, FaLock } from "react-icons/fa";
 import AuthLayout from "../../../components/authLayout";
-import { TextInput } from "../../login/TextInput";
-import Button from "../../login/Button";
+import { TextInput } from "../../(authenticate)/auth/login/TextInput";
+import Button from "../../(authenticate)/auth/login/Button";
 import useAxiosClient from "@/hooks/axiosClient";
 import Link from "next/link";
 
@@ -76,7 +76,7 @@ const ResetPassword: React.FC = () => {
         const response = await client.post("/users/reset", formData);
         if (response.status === 200) {
           toast.success("Password reset successfully!");
-          router.push("/login");
+          router.push("/auth/login");
         } else {
           toast.error("Failed to reset password. Please try again.");
         }

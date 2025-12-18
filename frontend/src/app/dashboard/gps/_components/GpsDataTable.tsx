@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import type { GridColDef } from "@mui/x-data-grid"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -51,8 +51,9 @@ export function GpsDataTable({ onViewOnMap, onEdit, onDelete, initialFilters = {
         }
 
         const response = await gpsService.getAllGpsData(queryParams)
-        setData(response.data)
-        setTotalRows(response.meta.totalItems)
+        setData(response?.data?.data)
+        console.log("am fromthe  gps dtat table  and  i have the following data foll the reponse ")
+        setTotalRows(response.data?.meta.totalItems)
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to fetch GPS data")
         console.error("Error fetching GPS data:", err)
@@ -60,7 +61,10 @@ export function GpsDataTable({ onViewOnMap, onEdit, onDelete, initialFilters = {
         setLoading(false)
       }
     }
-
+useEffect(() => {
+  fetchData({ page: 1, limit: 25 })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [])
 
 
   const handleFilterChange = (key: string, value: unknown) => {
@@ -164,7 +168,7 @@ export function GpsDataTable({ onViewOnMap, onEdit, onDelete, initialFilters = {
       field: "timestamp",
       headerName: "Timestamp",
       width: 160,
-      type: "dateTime",
+
       renderCell: (params) => (
         <div className="flex flex-col">
           <span className="text-sm">{format(new Date(params.value), "MMM dd, yyyy")}</span>
@@ -354,7 +358,9 @@ const  gpsQueryToRecord = (query: GpsDataQueryParams): Record<string, unknown> =
       data={data}
       loading={loading}
       totalRows={totalRows}
-      onPaginationChange={fetchData}
+      // onPaginationChange={fetchData}      
+      onPaginationChange={()=>{console.log("you should be refetching the dtata")}}
+      
       customFilters={customFilters}
       additionHeaderContent={additionalHeaderContent}
       searchPlaceholder="Search by plate number..."

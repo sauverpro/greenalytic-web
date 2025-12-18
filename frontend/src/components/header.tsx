@@ -12,15 +12,15 @@ export default function Header() {
       setIsAuthenticated(!!localStorage.getItem("AUTH_TOKEN"));
     }
   }, []);
-const onLogout = async (e: React.MouseEvent<HTMLButtonElement>) => {
-  e.preventDefault();
-  const loggedOut = handleLogout();
-  if (loggedOut) {
-    setIsAuthenticated(false);
-  }
-};
+  const onLogout = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    const loggedOut = handleLogout();
+    if (loggedOut) {
+      setIsAuthenticated(false);
+    }
+  };
 
-  
+
   return (
     <header className="bg-primary text-light px-10 py-2 flex justify-between items-center">
       <div className="flex gap-10 justify-center items-center text-[16px]">
@@ -43,11 +43,11 @@ const onLogout = async (e: React.MouseEvent<HTMLButtonElement>) => {
             Logout
           </Button>
         ) : (
-          <Link href="/login">
+          <Link href="/auth/login">
             <Button variant="default">Login</Button>
           </Link>
         )}
-        <Link href="/signup">
+        <Link href="/auth/signup">
           <Button variant="secondary">Become a Member</Button>
         </Link>
       </div>

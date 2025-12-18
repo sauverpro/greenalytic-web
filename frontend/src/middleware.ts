@@ -15,7 +15,7 @@ export function middleware(request: NextRequest) {
   if (isProtected && !token) {
      console.log("⛔ No token found. Redirecting to login.")
     const loginUrl = request.nextUrl.clone()
-    loginUrl.pathname = "/login"
+    loginUrl.pathname = "/auth/login"
     return NextResponse.redirect(loginUrl)
   }
 

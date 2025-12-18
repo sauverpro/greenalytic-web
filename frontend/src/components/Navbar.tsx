@@ -34,7 +34,7 @@ const navigationItems = [
   { name: "Partners", href: "/partners", icon: Handshake },
   { name: "Blog", href: "/blog", icon: Newspaper },
   { name: "Contact", href: "/contact", icon: Phone },
-  { name: "Login", href: "/login", icon: Phone }
+  { name: "Login", href: "/auth/login", icon: Phone }
 ];
 
 const socialLinks = [
@@ -88,128 +88,128 @@ export default function Navbar() {
   };
 
   return <div className="w-full">
-      {/* Top Contact Bar */}
-      <div className="bg-gray-800 text-white py-2 px-4 hidden md:block h-12">
-        <div className="container mx-auto flex justify-between items-center text-sm">
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
-              <Mail className="h-4 w-4" />
-              <span>info@greenalytic.rw</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Phone className="h-4 w-4" />
-              <span>+250 788 567 890</span>
-            </div>
+    {/* Top Contact Bar */}
+    <div className="bg-gray-800 text-white py-2 px-4 hidden md:block h-12">
+      <div className="container mx-auto flex justify-between items-center text-sm">
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2">
+            <Mail className="h-4 w-4" />
+            <span>info@greenalytic.rw</span>
           </div>
-          <div className="flex items-center gap-3">
-            {socialLinks.map((social, index) =>
-              <Link
-                key={index}
-                href={social.href}
-                className="hover:text-green-400 transition-colors duration-200"
-                aria-label={social.label}>
-                <social.icon className="h-4 w-4" />
-              </Link>
-            )}
+          <div className="flex items-center gap-2">
+            <Phone className="h-4 w-4" />
+            <span>+250 788 567 890</span>
           </div>
         </div>
-      </div>
-
-      <nav className="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-40">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center h-16">
-            <Link href="/" className="flex items-center group">
-              <img src="/Greenalytic.png" alt="Greenalytic Motors" className="h-24 w-auto group-hover:scale-105 transition-transform duration-300" />
+        <div className="flex items-center gap-3">
+          {socialLinks.map((social, index) =>
+            <Link
+              key={index}
+              href={social.href}
+              className="hover:text-green-400 transition-colors duration-200"
+              aria-label={social.label}>
+              <social.icon className="h-4 w-4" />
             </Link>
+          )}
+        </div>
+      </div>
+    </div>
 
-            {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center gap-2 ">
-              {navigationItems.map(item =>
-                <NavButton key={item.name} item={item} />
-              )}
-            </div>
+    <nav className="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-40">
+      <div className="container mx-auto px-4">
+        <div className="flex justify-between items-center h-16">
+          <Link href="/" className="flex items-center group">
+            <img src="/Greenalytic.png" alt="Greenalytic Motors" className="h-24 w-auto group-hover:scale-105 transition-transform duration-300" />
+          </Link>
 
-            {/* Mobile Menu Button & Sheet */}
-            <div className="lg:hidden  bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-tl-2xl rounded-br-2xl shadow-lg px-2 txl-xl retive top-36">
-              < Sheet open={isOpen} onOpenChange={setIsOpen} >
-                <SheetTrigger asChild>
-                  <Button variant="ghost" size="sm" className="p-2 hover:bg-green-50 hover:text-green-600 rounded-tl-lg rounded-br-lg transition-all duration-200">
-                    <Menu className="h-10 w-10" />
-                    <span className="sr-only">Open menu</span>
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="right" className="w-80 p-0 bg-white border-l-2 border-green-100" style={{ animation: "slideInFromRight 0.3s ease-out" }}>
-                  {/* Mobile Navigation Content */}
-                  <div className="h-full flex flex-col p-2">
-                    {/* Header with Logo */}
-                    <DialogTitle>
-                      <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-gray-700 p-6 rounded-tl-2xl rounded-br-2xl ">
-                        <div className="flex items-center gap-3">
-                          <Image src="/Greenalytic.png" alt="Greenalytic Motors" width={160} height={48} className="h-10 sm:h-12 md:h-16 w-auto brightness-0 invert" priority />
+          {/* Desktop Navigation */}
+          <div className="hidden lg:flex items-center gap-2 ">
+            {navigationItems.map(item =>
+              <NavButton key={item.name} item={item} />
+            )}
+          </div>
+
+          {/* Mobile Menu Button & Sheet */}
+          <div className="lg:hidden  bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-tl-2xl rounded-br-2xl shadow-lg px-2 txl-xl retive top-36">
+            < Sheet open={isOpen} onOpenChange={setIsOpen} >
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="sm" className="p-2 hover:bg-green-50 hover:text-green-600 rounded-tl-lg rounded-br-lg transition-all duration-200">
+                  <Menu className="h-10 w-10" />
+                  <span className="sr-only">Open menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-80 p-0 bg-white border-l-2 border-green-100" style={{ animation: "slideInFromRight 0.3s ease-out" }}>
+                {/* Mobile Navigation Content */}
+                <div className="h-full flex flex-col p-2">
+                  {/* Header with Logo */}
+                  <DialogTitle>
+                    <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-gray-700 p-6 rounded-tl-2xl rounded-br-2xl ">
+                      <div className="flex items-center gap-3">
+                        <Image src="/Greenalytic.png" alt="Greenalytic Motors" width={160} height={48} className="h-10 sm:h-12 md:h-16 w-auto brightness-0 invert" priority />
+                      </div>
+                    </div>
+                  </DialogTitle>
+
+                  {/* Navigation Items */}
+                  <div className="flex-1 overflow-y-auto p-4 rounded-tl-xl rounded-br-xl border border-green-500 w-full bg-gradient-to-r from-green-50 to-emerald-600">
+                    <div className="space-y-2 ">
+                      {navigationItems.map(item => {
+                        const active = isActive(item.href);
+                        return <Link key={item.name} href={item.href} onClick={() => setIsOpen(false)} className={`flex items-center gap-3 px-4 py-3 text-left w-full transition-all duration-200 ${active ? "bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-tl-2xl rounded-br-2xl shadow-lg" : "text-gray-700 hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 hover:text-green-700 rounded-tl-xl rounded-br-xl"}`}>
+                          <item.icon className="h-5 w-5" />
+                          <span className="font-medium">
+                            {item.name}
+                          </span>
+                        </Link>;
+                      })}
+                    </div>
+
+                    {/* Contact Info in Mobile */}
+                    <div className="mt-8 pt-6 border-t border-gray-200">
+                      <h4 className="font-semibold text-gray-900 mb-4">
+                        Contact Info
+                      </h4>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3 text-gray-600">
+                          <Mail className="h-4 w-4" />
+                          <span className="text-sm">
+                            info@greenalytic.rw
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 text-gray-600">
+                          <Phone className="h-4 w-4" />
+                          <span className="text-sm">+250 788 567 890</span>
                         </div>
                       </div>
-                    </DialogTitle>
 
-                    {/* Navigation Items */}
-                    <div className="flex-1 overflow-y-auto p-4 rounded-tl-xl rounded-br-xl border border-green-500 w-full bg-gradient-to-r from-green-50 to-emerald-600">
-                      <div className="space-y-2 ">
-                        {navigationItems.map(item => {
-                          const active = isActive(item.href);
-                          return <Link key={item.name} href={item.href} onClick={() => setIsOpen(false)} className={`flex items-center gap-3 px-4 py-3 text-left w-full transition-all duration-200 ${active ? "bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-tl-2xl rounded-br-2xl shadow-lg" : "text-gray-700 hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 hover:text-green-700 rounded-tl-xl rounded-br-xl"}`}>
-                              <item.icon className="h-5 w-5" />
-                              <span className="font-medium">
-                                {item.name}
-                              </span>
-                            </Link>;
-                        })}
-                      </div>
-
-                      {/* Contact Info in Mobile */}
-                      <div className="mt-8 pt-6 border-t border-gray-200">
-                        <h4 className="font-semibold text-gray-900 mb-4">
-                          Contact Info
+                      {/* Social Links */}
+                      <div className="mt-6">
+                        <h4 className="font-semibold text-gray-900 mb-3">
+                          Follow Us
                         </h4>
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-3 text-gray-600">
-                            <Mail className="h-4 w-4" />
-                            <span className="text-sm">
-                              info@greenalytic.rw
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-3 text-gray-600">
-                            <Phone className="h-4 w-4" />
-                            <span className="text-sm">+250 788 567 890</span>
-                          </div>
-                        </div>
-
-                        {/* Social Links */}
-                        <div className="mt-6">
-                          <h4 className="font-semibold text-gray-900 mb-3">
-                            Follow Us
-                          </h4>
-                          <div className="flex items-center gap-3">
-                            {socialLinks.map((social, index) =>
-                              <Link
-                                key={index}
-                                href={social.href}
-                                className="p-2 bg-gray-100 hover:bg-green-100 hover:text-green-600 rounded-tl-lg rounded-br-lg transition-all duration-200"
-                                aria-label={social.label}>
-                                <social.icon className="h-4 w-4" />
-                              </Link>
-                            )}
-                          </div>
+                        <div className="flex items-center gap-3">
+                          {socialLinks.map((social, index) =>
+                            <Link
+                              key={index}
+                              href={social.href}
+                              className="p-2 bg-gray-100 hover:bg-green-100 hover:text-green-600 rounded-tl-lg rounded-br-lg transition-all duration-200"
+                              aria-label={social.label}>
+                              <social.icon className="h-4 w-4" />
+                            </Link>
+                          )}
                         </div>
                       </div>
                     </div>
                   </div>
-                </SheetContent>
-              </Sheet>
-            </div>
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
-      </nav>
+      </div>
+    </nav>
 
-      <style jsx>{`@keyframes slideInFromRight {from {
+    <style jsx>{`@keyframes slideInFromRight {from {
             transform: translateX(100%);
             opacity: 0;
           }
@@ -217,5 +217,5 @@ export default function Navbar() {
             transform: translateX(0);
             opacity: 1;
           }}`}</style>
-    </div>;
+  </div>;
 }

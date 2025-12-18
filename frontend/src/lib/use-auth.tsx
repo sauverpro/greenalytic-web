@@ -59,52 +59,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error("Invalid user cookie", error);
       }
     } else {
-  
+
 
     }
 
     setIsLoading(false);
   }, []);
 
-const login = async (credentials: LoginRequest): Promise<ApiResponse<AuthResponse>> => {
-  try {
-    const response = await axios.post<ApiResponse<AuthResponse>>(
-      "https://greenalytic-vehicle-monitoring-1.onrender.com/api/users/login",
-      credentials
-    );
-    const { token, user } = response.data.data;
-    setCookie("access_token", token, { maxAge: 60 * 60 * 24 * 7 });
-    setCookie("user", JSON.stringify(user), { maxAge: 60 * 60 * 24 * 7 });
-    setUser(user);
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
+  const login = async (credentials: LoginRequest): Promise<ApiResponse<AuthResponse>> => {
+    try {
+      const response = await axios.post<ApiResponse<AuthResponse>>(
+        "https://greenalytic-vehicle-monitoring-1.onrender.com/api/users/login",
+        credentials
+      );
+      const { token, user } = response.data.data;
+      setCookie("access_token", token, { maxAge: 60 * 60 * 24 * 7 });
+      setCookie("user", JSON.stringify(user), { maxAge: 60 * 60 * 24 * 7 });
+      setUser(user);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
 
 
-const signup = async (data: SignupRequest): Promise<ApiResponse<AuthResponse>> => {
-  try {
-    const response = await apiClient.post<ApiResponse<AuthResponse>>(
-      "/users/signup",
-      data
-    );
-    const { token, user } = response.data.data;
-    setCookie("access_token", token, { maxAge: 60 * 60 * 24 * 7 });
-    setCookie("user", JSON.stringify(user), { maxAge: 60 * 60 * 24 * 7 });
-    setUser(user);
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
+  const signup = async (data: SignupRequest): Promise<ApiResponse<AuthResponse>> => {
+    try {
+      const response = await apiClient.post<ApiResponse<AuthResponse>>(
+        "/users/signup",
+        data
+      );
+      const { token, user } = response.data.data;
+      setCookie("access_token", token, { maxAge: 60 * 60 * 24 * 7 });
+      setCookie("user", JSON.stringify(user), { maxAge: 60 * 60 * 24 * 7 });
+      setUser(user);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
 
 
   const logout = () => {
     deleteCookie("access_token");
     deleteCookie("user");
     setUser(null);
-    window.location.href = "/login";
+    window.location.href = "/auth/login";
   };
 
   const hasRole = (roles: UserRole | UserRole[]): boolean => {
@@ -114,7 +114,7 @@ const signup = async (data: SignupRequest): Promise<ApiResponse<AuthResponse>> =
   };
 
   const initiateGoogleLogin = () => {
-    const base = process.env.NEXT_PUBLIC_API_BASE_URL 
+    const base = process.env.NEXT_PUBLIC_API_BASE_URL
     window.location.href = `${base}/auth/google`;
   };
 

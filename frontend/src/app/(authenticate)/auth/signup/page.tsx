@@ -6,7 +6,7 @@ import Link from "next/link";
 import {
   Eye,
   EyeOff,
-  User,
+
   Mail,
   Phone,
   Building,
@@ -85,7 +85,7 @@ type FormData = {
   confirmPassword: string;
   role: string;
   companyName: string;
-   companyRegistrationNumber: string;
+  companyRegistrationNumber: string;
   businessSector: string;
   fleetSize: number;
   notificationPreference: "email" | "sms" | "whatsapp";
@@ -130,7 +130,7 @@ export default function SignupPage() {
     let isValid = false;
 
     if (step === 1) {
-      isValid = await trigger([ "email", "phoneNumber"]);
+      isValid = await trigger(["email", "phoneNumber"]);
     } else if (step === 2) {
       isValid = await trigger([
         "username",
@@ -138,8 +138,8 @@ export default function SignupPage() {
         "confirmPassword",
         "role",
       ]);
-      
-  } else if (step === 3) {
+
+    } else if (step === 3) {
       if (watch("role") === "FLEET_MANAGER") {
         isValid = await trigger(["fleetSize"]);
       } else {
@@ -218,7 +218,7 @@ export default function SignupPage() {
         return (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-  
+
 
               <div className="space-y-2">
                 <Label
@@ -233,11 +233,10 @@ export default function SignupPage() {
                     id="email"
                     type="email"
                     placeholder="Enter your email"
-                    className={`pl-12 h-12 ${
-                      errors.email
-                        ? "border-red-500"
-                        : "border-gray-300 focus:border-green-500"
-                    }`}
+                    className={`pl-12 h-12 ${errors.email
+                      ? "border-red-500"
+                      : "border-gray-300 focus:border-green-500"
+                      }`}
                     {...register("email", {
                       required: "Email is required",
                       pattern: {
@@ -266,11 +265,10 @@ export default function SignupPage() {
                   <Input
                     id="phoneNumber"
                     placeholder="+250 xxx xxx xxx"
-                    className={`pl-12 h-12 ${
-                      errors.phoneNumber
-                        ? "border-red-500"
-                        : "border-gray-300 focus:border-green-500"
-                    }`}
+                    className={`pl-12 h-12 ${errors.phoneNumber
+                      ? "border-red-500"
+                      : "border-gray-300 focus:border-green-500"
+                      }`}
                     {...register("phoneNumber", {
                       required: "Phone number is required",
                       pattern: {
@@ -319,11 +317,10 @@ export default function SignupPage() {
                 <Input
                   id="username"
                   placeholder="6-10 characters"
-                  className={`h-12 ${
-                    errors.username
-                      ? "border-red-500"
-                      : "border-gray-300 focus:border-green-500"
-                  }`}
+                  className={`h-12 ${errors.username
+                    ? "border-red-500"
+                    : "border-gray-300 focus:border-green-500"
+                    }`}
                   {...register("username", {
                     required: "Username is required",
                     minLength: {
@@ -362,11 +359,10 @@ export default function SignupPage() {
                       }}
                     >
                       <SelectTrigger
-                        className={`h-12 ${
-                          errors.role
-                            ? "border-red-500"
-                            : "border-gray-300 focus:border-green-500"
-                        }`}
+                        className={`h-12 ${errors.role
+                          ? "border-red-500"
+                          : "border-gray-300 focus:border-green-500"
+                          }`}
                       >
                         <SelectValue placeholder="Select your role" />
                       </SelectTrigger>
@@ -404,11 +400,10 @@ export default function SignupPage() {
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="Min 6 chars, uppercase & symbol"
-                    className={`pr-12 h-12 ${
-                      errors.password
-                        ? "border-red-500"
-                        : "border-gray-300 focus:border-green-500"
-                    }`}
+                    className={`pr-12 h-12 ${errors.password
+                      ? "border-red-500"
+                      : "border-gray-300 focus:border-green-500"
+                      }`}
                     {...register("password", {
                       required: "Password is required",
                       minLength: {
@@ -453,11 +448,10 @@ export default function SignupPage() {
                     id="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
                     placeholder="Confirm your password"
-                    className={`pr-12 h-12 ${
-                      errors.confirmPassword
-                        ? "border-red-500"
-                        : "border-gray-300 focus:border-green-500"
-                    }`}
+                    className={`pr-12 h-12 ${errors.confirmPassword
+                      ? "border-red-500"
+                      : "border-gray-300 focus:border-green-500"
+                      }`}
                     {...register("confirmPassword", {
                       required: "Please confirm your password",
                       validate: (value) =>
@@ -561,49 +555,48 @@ export default function SignupPage() {
                 />
               </div>
 
-        <div className="space-y-2">
-  <Label
-    htmlFor="fleetSize"
-    className="text-sm font-medium text-gray-700"
-  >
-    Fleet Size (Number of Vehicles){" "}
-    {watch("role") === "fleet_manager" && "*"}
-  </Label>
+              <div className="space-y-2">
+                <Label
+                  htmlFor="fleetSize"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Fleet Size (Number of Vehicles){" "}
+                  {watch("role") === "fleet_manager" && "*"}
+                </Label>
 
-  <div className="relative">
-    <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-    <Input
-      id="fleetSize"
-      type="number"
-      step="1" // only allows whole numbers from UI
-      placeholder="Enter number of vehicles"
-      className={`pl-12 h-12 ${
-        errors.fleetSize
-          ? "border-red-500"
-          : "border-gray-300 focus:border-green-500"
-      }`}
-      {...register("fleetSize", {
-        required:
-          watch("role") === "fleet_manager"
-            ? "Fleet size is required for fleet managers"
-            : false,
-        valueAsNumber: true,
-        validate: (value) => {
-          if (watch("role") === "fleet_manager" && !Number.isInteger(value)) {
-            return "Fleet size must be an integer";
-          }
-          return true;
-        },
-      })}
-    />
-  </div>
+                <div className="relative">
+                  <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <Input
+                    id="fleetSize"
+                    type="number"
+                    step="1" // only allows whole numbers from UI
+                    placeholder="Enter number of vehicles"
+                    className={`pl-12 h-12 ${errors.fleetSize
+                      ? "border-red-500"
+                      : "border-gray-300 focus:border-green-500"
+                      }`}
+                    {...register("fleetSize", {
+                      required:
+                        watch("role") === "fleet_manager"
+                          ? "Fleet size is required for fleet managers"
+                          : false,
+                      valueAsNumber: true,
+                      validate: (value) => {
+                        if (watch("role") === "fleet_manager" && !Number.isInteger(value)) {
+                          return "Fleet size must be an integer";
+                        }
+                        return true;
+                      },
+                    })}
+                  />
+                </div>
 
-  {errors.fleetSize && (
-    <p className="text-sm text-red-500">
-      {errors.fleetSize.message}
-    </p>
-  )}
-</div>
+                {errors.fleetSize && (
+                  <p className="text-sm text-red-500">
+                    {errors.fleetSize.message}
+                  </p>
+                )}
+              </div>
 
             </div>
           </div>
@@ -708,9 +701,8 @@ export default function SignupPage() {
                       id="agreeToTerms"
                       checked={field.value}
                       onCheckedChange={field.onChange}
-                      className={`mt-1 ${
-                        errors.agreeToTerms ? "border-red-500" : ""
-                      }`}
+                      className={`mt-1 ${errors.agreeToTerms ? "border-red-500" : ""
+                        }`}
                     />
                   )}
                 />
@@ -800,13 +792,12 @@ export default function SignupPage() {
                           className="flex items-center space-x-3"
                         >
                           <div
-                            className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
-                              index + 1 < currentStep
-                                ? "bg-white text-green-600"
-                                : index + 1 === currentStep
+                            className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${index + 1 < currentStep
+                              ? "bg-white text-green-600"
+                              : index + 1 === currentStep
                                 ? "bg-green-400 text-white"
                                 : "bg-white/20 text-white"
-                            }`}
+                              }`}
                           >
                             {index + 1 < currentStep ? (
                               <CheckCircle className="h-5 w-5" />
@@ -815,11 +806,10 @@ export default function SignupPage() {
                             )}
                           </div>
                           <span
-                            className={`text-sm ${
-                              index + 1 <= currentStep
-                                ? "text-white font-medium"
-                                : "text-green-200"
-                            }`}
+                            className={`text-sm ${index + 1 <= currentStep
+                              ? "text-white font-medium"
+                              : "text-green-200"
+                              }`}
                           >
                             {title}
                           </span>
@@ -955,7 +945,7 @@ export default function SignupPage() {
                         <p className="text-gray-600">
                           Already have an account?{" "}
                           <Link
-                            href="/login"
+                            href="/auth/login"
                             className="text-green-600 hover:text-green-700 font-semibold hover:underline"
                           >
                             Sign in here

@@ -4,8 +4,8 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { FaRegEnvelope } from "react-icons/fa";
 import AuthLayout from "../../../../components/authLayout";
-import { TextInput } from "../../../login/TextInput";
-import Button from "../../../login/Button";
+import { TextInput } from "../login/TextInput";
+import Button from "../login/Button";
 import Link from "next/link";
 import useAxiosClient from "@/hooks/axiosClient";
 
@@ -99,7 +99,7 @@ const ForgotPassword: React.FC = () => {
           </div>
 
           <div className="my-4 text-sm text-center">
-            <Link href="/login" className="mx-1 text-primary">
+            <Link href="/auth/login" className="mx-1 text-primary">
               Back to Login
             </Link>
           </div>

@@ -7,7 +7,6 @@ export interface LoginCredentials {
 }
 
 export interface SignupData {
-
   email: string;
   phoneNumber: string;
   nationalId?: string;
@@ -15,7 +14,7 @@ export interface SignupData {
   password: string;
   role: string;
   companyName?: string;
-   companyRegistrationNumber?: string;
+  companyRegistrationNumber?: string;
   businessSector?: string;
   fleetSize?: number;
   notificationPreference: "email" | "sms" | "whatsapp";
@@ -107,9 +106,7 @@ class AuthService {
   }
 
   async initiateGoogleLogin(): Promise<void> {
-    const googleAuthUrl = `${
-      process.env.NEXT_PUBLIC_API_BASE_URL
-    }/auth/google`;
+    const googleAuthUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/google`;
     window.location.href = googleAuthUrl;
   }
 
@@ -147,7 +144,7 @@ class AuthService {
       setCookie("user", "", { maxAge: 0 });
 
       if (typeof window !== "undefined") {
-        window.location.href = "/login";
+        window.location.href = "/auth/login";
       }
     }
   }

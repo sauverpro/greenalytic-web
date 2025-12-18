@@ -6,7 +6,7 @@ import Image from "next/image";
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { usePathname, useRouter} from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { getCookie } from "cookies-next";
 import {
   Tooltip,
@@ -35,11 +35,11 @@ import {
 
   Leaf,
 
-   ChevronRight,
+  ChevronRight,
 
 
 
-    LayoutDashboard,
+  LayoutDashboard,
   Car,
   RadioReceiver,
   Cloud,
@@ -132,7 +132,7 @@ export const navigationItems = [
 
 export function AppSidebar() {
   const { user: currentUser } = useAuth()
-  
+
   const router = useRouter();
 
   const { state: isCollapsed } = useSidebar();
@@ -140,21 +140,21 @@ export function AppSidebar() {
 
   const [activeItem, setActiveItem] = useState("");
 
-// const sidebarItems = navigationItems.filter(item =>
-//   currentUser && (item.roles.includes("*") || item.roles.includes(currentUser.role))
-// )
-const sidebarItems = navigationItems
-useEffect(()=>{
-  console.log("   checking if the loggin  happens   on ry*************************************")
-},[])
+  // const sidebarItems = navigationItems.filter(item =>
+  //   currentUser && (item.roles.includes("*") || item.roles.includes(currentUser.role))
+  // )
+  const sidebarItems = navigationItems
+  useEffect(() => {
+    console.log("   checking if the loggin  happens   on ry*************************************")
+  }, [])
   useEffect(() => {
     const token = getCookie("access_token");
     const userData = getCookie("user");
 
     if (!token || !userData) {
       alert("go back to login from the  app side bar")
-      router.push("/login");
-      
+      router.push("/auth/login");
+
       return;
     }
 
@@ -168,7 +168,7 @@ useEffect(()=>{
     } catch (error) {
       alert(" the erro  occur  from side bar")
       console.error("Error parsing user data from cookie", error);
-      router.push("/login");
+      router.push("/auth/login");
     }
   }, [router]);
 
@@ -229,7 +229,7 @@ useEffect(()=>{
   );
 
   return (
-    
+
     <Sidebar
       collapsible="icon"
       className={`fixed top-0 border-r border-emerald-700/30 shadow-xl h-screen overflow-hidden
@@ -254,30 +254,26 @@ useEffect(()=>{
                           href={item.url}
                           onClick={() => setActiveItem(item.title)}
                           className={`flex items-center transition-all duration-300 relative my-1.5 py-3 rounded-xl
-                            ${
-                              isCollapsed === "expanded"
-                                ? "px-4 gap-3"
-                                : "w-14 h-14 mx-auto justify-center"
+                            ${isCollapsed === "expanded"
+                              ? "px-4 gap-3"
+                              : "w-14 h-14 mx-auto justify-center"
                             }
-                            ${
-                              activeItem === item.title
-                                ? "bg-[#059669] text-white font-medium shadow-lg shadow-emerald-900/30"
-                                : `text-emerald-100 ${
-                                    sidebarItems.indexOf(item) % 2 === 0
-                                      ? "hover:bg-[#059669]"
-                                      : "hover:bg-[#059669]"
-                                  }`
+                            ${activeItem === item.title
+                              ? "bg-[#059669] text-white font-medium shadow-lg shadow-emerald-900/30"
+                              : `text-emerald-100 ${sidebarItems.indexOf(item) % 2 === 0
+                                ? "hover:bg-[#059669]"
+                                : "hover:bg-[#059669]"
+                              }`
                             }`}
                         >
                           <TooltipTrigger>
                             <div className="flex items-center justify-center relative">
                               <item.icon
                                 className={`w-6 h-6 transition-transform duration-300
-                                ${
-                                  activeItem === item.title
+                                ${activeItem === item.title
                                     ? "text-white"
                                     : "text-emerald-300"
-                                }`}
+                                  }`}
                               />
 
                               {activeItem === item.title && (
@@ -292,11 +288,10 @@ useEffect(()=>{
 
                           {isCollapsed === "expanded" && (
                             <span
-                              className={`transition-all duration-300 flex-1 ${
-                                activeItem === item.title
-                                  ? "text-white hover:text-white"
-                                  : ""
-                              }`}
+                              className={`transition-all duration-300 flex-1 ${activeItem === item.title
+                                ? "text-white hover:text-white"
+                                : ""
+                                }`}
                             >
                               {item.title}
                             </span>
@@ -334,10 +329,9 @@ useEffect(()=>{
                   <button
                     onClick={onLogout}
                     className={`flex items-center justify-center relative py-3 rounded-xl w-full
-                      ${
-                        isCollapsed === "expanded"
-                          ? "px-4 gap-3"
-                          : "w-14 h-14 mx-auto justify-center"
+                      ${isCollapsed === "expanded"
+                        ? "px-4 gap-3"
+                        : "w-14 h-14 mx-auto justify-center"
                       }
                       bg-gradient-to-b hover:from-emerald-600 hover:to-emerald-700 text-white hover:text-white font-medium shadow-lg `}
                   >
@@ -385,6 +379,6 @@ useEffect(()=>{
         </div>
       </SidebarContent>
     </Sidebar>
-    
+
   );
 }
