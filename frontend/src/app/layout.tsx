@@ -52,59 +52,21 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-         
-            
-            <head>
-                    <link
-                href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Figtree:wght@400;500;700&display=swap"
-                rel="stylesheet"
-              />
-        <meta charSet="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      
-        {/* Primary SEO */}
-        <meta name="author" content="Greenalytic Motors Ltd" />
-        <meta name="theme-color" content="#1B9C85" />
-        <meta name="robots" content="index, follow" />
-      
-        {/* Open Graph for social sharing */}
-        <meta property="og:type" content="website" />
-        <meta property="og:title" content="Greenalytic Motors – Clean Mobility in Africa" />
-        <meta property="og:description" content="Fleet emissions monitoring, fuel tracking, diagnostics, and reports." />
-        <meta property="og:image" content="/images/logo.png" />
-        <meta property="og:url" content="https://greenalytic.rw" />
-      
-        {/* Twitter Cards */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Greenalytic Motors – Real-time Fleet Monitoring" />
-        <meta name="twitter:description" content="Track emissions, speed, and fuel data across your fleet in Africa." />
-        <meta name="twitter:image" content="/images/logo.png" />
-      
+    <html lang="en" suppressHydrationWarning>
+      <head>
         <link
           href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Figtree:wght@400;500;700&display=swap"
           rel="stylesheet"
         />
       </head>
-      
- 
-    <AuthProvider>
       <body className="font-body text-midnight_text bg-white dark:bg-darkmode transition-all duration-300 antialiased">
-        {/* ✅ Client-side Navbar */}
-
-
-        {/* ✅ Page Content with Transitions */}
-        <main className="">
-          {/* <PageTransition> */}
+        <AuthProvider>
+          {/* ✅ Page Content with Transitions */}
+          <main className="">
             {children}
-            
-          {/* </PageTransition> */}
-        </main>
-
-
-
+          </main>
+        </AuthProvider>
       </body>
-          </AuthProvider>
     </html>
   );
 }
