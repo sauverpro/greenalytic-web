@@ -51,9 +51,9 @@ export function GpsDataTable({ onViewOnMap, onEdit, onDelete, initialFilters = {
         }
 
         const response = await gpsService.getAllGpsData(queryParams)
-        setData(response?.data?.data)
-        console.log("am fromthe  gps dtat table  and  i have the following data foll the reponse ")
-        setTotalRows(response.data?.meta.totalItems)
+        setData(response.data)
+        console.log("am from the  gps data table  and  i have the following data foll the response ", response.data)
+        setTotalRows(response.meta.totalItems)
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to fetch GPS data")
         console.error("Error fetching GPS data:", err)

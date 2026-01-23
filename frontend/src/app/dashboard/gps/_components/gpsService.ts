@@ -151,7 +151,7 @@ class GpsService {
     }
 
     const response = await this.getAllGpsData(params as GpsDataQueryParams)
-    return response
+    return response.data
   }
 
   async getVehicleRoute(vehicleId: number, startTime: Date, endTime: Date): Promise<GpsDataResponseDTO[]> {
