@@ -4,7 +4,7 @@ This guide explains how to deploy your Next.js application on an Ubuntu 24.04.3 
 
 ## Prerequisites
 
-Your server IP: `10.10.135.196`
+Your server IP: `197.243.27.245` (Public IP)
 
 ## Step 1: Server Setup
 
@@ -90,14 +90,15 @@ pm2 startup
 ## Step 6: Configure Nginx as Reverse Proxy
 
 ```bash
-sudo nano /etc/nginx/sites-available/greenalytic
+sudo nano /etc/nginx/sites-available/greenalytic-frontend
 ```
 
 Use the provided `nginx.conf` configuration.
 
 Enable the site:
 ```bash
-sudo ln -s /etc/nginx/sites-available/greenalytic /etc/nginx/sites-enabled/
+sudo cp nginx.conf /etc/nginx/sites-available/greenalytic-frontend
+sudo ln -s /etc/nginx/sites-available/greenalytic-frontend /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl restart nginx
 ```
@@ -112,9 +113,9 @@ sudo ufw enable
 
 ## Step 8: Configure DNS
 
-Point your domain `greenalytic.rw` to your server IP `10.10.135.196` in your DNS settings:
-- A Record: `greenalytic.rw` → `10.10.135.196`
-- A Record: `www.greenalytic.rw` → `10.10.135.196`
+Point your domain `greenalytic.rw` to your server IP `197.243.27.245` in your DNS settings:
+- A Record: `greenalytic.rw` → `197.243.27.245`
+- A Record: `www.greenalytic.rw` → `197.243.27.245`
 
 Your application should be accessible at:
 - `http://greenalytic.rw`
@@ -123,12 +124,12 @@ Your application should be accessible at:
 ## Useful PM2 Commands
 
 ```bash
-pm2 list                  # List all processes
-pm2 logs greenalytic     # View logs
-pm2 restart greenalytic  # Restart application
-pm2 stop greenalytic     # Stop application
-pm2 delete greenalytic   # Delete process
-pm2 monit                # Monitor resources
+pm2 list                           # List all processes
+pm2 logs greenalytic-frontend      # View logs
+pm2 restart greenalytic-frontend   # Restart application
+pm2 stop greenalytic-frontend      # Stop application
+pm2 delete greenalytic-frontend    # Delete process
+pm2 monit                          # Monitor resources
 ```
 
 ## Updating Your Application
@@ -145,7 +146,7 @@ pm2 restart greenalytic-frontend  # Restart the app
 
 ### Check PM2 logs
 ```bash
-pm2 logs greenalytic --lines 100
+pm2 logs greenalytic-frontend --lines 100
 ```
 
 ### Check Nginx logs
